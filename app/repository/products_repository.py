@@ -191,7 +191,6 @@ class ProductsRepository:
             ))
 
             if error is not None or not success:
-                connection.rollback()
                 return error, success, message
 
             cursor.execute("""
@@ -212,13 +211,13 @@ class ProductsRepository:
             ))
 
             if error is not None or not success:
-                connection.rollback()
                 return error, success, message
 
             connection.commit()
 
             return None, True, "Producto creado correctamente"
         except Exception as e:
+            connection.rollback()
             logger.error("Error en create_product: %s", e, exc_info=True)
             return "Error al intentar crear el producto", False, None
         finally:
@@ -235,8 +234,11 @@ class ProductsRepository:
             "model": "product_details_id",
         }
 
-        ALLOWED_COLUMNS = {"subcategory_id",
-                           "product_status", "product_details_id"}
+        ALLOWED_COLUMNS = {
+            "subcategory_id",
+            "product_status",
+            "product_details_id"
+        }
 
         connection = get_connection()
         cursor = connection.cursor()
