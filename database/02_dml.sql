@@ -245,24 +245,24 @@ INSERT INTO PRODUCTS VALUES
 
 
 INSERT INTO SUPPLIERS VALUES
-(null, 'Asus', 'Bogotá','Carrera 30 # 15 - 299', 'asus@asus.com', '1000000112', '2026-01-01', 2),
-(null, 'Servicios Industriales', 'Miami', 'Cra 50 #25-60, Barranquilla', 'contacto@sic.com', '3019873210', '2026-01-01', 2),
-(null, 'Lenovo', 'Miami', '1234 NW 107th Avenue, Miami, FL 33172', 'lenovo@lenovo.com', '3012141562', '2026-01-01', 2),
-(null, 'Logitech', 'Medellín', 'Cra 45 #12-30', 'ventas@logitech.com', '3021234567', '2026-01-01', 2),
-(null, 'Cisco', 'Bogotá', 'Av. El Dorado #25-80', 'ventas@cisco.com', '3186543210', '2026-01-01', 2),
-(null, 'TP-Link', 'Cali', 'Cl. 5 #15-22', 'soporte@tplink.com', '3009998887', '2026-01-01', 2),
-(null, 'Microsoft', 'Bogotá', 'Cra 15 # 45-20', 'soporte@microsoft.com', '3104442233', '2026-01-01', 2),
-(null, 'Razer', 'Medellín', 'Cl. 50 #30-12', 'contact@razer.com', '3115556677', '2026-01-01', 2),
-(null, 'HyperX', 'Cali', 'Av. 6N # 34-50', 'ventas@hyperx.com', '3129998877', '2026-02-01', 2),
-(null, 'Crucial', 'Barranquilla', 'Zona Franca Industrial', 'sales@crucial.com', '3131112233', '2026-02-01', 2),
-(null, 'Kingston', 'Miami', '1234 Kingston Blvd', 'contact@kingston.com', '3145557788', '2026-02-01', 2),
-(null, 'Western Digital', 'Bogotá', 'Av. 68 #45-80', 'support@wd.com', '3157778899', '2026-02-01', 2),
-(null, 'Sony', 'Cali', 'Cl. 10 #20-33', 'ventas@sony.com', '3168889900', '2026-02-01', 2),
-(null, 'LG', 'Medellín', 'Cra 45 # 25-15', 'lg@lg.com', '3172223344', '2026-03-01', 2),
-(null, 'Samsung', 'Bogotá', 'Cl. 26 #92-32', 'ventas@samsung.com', '3183334455', '2026-03-01', 2),
-(null, 'Mayorista', 'Medellin', 'CL 124 #15-245', 'mayorista@mayorista.com', '3401232255', '2026-04-01', 2),
-(null, 'HP', 'Bogotá', 'Avenida El Dorado # 68C - 61', 'hp@hp.com', '1000000113', '2026-04-02', 2),
-(null, 'Canon', 'Medellín', 'Calle 50 # 40 - 25', 'canon@canon.com', '1000000114', '2026-04-03', 2);
+(null, 'Asus', 1,'Carrera 30 # 15 - 299', 'asus@asus.com', '1000000112', '2026-01-01', 2),
+(null, 'Servicios Industriales', 1, 'Cra 50 #25-60, Barranquilla', 'contacto@sic.com', '3019873210', '2026-01-01', 2),
+(null, 'Lenovo', 1, '1234 NW 107th Avenue, Miami, FL 33172', 'lenovo@lenovo.com', '3012141562', '2026-01-01', 2),
+(null, 'Logitech', 1, 'Cra 45 #12-30', 'ventas@logitech.com', '3021234567', '2026-01-01', 2),
+(null, 'Cisco', 1, 'Av. El Dorado #25-80', 'ventas@cisco.com', '3186543210', '2026-01-01', 2),
+(null, 'TP-Link', 1, 'Cl. 5 #15-22', 'soporte@tplink.com', '3009998887', '2026-01-01', 2),
+(null, 'Microsoft', 1, 'Cra 15 # 45-20', 'soporte@microsoft.com', '3104442233', '2026-01-01', 2),
+(null, 'Razer', 1, 'Cl. 50 #30-12', 'contact@razer.com', '3115556677', '2026-01-01', 2),
+(null, 'HyperX', 1, 'Av. 6N # 34-50', 'ventas@hyperx.com', '3129998877', '2026-02-01', 2),
+(null, 'Crucial', 1, 'Zona Franca Industrial', 'sales@crucial.com', '3131112233', '2026-02-01', 2),
+(null, 'Kingston', 1, '1234 Kingston Blvd', 'contact@kingston.com', '3145557788', '2026-02-01', 2),
+(null, 'Western Digital', 1, 'Av. 68 #45-80', 'support@wd.com', '3157778899', '2026-02-01', 2),
+(null, 'Sony', 1, 'Cl. 10 #20-33', 'ventas@sony.com', '3168889900', '2026-02-01', 2),
+(null, 'LG', 1, 'Cra 45 # 25-15', 'lg@lg.com', '3172223344', '2026-03-01', 2),
+(null, 'Samsung', 1, 'Cl. 26 #92-32', 'ventas@samsung.com', '3183334455', '2026-03-01', 2),
+(null, 'Mayorista', 1, 'CL 124 #15-245', 'mayorista@mayorista.com', '3401232255', '2026-04-01', 2),
+(null, 'HP', 1, 'Avenida El Dorado # 68C - 61', 'hp@hp.com', '1000000113', '2026-04-02', 2),
+(null, 'Canon', 1, 'Calle 50 # 40 - 25', 'canon@canon.com', '1000000114', '2026-04-03', 2);
 
 
 INSERT INTO INPUT_ORDERS VALUES
