@@ -1,13 +1,25 @@
 from app.repository.suppliers_repository import SuppliersRepository
-from app.models.suppliers_model import Supplier
+from app.models.suppliers_model import Supplier, UpdateSupplier
 from fastapi import HTTPException
 
 
 class SuppliersController:
 
     @staticmethod
-    def get_all_suppliers():
-        error, data = SuppliersRepository.find_all_suppliers()
+    def get_all_suppliers(
+        name_order: str = None,
+        start_date: str = None,
+        end_date: str = None,
+        status: int = None,
+        city: int = None,
+    ):
+        error, data = SuppliersRepository.find_all_suppliers(
+            name_order,
+            start_date,
+            end_date,
+            status,
+            city,
+        )
 
         if error:
             raise HTTPException(status_code=404, detail=error)
@@ -36,7 +48,7 @@ class SuppliersController:
         }
 
     @staticmethod
-    def update_supplier(supplier_id: int, supplier_data: dict):
+    def update_supplier(supplier_id: int, supplier_data: UpdateSupplier):
         error, success, message = SuppliersRepository.update_supplier(
             supplier_id, supplier_data)
         if error:
@@ -56,7 +68,7 @@ class SuppliersController:
             "success": success,
             "message": message
         }
-    
+
     @staticmethod
     def enable_supplier(supplier_id: int):
         error, success, message = SuppliersRepository.enable_supplier(
