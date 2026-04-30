@@ -145,13 +145,19 @@ ENGINE = InnoDB;
 CREATE TABLE SUPPLIERS (
   supplier_id INT NOT NULL AUTO_INCREMENT COMMENT 'Identificador autogenerado para cada proveedor, llave primaria (INT, Not null)',
   supplier_name VARCHAR(255) NOT NULL COMMENT 'Nombre del proveedor (VARCHAR, Not null)',
-  supplier_city VARCHAR(255) NOT NULL COMMENT 'Ciudad donde esta ubicado el proveedor (VARCHAR, Not null)',
+  supplier_city INT NOT NULL COMMENT 'Ciudad donde esta ubicado el proveedor (INT, Not null)',
   supplier_address VARCHAR(255) NOT NULL COMMENT 'Dirección del proveedor (VARCHAR, Not null)',
   supplier_email VARCHAR(255) NOT NULL COMMENT 'Correo electronico del proveedor (VARCHAR, Not null)',
   supplier_phone VARCHAR(255) NOT NULL COMMENT 'Número de teléfono del proveedor (VARCHAR, Not null)',
   supplier_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del proveedor (DATE, Not null)',
   supplier_status INT NOT NULL DEFAULT 2 COMMENT "Estado en el que se encuentra el proveedor 1 = deshabilitado, 2 = activo",
-  PRIMARY KEY (supplier_id))
+  PRIMARY KEY (supplier_id),
+  CONSTRAINT fk_suppliers_cities
+    FOREIGN KEY (supplier_city)
+    REFERENCES CITIES (city_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+  )
 ENGINE = InnoDB;
 
 
