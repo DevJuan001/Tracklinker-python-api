@@ -18,6 +18,7 @@ class UserRepository:
         start_date: str = None,
         end_date: str = None,
         status: int = None,
+        city: int = None,
     ):
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
@@ -35,11 +36,14 @@ class UserRepository:
             u.user_email,
             u.user_address,
             u.user_city,
+            c.city_name,
             u.user_date,
             u.user_status
         FROM USERS AS u 
         INNER JOIN ROLES AS r 
             ON u.rol_id = r.rol_id
+        INNER JOIN CITIES AS c
+            ON u.user_city = c.city_id
         """
 
         filters = []
@@ -66,6 +70,10 @@ class UserRepository:
             filters.append("u.user_status = %s")
             values.append(status)
 
+        if city:
+            filters.append("u.user_city = %s")
+            values.append(city)
+
         if filters:
             query += " WHERE " + " AND ".join(filters)
 
@@ -84,6 +92,7 @@ class UserRepository:
                     "email": item["user_email"],
                     "address": item["user_address"],
                     "city": item["user_city"],
+                    "city_name": item["city_name"],
                     "date": date_formatter(item["user_date"]),
                     "status": item["user_status"]
                 }
