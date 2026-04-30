@@ -1,6 +1,6 @@
 from app.repository.user_repository import UserRepository
 from app.repository.suppliers_repository import SuppliersRepository
-from app.repository.warranties_repository import GuaranteeRepository
+from app.repository.warranties_repository import WarrantiesRepository
 from app.repository.category_repository import CategoryRepository
 from app.repository.subcategories_repository import SubcategoriesRepository
 from app.repository.products_repository import ProductsRepository
@@ -170,7 +170,7 @@ class ReportsController:
 #   ------------ REPORTES DE GARANTÍAS ------------
     @staticmethod
     def get_recent_warranties():
-        error, warranties = GuaranteeRepository.find_recent_warranties()
+        error, warranties = WarrantiesRepository.find_recent_warranties()
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
@@ -179,7 +179,7 @@ class ReportsController:
 
     @staticmethod
     def get_warranties_growth(period: str):
-        error, data = GuaranteeRepository.find_warranties_growth(period)
+        error, data = WarrantiesRepository.find_warranties_growth(period)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
@@ -188,7 +188,7 @@ class ReportsController:
     
     @staticmethod
     def get_warranties_by_brand(period: str):
-        error, data = GuaranteeRepository.find_warranties_by_brand(period)
+        error, data = WarrantiesRepository.find_warranties_by_brand(period)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
@@ -197,7 +197,7 @@ class ReportsController:
     
     @staticmethod
     def get_warranties_by_status():
-        error, data = GuaranteeRepository.find_warranties_by_status()
+        error, data = WarrantiesRepository.find_warranties_by_status()
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
