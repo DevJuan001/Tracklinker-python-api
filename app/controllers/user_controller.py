@@ -36,6 +36,7 @@ class UserController:
         start_date: str = None,
         end_date: str = None,
         status: int = None,
+        city: int = None,
     ):
         error, users = UserRepository.find_all_users(
             role_order,
@@ -43,6 +44,7 @@ class UserController:
             start_date,
             end_date,
             status,
+            city,
         )
         if error:
             raise HTTPException(status_code=404, detail=error)
@@ -73,7 +75,7 @@ class UserController:
         data = user_data.model_dump()
         temporal_password = generate_temporal_password()
 
-        error, success, message = UserRepository.create(
+        error, success, message = UserRepository.create_user(
             user_data, temporal_password)
 
         if error:
@@ -101,7 +103,8 @@ class UserController:
 
     @staticmethod
     def update_user(user_id: int, user_data: dict):
-        error, success, message = UserRepository.update(user_id, user_data)
+        error, success, message = UserRepository.update_user(
+            user_id, user_data)
         if error:
             raise HTTPException(status_code=400, detail=error)
         return {
@@ -111,7 +114,7 @@ class UserController:
 
     @staticmethod
     def disable_user(user_id: int):
-        error, success, message = UserRepository.disable(user_id)
+        error, success, message = UserRepository.disable_user(user_id)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
@@ -121,7 +124,7 @@ class UserController:
 
     @staticmethod
     def enable_user(user_id: int):
-        error, success, message = UserRepository.enable(user_id)
+        error, success, message = UserRepository.enable_user(user_id)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
