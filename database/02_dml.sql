@@ -392,12 +392,12 @@ INSERT INTO WARRANTY_INCIDENTS VALUES
 (null, 'QTYA9876543', 'Ana Gomez', '3008765432', 'Calle 50 #10-25', 'Problema con la impresión', '../warranties/images/WINC0001', 1, '2026-01-15', 3),
 (null, 'QTYB5554441', 'Carlos Ruiz', '3002223344', 'Calle 80 #45-10', 'Teclado no enciende retroiluminación', '../warranties/images/WINC0002', 1, '2026-01-01', 3),
 (null, 'QTYC3332220', 'Laura Jimenez', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-01-02', 3),
-(null, 'QTYD1234567', 'Laura Jimenez', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-01-02', 1),
-(null, 'QTYE9876543', 'Laura Jimenez', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-01-02', 1),
-(null, 'QTYF1112223', 'Pedro Torres', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-02-02', 1),
+(null, 'QTYD1234567', 'Laura Jimenez', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-01-02', 4),
+(null, 'QTYE9876543', 'Laura Jimenez', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-01-02', 4),
+(null, 'QTYF1112223', 'Pedro Torres', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-02-02', 4),
 (null, 'QTYG7778889', 'Sofia Fernandez', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-02-02', 2),
 (null, 'QTYH5556667', 'Luiz Alvarez', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-03-02', 2),
-(null, 'QTYI9990001', 'Martha Vargas', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-04-02', 2);
+(null, 'QTYI9990001', 'Martha Vargas', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-04-02', 1);
 
 
 INSERT INTO TECHNICAL VALUES
