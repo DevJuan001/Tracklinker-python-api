@@ -1,6 +1,6 @@
 from app.repository.user_repository import UserRepository
 from app.repository.suppliers_repository import SuppliersRepository
-from app.repository.warranties_repository import WarrantiesRepository
+from app.features.warranties.warranties_repository import WarrantiesRepository
 from app.repository.category_repository import CategoryRepository
 from app.repository.subcategories_repository import SubcategoriesRepository
 from app.repository.products_repository import ProductsRepository
