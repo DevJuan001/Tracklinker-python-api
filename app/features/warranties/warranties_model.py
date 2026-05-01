@@ -1,10 +1,26 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime
 
 
 class Warranty(BaseModel):
-    warranty_incidents_id: Optional[int] = None
+    id: int
+    product_serial: str
+    customer: str
+    phone: str
+    address: str
+    description: str
+    link_attachments: str
+    city: int
+    city_name: str
+    date: str
+    status: int
+
+class WarrantiesFilter(BaseModel):
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    status: Optional[int] = None
+
+class CreateWarranty(BaseModel):
     product_serial: str
     warranty_customer: str
     warranty_phone: str
@@ -12,8 +28,6 @@ class Warranty(BaseModel):
     warranty_description: str
     warranty_link_attachments: str
     warranty_city: str
-    warranty_date: Optional[datetime] = None
-    warranty_status:  Optional[int] = None
 
 
 class WarrantyUpdate(BaseModel):
