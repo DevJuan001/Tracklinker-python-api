@@ -1,5 +1,5 @@
 from app.core.database import get_connection
-from app.models.warranties_model import Warranty, WarrantyUpdate
+from app.features.warranties.warranties_model import Warranty, WarrantyUpdate, WarrantiesFilter, CreateWarranty
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
 from app.utils.logger import get_logger
@@ -15,43 +15,44 @@ logger = get_logger(__name__)
 class WarrantiesRepository:
 
     @staticmethod
-    def find_all_warranties(
-        start_date: str = None,
-        end_date: str = None,
-        status: int = None,
-    ):
+    def find_all_warranties(filters: WarrantiesFilter):
+        data = filters.model_dump(exclude_none=True)
+
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
 
         query = """
         SELECT
-            warranty_incidents_id,
-            product_serial,
-            warranty_customer,
-            warranty_phone,
-            warranty_address,
-            warranty_description,
-            warranty_link_attachments,
-            warranty_city,
-            warranty_date,
-            warranty_status
-        FROM WARRANTY_INCIDENTS
+            wi.warranty_incidents_id,
+            wi.product_serial,
+            wi.warranty_customer,
+            wi.warranty_phone,
+            wi.warranty_address,
+            wi.warranty_description,
+            wi.warranty_link_attachments,
+            wi.warranty_city,
+            c.city_name,
+            wi.warranty_date,
+            wi.warranty_status
+        FROM WARRANTY_INCIDENTS AS wi
+        INNER JOIN CITIES as c
+            ON wi.warranty_city = c.city_id
         """
 
         filters = []
         values = []
 
-        if start_date:
+        if "start_date" in data:
             filters.append("DATE(warranty_date) >= %s")
-            values.append(start_date)
+            values.append(data["start_date"])
 
-        if end_date:
+        if "end_date" in data:
             filters.append("DATE(warranty_date) <= %s")
-            values.append(end_date)
+            values.append(data["end_date"])
 
-        if status:
+        if "status" in data:
             filters.append("warranty_status = %s")
-            values.append(status)
+            values.append(data["status"])
 
         if filters:
             query += " WHERE " + " AND ".join(filters)
@@ -61,18 +62,19 @@ class WarrantiesRepository:
             results = cursor.fetchall()
 
             data = [
-                {
-                    "warranty_incidents_id": item["warranty_incidents_id"],
-                    "product_serial": item["product_serial"],
-                    "warranty_customer": item["warranty_customer"],
-                    "warranty_phone": item["warranty_phone"],
-                    "warranty_address": item["warranty_address"],
-                    "warranty_description": item["warranty_description"],
-                    "warranty_link_attachments": item["warranty_link_attachments"],
-                    "warranty_city": item["warranty_city"],
-                    "warranty_date": date_formatter(item["warranty_date"]),
-                    "warranty_status": item["warranty_status"]
-                }
+                Warranty(
+                    id=item["warranty_incidents_id"],
+                    product_serial=item["product_serial"],
+                    customer=item["warranty_customer"],
+                    phone=item["warranty_phone"],
+                    address=item["warranty_address"],
+                    description=item["warranty_description"],
+                    link_attachments=item["warranty_link_attachments"],
+                    city=item["warranty_city"],
+                    city_name=item["city_name"],
+                    date=date_formatter(item["warranty_date"]),
+                    status=item["warranty_status"]
+                )
                 for item in results
             ]
 
@@ -107,7 +109,7 @@ class WarrantiesRepository:
             connection.close()
 
     @staticmethod
-    def create_warranty(warranty_data: Warranty):
+    def create_warranty(warranty_data: CreateWarranty):
 
         data = warranty_data.model_dump()
 
@@ -182,12 +184,12 @@ class WarrantiesRepository:
 
             cursor.execute(query, (
                 data["product_serial"],
-                data["warranty_customer"],
-                data["warranty_phone"],
-                data["warranty_address"],
-                data["warranty_description"],
-                data["warranty_link_attachments"],
-                data["warranty_city"],
+                data["customer"],
+                data["phone"],
+                data["address"],
+                data["description"],
+                data["link_attachments"],
+                data["city"],
             ))
             connection.commit()
 
