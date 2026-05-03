@@ -1,44 +1,160 @@
 from app.features.warranties.warranties_repository import WarrantiesRepository
 from app.features.warranties.warranties_model import WarrantyUpdate, WarrantiesFilter, CreateWarranty
+from app.repository.product_serials_repository import ProductSerialsRepository
+from app.repository.products_repository import ProductsRepository
+from app.core.database import get_connection
+from app.utils.logger import get_logger
+
+logger = get_logger("warranties.service")
 
 
 class WarrantiesService:
 
     @staticmethod
     def get_all_warranties(filters: WarrantiesFilter):
-        error, warranties = WarrantiesRepository.find_all_warranties(filters)
-        if error:
-            return "Error al obtener las garantías", None
-        return None, warranties
+        connection = get_connection()
+
+        try:
+            error, warranties = WarrantiesRepository.find_all_warranties(
+                filters, connection
+            )
+            if error:
+                return "Error al intentar obtener las garantias", None
+
+            return None, warranties
+        except Exception as e:
+            connection.rollback()
+            logger.error("Error en get_all_warranties: %s", e, exc_info=True)
+            return "Error al intentar obtener la garantias", None
 
     @staticmethod
     def get_warranty_by_id(warranty_incidents_id: int):
-        error, warranty = WarrantiesRepository.find_warranty_by_id(
-            warranty_incidents_id)
-        if error:
-            return "Error al obtener la garantía", None
-        return None, warranty
+        connection = get_connection()
+
+        try:
+            error, warranty = WarrantiesRepository.find_warranty_by_id(
+                warranty_incidents_id, connection
+            )
+            if error:
+                return "Error al intentar obtener la garantía", None
+
+            return None, warranty
+        except Exception as e:
+            connection.rollback()
+            logger.error("Error en get_warranty_by_id: %s", e, exc_info=True)
+            return "Error al intentar obtener la garantía", None
 
     @staticmethod
     def create_warranty(warranty_data: CreateWarranty):
-        error, success, message = WarrantiesRepository.create_warranty(
-            warranty_data)
-        if error:
-            return "Error al crear la garantía", None, None
-        return None, success, message
+        data = warranty_data.model_dump()
+        connection = get_connection()
+
+        try:
+            # Verificar que el serial existe
+            product_id = ProductSerialsRepository.find_product_id_by_serial(
+                data["product_serial"], connection
+            )
+            if not product_id:
+                return "Serial no encontrado", False, None
+
+            # Verificar que el producto no tenga una garantía activa
+            existing = WarrantiesRepository.find_active_warranty_by_serial(
+                data["product_serial"], connection
+            )
+            if existing:
+                return "El producto ya tiene una garantía activa", False, None
+
+            # Actualizar estado del producto a en garantía (4)
+            error, success, message = ProductsRepository.update_product_status(
+                product_id, 4, connection
+            )
+            if error:
+                return error, success, message
+
+            error, success, message = WarrantiesRepository.create_warranty(
+                data, connection
+            )
+            if error:
+                return error, success, message
+
+            connection.commit()
+
+            return None, success, message
+        except Exception as e:
+            connection.rollback()
+            logger.error("Error en create_warranty: %s", e, exc_info=True)
+            return "Error al intentar crear la garantía", False, None
+        finally:
+            connection.close()
 
     @staticmethod
     def update_warranty(warranty_incidents_id: int, warranty_data: WarrantyUpdate):
-        error, success, message = WarrantiesRepository.update_warranty(
-            warranty_incidents_id, warranty_data)
-        if error:
-            return "Error al actualizar la garantía", None, None
-        return None, success, message
+        data = warranty_data.model_dump(exclude_none=True)
+        connection = get_connection()
+
+        WARRANTY_STATUS_PRODUCT_MAP = {
+            1: 2,
+            2: 4,
+            3: 4,
+            4: 2,
+        }
+
+        try:
+            warranty = WarrantiesRepository.find_warranty_by_id(
+                warranty_incidents_id, connection
+            )
+            if not warranty:
+                return "Garantía no encontrada", False, None
+
+            if not data:
+                return "No hay campos para actualizar", False, None
+
+            new_status = data.get("status")
+
+            if new_status in WARRANTY_STATUS_PRODUCT_MAP:
+                product_serial = data.get("product_serial")
+
+                if not product_serial:
+                    return "Serial requerido para este estado", False, None
+
+                product_id = ProductSerialsRepository.find_product_id_by_serial(
+                    product_serial, connection
+                )
+
+                if not product_id:
+                    return "Serial no encontrado", False, None
+
+                new_product_status = WARRANTY_STATUS_PRODUCT_MAP[new_status]
+                error, success, message = ProductsRepository.update_product_status(
+                    product_id, new_product_status, connection
+                )
+
+                if error:
+                    return error, False, None
+
+            error, success, message = WarrantiesRepository.update_warranty(
+                warranty_incidents_id=warranty_incidents_id, warranty_data=data, connection=connection)
+            if error:
+                return "Error al actualizar la garantía", None, None
+
+            connection.commit()
+            return None, success, message
+
+        except Exception as e:
+            connection.rollback()
+            logger.error("Error en update_warranty: %s", e, exc_info=True)
+            return "Error al intentar actualizar la garantía", False, None
+        finally:
+            connection.close()
 
     @staticmethod
     def delete_warranty(warranty_incidents_id: int):
+        connection = get_connection()
+
         error, success, message = WarrantiesRepository.delete_warranty(
-            warranty_incidents_id)
+            warranty_incidents_id, connection
+        )
+
         if error:
             return "Error al eliminar la garantía", None, None
         return None, success, message
