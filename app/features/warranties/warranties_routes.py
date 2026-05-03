@@ -51,8 +51,8 @@ def create_warranty(warranty_data: CreateWarranty):
     ]
 )
 def update_warranty(
-    warranty_incidents_id:int,
-    warranty_data:  WarrantyUpdate,
+    warranty_incidents_id: int,
+    warranty_data: WarrantyUpdate,
 ):
     return WarrantiesController.update_warranty(warranty_incidents_id, warranty_data)
 
