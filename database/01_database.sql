@@ -299,7 +299,7 @@ CREATE TABLE WARRANTY_INCIDENTS (
   warranty_address VARCHAR(255) NOT NULL COMMENT' Dirección del cliente para la gestión de la garantía.',
   warranty_description VARCHAR(100) NOT NULL COMMENT'Descripción detallada del problema o incidente reportado por el cliente.',
   warranty_link_attachments VARCHAR(255) NOT NULL COMMENT'Campo que contiene la URL o el path a los archivos adjuntos (imágenes, documentos) de la garantía, como facturas o fotos del producto.',
-  warranty_city VARCHAR(100) NOT NULL COMMENT'Nombre de la ciudad del cliente. Utilizado para determinar la ubicación geográfica y asignar el caso a un centro de servicio local.' ,
+  warranty_city INT NOT NULL COMMENT'Nombre de la ciudad del cliente. Utilizado para determinar la ubicación geográfica y asignar el caso a un centro de servicio local.' ,
   warranty_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora en que se reportó el incidente de garantía al sistema.' ,
   warranty_status INT NOT NULL DEFAULT 2 COMMENT 'Estado actual de la garantía , 1 = Sin Completar, 2 = En Proceso, 3 = Sin Completar, Al momento de ingresar la garantia nueva se le da un estado de 0 o Sin completar',
   PRIMARY KEY (warranty_incidents_id),
@@ -309,7 +309,13 @@ CREATE TABLE WARRANTY_INCIDENTS (
     FOREIGN KEY (product_serial)
     REFERENCES OUTPUT_DETAILS (product_serial)
     ON DELETE CASCADE
-    ON UPDATE CASCADE)
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_warranties_cities
+    FOREIGN KEY (warranty_city)
+    REFERENCES CITIES (city_id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+)
 ENGINE = InnoDB;
 
 

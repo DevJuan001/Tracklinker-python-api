@@ -1,57 +1,56 @@
-from app.core.database import get_connection
-from app.models.warranties_model import Warranty, WarrantyUpdate
+from datetime import datetime
+from app.utils.logger import get_logger
+from dateutil.relativedelta import relativedelta
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
-from app.utils.logger import get_logger
+from app.features.warranties.warranties_model import Warranty, WarrantyUpdate, WarrantiesFilter, CreateWarranty
 from app.repository.products_repository import ProductsRepository
 from app.repository.output_details_repository import OutputDetailsRepository
 from app.models.output_details_model import OutputDetails
-from dateutil.relativedelta import relativedelta
-from datetime import datetime
 
-logger = get_logger(__name__)
+logger = get_logger("warranties.repository")
 
 
 class WarrantiesRepository:
 
     @staticmethod
-    def find_all_warranties(
-        start_date: str = None,
-        end_date: str = None,
-        status: int = None,
-    ):
-        connection = get_connection()
+    def find_all_warranties(filters: WarrantiesFilter, connection):
+        data = filters.model_dump(exclude_none=True)
+
         cursor = connection.cursor(dictionary=True)
 
         query = """
         SELECT
-            warranty_incidents_id,
-            product_serial,
-            warranty_customer,
-            warranty_phone,
-            warranty_address,
-            warranty_description,
-            warranty_link_attachments,
-            warranty_city,
-            warranty_date,
-            warranty_status
-        FROM WARRANTY_INCIDENTS
+            wi.warranty_incidents_id,
+            wi.product_serial,
+            wi.warranty_customer,
+            wi.warranty_phone,
+            wi.warranty_address,
+            wi.warranty_description,
+            wi.warranty_link_attachments,
+            wi.warranty_city,
+            c.city_name,
+            wi.warranty_date,
+            wi.warranty_status
+        FROM WARRANTY_INCIDENTS AS wi
+        INNER JOIN CITIES as c
+            ON wi.warranty_city = c.city_id
         """
 
         filters = []
         values = []
 
-        if start_date:
+        if "start_date" in data:
             filters.append("DATE(warranty_date) >= %s")
-            values.append(start_date)
+            values.append(data["start_date"])
 
-        if end_date:
+        if "end_date" in data:
             filters.append("DATE(warranty_date) <= %s")
-            values.append(end_date)
+            values.append(data["end_date"])
 
-        if status:
+        if "status" in data:
             filters.append("warranty_status = %s")
-            values.append(status)
+            values.append(data["status"])
 
         if filters:
             query += " WHERE " + " AND ".join(filters)
@@ -61,18 +60,19 @@ class WarrantiesRepository:
             results = cursor.fetchall()
 
             data = [
-                {
-                    "warranty_incidents_id": item["warranty_incidents_id"],
-                    "product_serial": item["product_serial"],
-                    "warranty_customer": item["warranty_customer"],
-                    "warranty_phone": item["warranty_phone"],
-                    "warranty_address": item["warranty_address"],
-                    "warranty_description": item["warranty_description"],
-                    "warranty_link_attachments": item["warranty_link_attachments"],
-                    "warranty_city": item["warranty_city"],
-                    "warranty_date": date_formatter(item["warranty_date"]),
-                    "warranty_status": item["warranty_status"]
-                }
+                Warranty(
+                    id=item["warranty_incidents_id"],
+                    product_serial=item["product_serial"],
+                    customer=item["warranty_customer"],
+                    phone=item["warranty_phone"],
+                    address=item["warranty_address"],
+                    description=item["warranty_description"],
+                    link_attachments=item["warranty_link_attachments"],
+                    city=item["warranty_city"],
+                    city_name=item["city_name"],
+                    date=date_formatter(item["warranty_date"]),
+                    status=item["warranty_status"]
+                )
                 for item in results
             ]
 
@@ -82,37 +82,43 @@ class WarrantiesRepository:
             return "Error al intentar obtener las garantías", None
         finally:
             cursor.close()
-            connection.close()
 
     # Obtener una incidencia por ID
     @staticmethod
-    def find_warranty_by_id(warranty_incidents_id: int):
-        connection = get_connection()
+    def find_warranty_by_id(warranty_incidents_id: int, connection):
         cursor = connection.cursor(dictionary=True)
 
         # Petición a la base de datos
         query = """
-        SELECT * FROM WARRANTY_INCIDENTS WHERE warranty_incidents_id = %s
+        SELECT warranty_customer FROM WARRANTY_INCIDENTS WHERE warranty_incidents_id = %s
         """
         try:
             cursor.execute(query, (warranty_incidents_id,))
-            result = cursor.fetchall()
-
-            return None, result
+            return cursor.fetchone()
         except Exception as e:
             logger.error("Error en find_warranty_by_id: %s", e, exc_info=True)
-            return "Error al intentar obtener la garantía", None
+            return None
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def create_warranty(warranty_data: Warranty):
+    def find_active_warranty_by_serial(product_serial: str, connection):
+        cursor = connection.cursor(dictionary=True)
+        try:
+            cursor.execute("""
+                SELECT warranty_incidents_id 
+                FROM WARRANTY_INCIDENTS 
+                WHERE product_serial = %s 
+                AND warranty_status NOT IN (1, 4)
+            """, (product_serial,))
+            return cursor.fetchone()
+        finally:
+            cursor.close()
 
-        data = warranty_data.model_dump()
+    @staticmethod
+    def create_warranty(warranty_data: CreateWarranty, connection):
 
-        connection = get_connection()
-        cursor = connection.cursor(buffered=True)
+        cursor = connection.cursor()
 
         # Petición a la base de datos
         query = """
@@ -128,83 +134,27 @@ class WarrantiesRepository:
         """
 
         try:
-            cursor.execute("""
-                SELECT 
-                    warranty_incidents_id 
-                FROM WARRANTY_INCIDENTS 
-                WHERE product_serial = %s 
-                AND DATE(warranty_date) = CURDATE()
-            """, (data["product_serial"],))
-
-            existing_warranty = cursor.fetchone()
-
-            if existing_warranty:
-                return "Ya existe una garantía creada hoy para este serial", None, None
-
-            cursor.execute("""
-            SELECT 
-                product_id
-            FROM PRODUCT_SERIALS WHERE product_serial = %s
-            """, (data["product_serial"],))
-
-            product_id = cursor.fetchone()
-
-            if not product_id:
-                return "Serial no encontrado", None, None
-
-            error, output_order_id, output_order_date = OutputDetailsRepository.find_by_product_serial(
-                data["product_serial"])
-
-            if error is not None:
-                return error, False, None
-
-            garanty_time = (datetime.now() + relativedelta(months=12)).date()
-
-            if output_order_date and output_order_date.date() == datetime.now().date():
-                return "Ya existe una garantía creada hoy para este serial", None, None
-
-            if not output_order_id and not output_order_date:
-                error, success, message = OutputDetailsRepository.create(OutputDetails(
-                    product_serial=data["product_serial"],
-                    out_product_garanty=garanty_time,
-                    product_transformation="No necesita"
-                ))
-
-                if error is not None or not success:
-                    return error, success, message
-
-            error, success, message = ProductsRepository.update_product_status(
-                {"product_id": product_id[0], "product_status": 4}
-            )
-
-            if error is not None or not success:
-                return error, success, message
-
             cursor.execute(query, (
-                data["product_serial"],
-                data["warranty_customer"],
-                data["warranty_phone"],
-                data["warranty_address"],
-                data["warranty_description"],
-                data["warranty_link_attachments"],
-                data["warranty_city"],
+                warranty_data["product_serial"],
+                warranty_data["customer"],
+                warranty_data["phone"],
+                warranty_data["address"],
+                warranty_data["description"],
+                warranty_data["link_attachments"],
+                warranty_data["city"],
             ))
             connection.commit()
 
             return None, True, "Garantía creada correctamente"
         except Exception as e:
-            connection.rollback()
             logger.error("Error en create_warranty: %s", e, exc_info=True)
 
             return "Error al intentar crear la garantía", None, None
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def update_warranty(warranty_incidents_id: int, warranty_data: WarrantyUpdate):
-        data = warranty_data.model_dump()
-
+    def update_warranty(warranty_incidents_id: int, warranty_data: WarrantyUpdate, connection):
         WARRANTY_FIELDS = {
             "customer": "warranty_customer",
             "phone": "warranty_phone",
@@ -215,58 +165,17 @@ class WarrantiesRepository:
             "status": "warranty_status"
         }
 
-        connection = get_connection()
-        cursor = connection.cursor(exclude_none=True)
+        cursor = connection.cursor()
 
         try:
-            # Verificar si existe la garantía
-            cursor.execute(
-                "SELECT warranty_incidents_id FROM WARRANTY_INCIDENTS WHERE warranty_incidents_id = %s",
-                (warranty_incidents_id,)
-            )
-            if not cursor.fetchone():
-                return "Garantía no encontrada", False, None
-
-            warranty_fields = {
-                key: data[key]
-                for key in WARRANTY_FIELDS.keys()
-                if key in data
-            }
-
             mapped = {
-                WARRANTY_FIELDS[key]: value for key, value in warranty_fields.items()
+                WARRANTY_FIELDS[key]: warranty_data[key]
+                for key in WARRANTY_FIELDS
+                if key in warranty_data
             }
 
             if not mapped:
-                return "No hay campos para actualizar", False, None
-
-            if data.get("warranty_status") == 3:
-                product_serial = data.get("product_serial")
-
-                if not product_serial:
-                    return "Serial requerido para este estado", False, None
-
-                cursor.execute("""
-                SELECT
-                    product_id
-                FROM PRODUCT_SERIALS
-                WHERE product_serial = %s
-                """, (data["product_serial"],))
-
-                row = cursor.fetchone()
-
-                if not row:
-                    return "Serial no encontrado", False, None
-
-                product_id = row["product_id"]
-
-                error, success, message = ProductsRepository.update_product_status({
-                    "product_status": 3,
-                    "product_id": product_id
-                })
-
-                if error is not None or not success:
-                    return error, success, message
+                return "No hay campos válidos para actualizar", False, None
 
             columns = ", ".join(f"{col} = %s" for col in mapped.keys())
             values = list(mapped.values()) + [warranty_incidents_id]
@@ -275,21 +184,15 @@ class WarrantiesRepository:
                 f"UPDATE WARRANTY_INCIDENTS SET {columns} WHERE warranty_incidents_id = %s",
                 values
             )
-
-            connection.commit()
             return None, True, "Garantía actualizada correctamente"
         except Exception as e:
-            connection.rollback()
-
             logger.error("Error en update_warranty: %s", e, exc_info=True)
             return "Error al intentar actualizar la garantía", False, None
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def delete_warranty(warranty_incidents_id: int):
-        connection = get_connection()
+    def delete_warranty(warranty_incidents_id: int, connection):
         cursor = connection.cursor()
         query = """
         DELETE FROM WARRANTY_INCIDENTS WHERE warranty_incidents_id = %s
@@ -303,7 +206,6 @@ class WarrantiesRepository:
             return "Error al intentar eliminar la garantía", None, None
         finally:
             cursor.close()
-            connection.close()
 
 
 #   ------------ REPORTES DE GARANTÍAS ------------
