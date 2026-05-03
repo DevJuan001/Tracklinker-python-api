@@ -22,20 +22,20 @@ class WarrantiesFilter(BaseModel):
 
 class CreateWarranty(BaseModel):
     product_serial: str
-    warranty_customer: str
-    warranty_phone: str
-    warranty_address: str
-    warranty_description: str
-    warranty_link_attachments: str
-    warranty_city: str
+    customer: str
+    phone: str
+    address: str
+    description: str
+    link_attachments: str
+    city: int
 
 
 class WarrantyUpdate(BaseModel):
     product_serial: str
-    warranty_customer: Optional[str] = None
-    warranty_phone: Optional[str] = None
-    warranty_address: Optional[str] = None
-    warranty_description: Optional[str] = None
-    warranty_link_attachments: Optional[str] = None
-    warranty_city: Optional[str] = None
-    warranty_status: Optional[int] = None
+    customer: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    description: Optional[str] = None
+    link_attachments: Optional[str] = None
+    city: Optional[str] = None
+    status: Optional[int] = None
