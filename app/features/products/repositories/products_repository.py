@@ -149,6 +149,7 @@ class ProductsRepository:
                 (product_id,)
             )
 
+            return cursor.fetchone()
         except Exception as e:
             logger.error("Error en find_product_by_id: %s", e, exc_info=True)
             return "Error al intentar obtener el producto", None
@@ -271,19 +272,6 @@ class ProductsRepository:
         cursor = connection.cursor()
 
         try:
-            cursor.execute(
-                "SELECT product_status FROM PRODUCTS WHERE product_id = %s",
-                (product_id,)
-            )
-
-            product = cursor.fetchone()
-
-            if not product:
-                return "Producto no encontrado", False, None
-
-            if product[0] == 1 and product_status in (2, 3):
-                return "No puedes vender o crear una garantía con un producto deshabilitado", False, None
-
             cursor.execute("""
                 UPDATE PRODUCTS SET
                     product_status = %s
@@ -291,11 +279,8 @@ class ProductsRepository:
                 """, (product_status, product_id)
             )
 
-            connection.commit()
-
             return None, True, "Estado del producto actualizado correctamente"
         except Exception as e:
-            connection.rollback()
             logger.error(
                 "Error en update_product_status: %s",
                 e,
