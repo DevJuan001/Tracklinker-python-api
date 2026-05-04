@@ -47,6 +47,10 @@ class WarrantiesRepository:
             filters.append("warranty_status = %s")
             values.append(data["status"])
 
+        if "city" in data:
+            filters.append("warranty_city = %s")
+            values.append(data["city"])
+
         if filters:
             query += " WHERE " + " AND ".join(filters)
 
@@ -186,22 +190,6 @@ class WarrantiesRepository:
         except Exception as e:
             logger.error("Error en update_warranty: %s", e, exc_info=True)
             return "Error al intentar actualizar la garantía", False, None
-        finally:
-            cursor.close()
-
-    @staticmethod
-    def delete_warranty(warranty_incidents_id: int, connection):
-        cursor = connection.cursor()
-        query = """
-        DELETE FROM WARRANTY_INCIDENTS WHERE warranty_incidents_id = %s
-        """
-        try:
-            cursor.execute(query, (warranty_incidents_id,))
-            connection.commit()
-            return None, True, "Garantía eliminada correctamente"
-        except Exception as e:
-            logger.error("Error en delete_warranty: %s", e, exc_info=True)
-            return "Error al intentar eliminar la garantía", None, None
         finally:
             cursor.close()
 
