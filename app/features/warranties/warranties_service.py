@@ -154,15 +154,3 @@ class WarrantiesService:
             return "Error al intentar actualizar la garantía", False, None
         finally:
             connection.close()
-
-    @staticmethod
-    def delete_warranty(warranty_incidents_id: int):
-        connection = get_connection()
-
-        error, success, message = WarrantiesRepository.delete_warranty(
-            warranty_incidents_id, connection
-        )
-
-        if error:
-            return "Error al eliminar la garantía", None, None
-        return None, success, message
