@@ -38,5 +38,5 @@ class WarrantyUpdate(BaseModel):
     address: Optional[str] = None
     description: Optional[str] = None
     link_attachments: Optional[str] = None
-    city: Optional[str] = None
+    city: Optional[int] = None
     status: Optional[int] = None
