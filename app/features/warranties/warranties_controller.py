@@ -48,15 +48,3 @@ class WarrantiesController:
             "success": success,
             "message": message
         }
-
-    @staticmethod
-    def delete_warranty(warranty_incidents_id: int):
-        error, success, message = WarrantiesService.delete_warranty(
-            warranty_incidents_id
-        )
-        if error:
-            raise HTTPException(status_code=400, detail=error)
-        return {
-            "success": success,
-            "message": message
-        }
