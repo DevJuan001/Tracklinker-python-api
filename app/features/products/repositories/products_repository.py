@@ -7,31 +7,19 @@ from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
 from app.utils.logger import get_logger
 # Models
-from app.models.product_model import Product, UpdateProduct
-from app.models.product_details_model import UpdateProductDetails, ProductDetails
-from app.models.product_serial_model import ProductSerial, UpdateProductSerial
-# Repositories
-from app.repository.product_details_repository import ProductDetailsRepository
-from app.repository.product_serials_repository import ProductSerialsRepository
+from app.features.products.models.product_serial_model import UpdateProductSerial
+from app.features.products.models.product_details_model import UpdateProductDetails
+from app.features.products.models.product_model import Product, UpdateProduct, ProductsFilter, CreateProduct
 
-logger = get_logger(__name__)
+logger = get_logger("products.repository")
 
 
 class ProductsRepository:
 
     @staticmethod
-    def find_all_products(
-        start_date: str = None,
-        end_date: str = None,
-        input_order: int = None,
-        category_order: int = None,
-        subcategory_order: int = None,
-        warranty_time: int = None,
-        product_status: int = None,
-        brand: int = None,
-        product_model: int = None,
-    ):
-        connection = get_connection()
+    def find_all_products(filters_data: ProductsFilter, connection):
+        data = filters_data.model_dump(exclude_none=True)
+
         cursor = connection.cursor()
 
         query = """
@@ -75,43 +63,44 @@ class ProductsRepository:
         filters = []
         values = []
 
-        if start_date:
+        if "start_date" in data:
             filters.append("DATE(pd.product_detail_date) >= %s")
-            values.append(start_date)
+            values.append(data["start_date"])
 
-        if end_date:
+        if "end_date" in data:
             filters.append("DATE(pd.product_detail_date) <= %s")
-            values.append(end_date)
+            values.append(data["end_date"])
 
-        if input_order:
+        if "input_order" in data:
             filters.append("io.input_order_id = %s")
-            values.append(input_order)
+            values.append(data["input_order"])
 
-        if category_order:
+        if "category_order" in data:
             filters.append("c.category_id = %s")
-            values.append(category_order)
+            values.append(data["category_order"])
 
-        if subcategory_order:
+        if "subcategory_order" in data:
             filters.append("sc.subcategory_id = %s")
-            values.append(subcategory_order)
+            values.append(data["subcategory_order"])
 
-        if warranty_time:
-            garanty_time = (datetime.now() +
-                            relativedelta(months=warranty_time)).date()
+        if "warranty_time" in data:
+            garanty_time = (
+                datetime.now() + relativedelta(months=data["warranty_time"])
+            ).date()
             filters.append("ps.product_garanty_input <= %s")
             values.append(garanty_time)
 
-        if product_status:
+        if "product_status" in data:
             filters.append("p.product_status = %s")
-            values.append(product_status)
+            values.append(data["product_status"])
 
-        if brand:
+        if "brand" in data:
             filters.append("pb.product_brand_id = %s")
-            values.append(brand)
+            values.append(data["brand"])
 
-        if product_model:
+        if "product_model" in data:
             filters.append("pd.product_details_id = %s")
-            values.append(product_model)
+            values.append(data["product_model"])
 
         if filters:
             query += " WHERE " + " AND ".join(filters)
@@ -119,41 +108,58 @@ class ProductsRepository:
         try:
             cursor.execute(query, values)
             result = cursor.fetchall()
+
             # Mapeamos cada item que devuelve la query y le agregamos una llave para identificarlos
-            data = [
-                {
-                    "input_order_id": item[0],
-                    "input_date": date_formatter(item[1]),
-                    "input_order": item[2],
-                    "category": item[3],
-                    "subcategory_id": item[4],
-                    "subcategory": item[5],
-                    "product_id": item[6],
-                    "supplier": item[7],
-                    "product_serial": item[8],
-                    "model": item[9],
-                    "model_id": item[10],
-                    "description": item[11],
-                    "brand_id": item[12],
-                    "brand": item[13],
-                    "warranty_time": item[14],
-                    "product_details_id": item[15],
-                    "status": item[16]
-                }
+            products = [
+                Product(
+                    input_order_id=item[0],
+                    input_date=date_formatter(item[1]),
+                    input_order=item[2],
+                    category=item[3],
+                    subcategory_id=item[4],
+                    subcategory=item[5],
+                    product_id=item[6],
+                    supplier=item[7],
+                    product_serial=item[8],
+                    model=item[9],
+                    model_id=item[10],
+                    description=item[11],
+                    brand_id=item[12],
+                    brand=item[13],
+                    warranty_time=item[14],
+                    product_details_id=item[15],
+                    status=item[16]
+                )
                 for item in result
             ]
-            return None, data
+            return None, products
         except Exception as e:
             logger.error("Error en find_all_products: %s", e, exc_info=True)
             return "Error al intentar obtener los productos", None
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def find_all_product_status():
-        connection = get_connection()
+    def find_product_by_id(product_id: int, connection):
         cursor = connection.cursor()
+
+        try:
+            cursor.execute(
+                "SELECT product_status FROM PRODUCTS WHERE product_id = %s",
+                (product_id,)
+            )
+
+            return cursor.fetchone()
+        except Exception as e:
+            logger.error("Error en find_product_by_id: %s", e, exc_info=True)
+            return "Error al intentar obtener el producto", None
+        finally:
+            cursor.close()
+
+    @staticmethod
+    def find_all_product_status(connection):
+        cursor = connection.cursor()
+
         try:
             cursor.execute("""
             SELECT DISTINCT
@@ -172,61 +178,41 @@ class ProductsRepository:
 
             return None, data
         except Exception as e:
-            logger.error("Error en find_all_products_status: %s",
-                         e, exc_info=True)
-            return "Error al intentar obtener los estados", None
+            logger.error(
+                "Error en find_all_products_status: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener los estados de los productos", None
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def create_product(product_data: Product):
-        data = product_data.model_dump()
-        connection = get_connection()
+    def create_product(product_data: CreateProduct, product_details_id: int, connection):
         cursor = connection.cursor()
 
         try:
-            error, success, message, product_details_id = ProductDetailsRepository.create_product_details(ProductDetails(
-                model=data["model"],
-            ))
-
-            if error is not None or not success:
-                return error, success, message
-
             cursor.execute("""
             INSERT INTO PRODUCTS (
                 subcategory_id,
                 product_details_id
-            ) VALUES (%s, %s)""",
-                           (data["subcategory"], product_details_id))
-            connection.commit()
+            ) VALUES (%s, %s)""", (
+                product_data["subcategory"],
+                product_details_id
+            ))
 
             product_id = cursor.lastrowid
 
-            error, success, message = ProductSerialsRepository.create_product_serial(ProductSerial(
-                serial=data["serial"],
-                product_id=product_id,
-                input_order=data["input_order"],
-                warranty_time=data["warranty_time"]
-            ))
-
-            if error is not None or not success:
-                return error, success, message
-
-            connection.commit()
-
-            return None, True, "Producto creado correctamente"
+            return None, True, "Producto creado correctamente", product_id
         except Exception as e:
-            connection.rollback()
             logger.error("Error en create_product: %s", e, exc_info=True)
             return "Error al intentar crear el producto", False, None
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def update_product(product_data: UpdateProduct):
-        data = product_data.model_dump(exclude_none=True)
+    def update_product(product_data: UpdateProduct, connection):
+        cursor = connection.cursor()
 
         PRODUCT_FIELD_MAP = {
             "subcategory": "subcategory_id",
@@ -240,54 +226,16 @@ class ProductsRepository:
             "product_details_id"
         }
 
-        connection = get_connection()
-        cursor = connection.cursor()
-
         try:
-            cursor.execute(
-                "SELECT product_id FROM PRODUCTS WHERE product_id = %s",
-                (data["id"],)
-            )
-
-            product = cursor.fetchone()
-
-            if not product:
-                return "Producto no encontrado", False, None
-
-            # Solo actualiza details si vino brand o model
-            if details_fields := {
-                key: data[key]
-                for key in ["brand", "model"]
-                if key in data
-            }:
-                error, success, message = ProductDetailsRepository.update_product_details(
-                    UpdateProductDetails(
-                        product_details_id=data["product_details_id"], **details_fields), cursor
-                )
-                if error is not None or not success:
-                    return error, success, message
-
-            # Solo actualiza serial si vino alguno de estos campos
-            if serial_fields := {
-                key: data[key]
-                for key in ["serial", "input_order", "warranty_time"]
-                if key in data
-            }:
-                error, success, message = ProductSerialsRepository.update_product_serial(
-                    UpdateProductSerial(
-                        id=data["id"],
-                        **serial_fields
-                    ), cursor
-                )
-                if error is not None or not success:
-                    return error, success, message
-
             # Campos de PRODUCTS — traduce con el mapa antes de construir el query
             product_fields = {
-                key: data[key]
+                key: product_data[key]
                 for key in ["subcategory", "status", "model"]
-                if key in data
+                if key in product_data
             }
+
+            if not product_fields:
+                return None, True, "Producto actualizado correctamente"
 
             if product_fields:
                 mapped = {
@@ -299,65 +247,48 @@ class ProductsRepository:
                 invalid_columns = mapped.keys() - ALLOWED_COLUMNS
                 if invalid_columns:
                     logger.error(
-                        "Columnas no permitidas en update_product: %s", invalid_columns)
+                        "Columnas no permitidas en update_product: %s", invalid_columns
+                    )
                     return "Campos de actualización no válidos", False, None
 
                 columns = ", ".join(f"{col} = %s" for col in mapped.keys())
-                values = list(mapped.values()) + [data["id"]]
+                values = list(mapped.values()) + [product_data["id"]]
 
                 cursor.execute(
                     f"UPDATE PRODUCTS SET {columns} WHERE product_id = %s",
                     values
                 )
 
-            connection.commit()
             return None, True, "Producto actualizado correctamente"
 
         except Exception as e:
-            connection.rollback()
             logger.error("Error en update_product: %s", e, exc_info=True)
             return "Error al intentar actualizar el producto", False, None
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def update_product_status(product_data: dict):
-        connection = get_connection()
+    def update_product_status(product_id: int, product_status: int, connection):
         cursor = connection.cursor()
 
         try:
-            cursor.execute(
-                "SELECT product_status FROM PRODUCTS WHERE product_id = %s",
-                (product_data["product_id"],)
-            )
-
-            product = cursor.fetchone()
-
-            if not product:
-                return "Producto no encontrado", False, None
-
-            if product[0] == 0 and (product_data["product_status"] == 2 or product_data["product_status"] == 3):
-                return "No puedes vender o crear una garantía con un producto deshabilitado", False, None
-
             cursor.execute("""
                 UPDATE PRODUCTS SET
                     product_status = %s
                 WHERE product_id = %s
-                """, (product_data["product_status"], product_data["product_id"])
+                """, (product_status, product_id)
             )
-
-            connection.commit()
 
             return None, True, "Estado del producto actualizado correctamente"
         except Exception as e:
-            connection.rollback()
-            logger.error("Error en update_product_status: %s",
-                         e, exc_info=True)
+            logger.error(
+                "Error en update_product_status: %s",
+                e,
+                exc_info=True
+            )
             return "Error al intentar actualizar el estado del producto", False, None
         finally:
             cursor.close()
-            connection.close()
 
 #   ------------ REPORTES DE PRODUCTOS ------------
 
@@ -403,7 +334,6 @@ class ProductsRepository:
             return "Error al intentar obtener los productos recientes", None
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
     def find_products_by_status():
@@ -441,7 +371,6 @@ class ProductsRepository:
             return "Error al intentar obtener los productos por estado", None
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
     def find_products_growth(period: str):
@@ -486,7 +415,6 @@ class ProductsRepository:
             return "Error al intentar obtener el crecimento de los productos", None
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
     def find_products_by_brand(period: str):
@@ -530,4 +458,3 @@ class ProductsRepository:
             return "Error al intentar obtener las marcas", None
         finally:
             cursor.close()
-            connection.close()

@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 
-class ProductSerial(BaseModel):
+class CreateProductSerial(BaseModel):
     serial: str
     product_id: int
     input_order: int

@@ -1,18 +1,37 @@
-from app.models.product_serial_model import ProductSerial, UpdateProductSerial
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
-from app.core.database import get_connection
 from app.utils.logger import get_logger
+from dateutil.relativedelta import relativedelta
+from app.features.products.models.product_serial_model import CreateProductSerial, UpdateProductSerial
 
-logger = get_logger(__name__)
+logger = get_logger("product_serials.repository")
 
 
 class ProductSerialsRepository:
 
     @staticmethod
-    def create_product_serial(serial_data: ProductSerial):
+    def find_product_id_by_serial(serial: str, connection):
+        cursor = connection.cursor()
+        try:
+            cursor.execute("""
+            SELECT product_id FROM PRODUCT_SERIALS WHERE product_serial = %s
+            """, (serial,))
+            row = cursor.fetchone()
+            if not row:
+                return "Serial no encontrado"
+
+            return row[0]
+        except Exception as e:
+            logger.error(
+                "Error en find_product_id_by_serial: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al buscar el serial"
+
+    @staticmethod
+    def create_product_serial(serial_data: CreateProductSerial, connection):
         data = serial_data.model_dump()
-        connection = get_connection()
+
         cursor = connection.cursor()
         try:
             warranty_time = None
@@ -26,9 +45,7 @@ class ProductSerialsRepository:
             """, (data["serial"],))
 
             if cursor.fetchone():
-                cursor.close()
-                connection.close()
-                return f"Este serial ya esta registrado", False, None
+                return "Este serial ya esta registrado", False, None
 
             cursor.execute("""
             INSERT INTO PRODUCT_SERIALS(
@@ -37,21 +54,25 @@ class ProductSerialsRepository:
                 input_order_id,
                 product_garanty_input
             ) VALUES (%s, %s, %s, %s)
-            """,
-                           (
-                               data["serial"],
-                               data["product_id"],
-                               data["input_order"],
-                               warranty_time
-                           ))
+            """, (
+                data["serial"],
+                data["product_id"],
+                data["input_order"],
+                warranty_time
+            ))
 
             connection.commit()
 
             return None, True, "Serial del producto creado correctamente"
         except Exception as e:
-            logger.error("Error en create_product_serial: %s",
-                         e, exc_info=True)
+            logger.error(
+                "Error en create_product_serial: %s",
+                e,
+                exc_info=True
+            )
             return "Error al crear el serial del producto", False, None
+        finally:
+            cursor.close()
 
     @staticmethod
     def update_product_serial(serial_data: UpdateProductSerial, cursor):
