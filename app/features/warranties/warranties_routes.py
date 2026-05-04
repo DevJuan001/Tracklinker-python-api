@@ -55,13 +55,3 @@ def update_warranty(
     warranty_data: WarrantyUpdate,
 ):
     return WarrantiesController.update_warranty(warranty_incidents_id, warranty_data)
-
-@router.delete(
-    "/delete/{warranty_incidents_id}",
-    dependencies=[
-        Depends(RateLimiter(times=30, seconds=60)),
-        Depends(require_roles(["Admin"]))
-    ]
-)
-def delete_warranty(warranty_incidents_id:int):
-  return WarrantiesController.delete_warranty(warranty_incidents_id)
