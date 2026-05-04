@@ -1,33 +1,34 @@
-from app.repository.user_repository import UserRepository
-from app.repository.suppliers_repository import SuppliersRepository
-from app.features.warranties.warranties_repository import WarrantiesRepository
-from app.repository.category_repository import CategoryRepository
-from app.repository.subcategories_repository import SubcategoriesRepository
-from app.repository.products_repository import ProductsRepository
-from app.repository.output_orders_repository import OutputOrdersRepository
 from fastapi import HTTPException
+from app.repository.user_repository import UserRepository
+from app.repository.category_repository import CategoryRepository
+from app.repository.suppliers_repository import SuppliersRepository
+from app.repository.output_orders_repository import OutputOrdersRepository
+from app.repository.subcategories_repository import SubcategoriesRepository
+from app.features.warranties.warranties_repository import WarrantiesRepository
+from app.features.products.repositories.products_repository import ProductsRepository
+
 
 class ReportsController:
 
-#   ------------ REPORTES DE USUARIOS ------------
+    #   ------------ REPORTES DE USUARIOS ------------
     @staticmethod
     def get_recent_users():
         error, user = UserRepository.find_recent_users()
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-           "data": user
+            "data": user
         }
-    
+
     @staticmethod
     def get_users_by_rol(period: str):
         error, user = UserRepository.find_users_by_rol(period)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-           "data": user
+            "data": user
         }
-    
+
     @staticmethod
     def get_users_by_month(period: str):
         error, data = UserRepository.find_users_by_month(period)
@@ -36,14 +37,14 @@ class ReportsController:
         return {
             "data": data
         }
-    
+
     @staticmethod
     def get_user_growth(period: str):
         error, data = UserRepository.find_users_growth(period)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
 
     @staticmethod
@@ -52,7 +53,7 @@ class ReportsController:
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
 
 #   ------------ REPORTES DE PRODUCTOS ------------
@@ -71,29 +72,30 @@ class ReportsController:
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
     @staticmethod
     def get_products_by_brand(period: str):
         error, data = ProductsRepository.find_products_by_brand(period)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
     @staticmethod
     def get_products_by_status():
         error, data = ProductsRepository.find_products_by_status()
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
 
 #   ------------ REPORTES DE CATEGORIAS ------------
+
     @staticmethod
     def get_recent_categories():
         error, categories = CategoryRepository.find_recent_categories()
@@ -109,27 +111,27 @@ class ReportsController:
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
     @staticmethod
     def get_categories_by_brand(period: str):
         error, data = CategoryRepository.find_categories_by_brand(period)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
     @staticmethod
     def get_categories_by_status():
         error, data = CategoryRepository.find_categories_by_status()
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
 #   ------------ REPORTES DE SUBCATEGORIAS ------------
     @staticmethod
     def get_recent_subcategories():
@@ -146,27 +148,28 @@ class ReportsController:
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
     @staticmethod
     def get_subcategories_by_category(period: str):
-        error, data = SubcategoriesRepository.find_subcategories_by_category(period)
+        error, data = SubcategoriesRepository.find_subcategories_by_category(
+            period)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
     @staticmethod
     def get_subcategories_by_status():
         error, data = SubcategoriesRepository.find_subcategories_by_status()
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
 #   ------------ REPORTES DE GARANTÍAS ------------
     @staticmethod
     def get_recent_warranties():
@@ -183,27 +186,27 @@ class ReportsController:
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
     @staticmethod
     def get_warranties_by_brand(period: str):
         error, data = WarrantiesRepository.find_warranties_by_brand(period)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
     @staticmethod
     def get_warranties_by_status():
         error, data = WarrantiesRepository.find_warranties_by_status()
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
 #   ------------ REPORTES DE PROVEEDORES ------------
     @staticmethod
     def get_recent_suppliers():
@@ -220,29 +223,30 @@ class ReportsController:
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
     @staticmethod
     def get_suppliers_by_brand(period: str):
         error, data = SuppliersRepository.find_suppliers_by_brand(period)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
     @staticmethod
     def get_suppliers_by_status():
         error, data = SuppliersRepository.find_suppliers_by_status()
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
 
 #   ------------ REPORTES DE ORDENES DE SALIDA ------------
+
     @staticmethod
     def get_recent_outputs():
         error, outputs = OutputOrdersRepository.find_recent_outputs()
@@ -258,23 +262,23 @@ class ReportsController:
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
     @staticmethod
     def get_outputs_by_brand(period: str):
         error, data = OutputOrdersRepository.find_outputs_by_brand(period)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
-    
+
     @staticmethod
     def get_outputs_by_status():
         error, data = OutputOrdersRepository.find_outputs_by_status()
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
-            "data": data 
+            "data": data
         }
