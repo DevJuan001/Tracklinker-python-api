@@ -6,7 +6,7 @@ from app.features.products.services.products_service import ProductsService
 from app.features.products.services.input_orders_service import InputOrdersService
 from app.features.products.services.product_brands_service import ProductBrandsService
 from app.features.products.services.product_models_service import ProductModelsService
-from app.features.products.models.product_model import UpdateProduct, CreateProduct, ProductsFilter
+from app.features.products.models.product_model import UpdateProduct, CreateProduct, ProductsFilter, UpdateProductStatus
 
 
 class ProductsController:
@@ -131,7 +131,7 @@ class ProductsController:
         }
 
     @staticmethod
-    def update_product_status(product_data: dict):
+    def update_product_status(product_data: UpdateProductStatus):
         error, success, message = ProductsService.update_product_status(
             product_data
         )
