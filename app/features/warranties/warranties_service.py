@@ -1,9 +1,10 @@
-from app.features.warranties.warranties_repository import WarrantiesRepository
-from app.features.warranties.warranties_model import WarrantyUpdate, WarrantiesFilter, CreateWarranty
-from app.repository.product_serials_repository import ProductSerialsRepository
-from app.repository.products_repository import ProductsRepository
-from app.core.database import get_connection
+from app.core.exception import ServiceError
 from app.utils.logger import get_logger
+from app.core.database import get_connection
+from app.features.warranties.warranties_repository import WarrantiesRepository
+from app.features.products.repositories.products_repository import ProductsRepository
+from app.features.products.repositories.product_serials_repository import ProductSerialsRepository
+from app.features.warranties.warranties_model import WarrantyUpdate, WarrantiesFilter, CreateWarranty
 
 logger = get_logger("warranties.service")
 
@@ -47,6 +48,7 @@ class WarrantiesService:
     @staticmethod
     def create_warranty(warranty_data: CreateWarranty):
         data = warranty_data.model_dump()
+
         connection = get_connection()
 
         try:
@@ -55,31 +57,35 @@ class WarrantiesService:
                 data["product_serial"], connection
             )
             if not product_id:
-                return "Serial no encontrado", False, None
+                raise ServiceError("Serial no encontrado")
 
             # Verificar que el producto no tenga una garantía activa
             existing = WarrantiesRepository.find_active_warranty_by_serial(
                 data["product_serial"], connection
             )
             if existing:
-                return "El producto ya tiene una garantía activa", False, None
+                raise ServiceError("El producto ya tiene una garantía activa")
 
             # Actualizar estado del producto a en garantía (4)
             error, success, message = ProductsRepository.update_product_status(
                 product_id, 4, connection
             )
             if error:
-                return error, success, message
+                raise ServiceError(error)
 
             error, success, message = WarrantiesRepository.create_warranty(
                 data, connection
             )
             if error:
-                return error, success, message
+                raise ServiceError(error)
 
             connection.commit()
 
             return None, success, message
+
+        except ServiceError as e:
+            return e.message, False, None
+
         except Exception as e:
             connection.rollback()
             logger.error("Error en create_warranty: %s", e, exc_info=True)
@@ -115,14 +121,16 @@ class WarrantiesService:
                 product_serial = data.get("product_serial")
 
                 if not product_serial:
-                    return "Serial requerido para este estado", False, None
+                    raise ServiceError(
+                        "Serial requerido para cambiarle el estado"
+                    )
 
                 product_id = ProductSerialsRepository.find_product_id_by_serial(
                     product_serial, connection
                 )
 
                 if not product_id:
-                    return "Serial no encontrado", False, None
+                    raise ServiceError("Serial no encontrado")
 
                 new_product_status = WARRANTY_STATUS_PRODUCT_MAP[new_status]
                 error, success, message = ProductsRepository.update_product_status(
@@ -130,15 +138,19 @@ class WarrantiesService:
                 )
 
                 if error:
-                    return error, False, None
+                    raise ServiceError(error)
 
             error, success, message = WarrantiesRepository.update_warranty(
-                warranty_incidents_id=warranty_incidents_id, warranty_data=data, connection=connection)
+                warranty_incidents_id=warranty_incidents_id, warranty_data=data, connection=connection
+            )
             if error:
-                return "Error al actualizar la garantía", None, None
+                raise ServiceError(error)
 
             connection.commit()
             return None, success, message
+
+        except ServiceError as e:
+            return e.message, False, None
 
         except Exception as e:
             connection.rollback()
@@ -146,15 +158,3 @@ class WarrantiesService:
             return "Error al intentar actualizar la garantía", False, None
         finally:
             connection.close()
-
-    @staticmethod
-    def delete_warranty(warranty_incidents_id: int):
-        connection = get_connection()
-
-        error, success, message = WarrantiesRepository.delete_warranty(
-            warranty_incidents_id, connection
-        )
-
-        if error:
-            return "Error al eliminar la garantía", None, None
-        return None, success, message

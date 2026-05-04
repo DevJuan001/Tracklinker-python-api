@@ -1,12 +1,7 @@
-from datetime import datetime
 from app.utils.logger import get_logger
-from dateutil.relativedelta import relativedelta
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
 from app.features.warranties.warranties_model import Warranty, WarrantyUpdate, WarrantiesFilter, CreateWarranty
-from app.repository.products_repository import ProductsRepository
-from app.repository.output_details_repository import OutputDetailsRepository
-from app.models.output_details_model import OutputDetails
 
 logger = get_logger("warranties.repository")
 
@@ -51,6 +46,10 @@ class WarrantiesRepository:
         if "status" in data:
             filters.append("warranty_status = %s")
             values.append(data["status"])
+
+        if "city" in data:
+            filters.append("warranty_city = %s")
+            values.append(data["city"])
 
         if filters:
             query += " WHERE " + " AND ".join(filters)
@@ -112,6 +111,9 @@ class WarrantiesRepository:
                 AND warranty_status NOT IN (1, 4)
             """, (product_serial,))
             return cursor.fetchone()
+        except Exception as e:
+            logger.error("Error en find_active_warranty_by_serial: %s", e, exc_info=True)
+            return None
         finally:
             cursor.close()
 
@@ -188,22 +190,6 @@ class WarrantiesRepository:
         except Exception as e:
             logger.error("Error en update_warranty: %s", e, exc_info=True)
             return "Error al intentar actualizar la garantía", False, None
-        finally:
-            cursor.close()
-
-    @staticmethod
-    def delete_warranty(warranty_incidents_id: int, connection):
-        cursor = connection.cursor()
-        query = """
-        DELETE FROM WARRANTY_INCIDENTS WHERE warranty_incidents_id = %s
-        """
-        try:
-            cursor.execute(query, (warranty_incidents_id,))
-            connection.commit()
-            return None, True, "Garantía eliminada correctamente"
-        except Exception as e:
-            logger.error("Error en delete_warranty: %s", e, exc_info=True)
-            return "Error al intentar eliminar la garantía", None, None
         finally:
             cursor.close()
 
