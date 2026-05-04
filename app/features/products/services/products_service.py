@@ -1,10 +1,13 @@
+from fastapi import status
+from app.features.warranties.warranties_model import WarrantyUpdate
+from app.features.warranties.warranties_repository import WarrantiesRepository
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
 from app.features.products.repositories.products_repository import ProductsRepository
 from app.features.products.repositories.product_details_repository import ProductDetailsRepository
 from app.features.products.repositories.product_serials_repository import ProductSerialsRepository
-from app.features.products.models.product_model import ProductsFilter, UpdateProduct, CreateProduct
+from app.features.products.models.product_model import ProductsFilter, UpdateProduct, CreateProduct, UpdateProductStatus
 from app.features.products.models.product_serial_model import CreateProductSerial, UpdateProductSerial
 from app.features.products.models.product_details_model import CreateProductDetails, UpdateProductDetails
 
@@ -151,5 +154,56 @@ class ProductsService:
         except Exception as e:
             logger.error("Error en update_product: %s", e, exc_info=True)
             return "Error al intentar actualizar el producto", False, None
+        finally:
+            connection.close()
+
+    @staticmethod
+    def update_product_status(product_data: UpdateProductStatus):
+        data = product_data.model_dump()
+
+        connection = get_connection()
+
+        try:
+
+            product = ProductsRepository.find_product_by_id(
+                data["product_id"], connection
+            )
+
+            if not product:
+                return "Producto no encontrado", False, None
+
+            if product[0] == 1 and data["status"] in (3, 4):
+                return "No puedes vender o crear una garantía con un producto deshabilitado", False, None
+
+            if data["status"] == 1:
+                active_warranty_id = WarrantiesRepository.find_active_warranty_by_serial(
+                    data["product_serial"], connection
+                )
+
+                if active_warranty_id:
+                    raise ServiceError(
+                        "No puedes deshabilitar un producto con una garantía vigente"
+                    )
+
+            error, success, message = ProductsRepository.update_product_status(
+                data["product_id"], data["status"], connection
+            )
+
+            if error:
+                raise ServiceError(error)
+
+            connection.commit()
+            return error, success, message
+
+        except ServiceError as e:
+            return e.message, False, None
+
+        except Exception as e:
+            logger.error(
+                "Error en update_product_status: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar actualizar el estado producto", False, None
         finally:
             connection.close()
