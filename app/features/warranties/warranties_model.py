@@ -18,6 +18,7 @@ class Warranty(BaseModel):
 class WarrantiesFilter(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
+    city: Optional[int] = None
     status: Optional[int] = None
 
 class CreateWarranty(BaseModel):
