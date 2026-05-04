@@ -82,6 +82,10 @@ class WarrantiesService:
             connection.commit()
 
             return None, success, message
+
+        except ServiceError as e:
+            return e.message, False, None
+
         except Exception as e:
             connection.rollback()
             logger.error("Error en create_warranty: %s", e, exc_info=True)
