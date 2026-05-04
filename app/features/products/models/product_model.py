@@ -54,3 +54,8 @@ class CreateProduct(BaseModel):
     serial: str
     model: int
     warranty_time: int
+
+class UpdateProductStatus(BaseModel):
+    product_id: int
+    product_serial: str
+    status: int
