@@ -79,7 +79,7 @@ class WarrantiesService:
                 )
             )
 
-            # Actualizar estado del producto a en garantía (4)
+            # Actualizar estado del producto a en garantía
             error, success, message = ProductsRepository.update_product_status(
                 product_id, 4, connection
             )
