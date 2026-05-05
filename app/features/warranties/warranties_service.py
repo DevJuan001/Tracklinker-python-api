@@ -1,8 +1,10 @@
-from app.core.exception import ServiceError
-from app.features.warranties.technicians_repository import TechniciansRepository
 from app.utils.logger import get_logger
 from app.core.database import get_connection
+from app.core.exception import ServiceError
+from app.models.output_details_model import CreateOutputDetails
+from app.repository.output_details_repository import OutputDetailsRepository
 from app.features.warranties.warranties_repository import WarrantiesRepository
+from app.features.warranties.technicians_repository import TechniciansRepository
 from app.features.products.repositories.products_repository import ProductsRepository
 from app.features.products.repositories.product_serials_repository import ProductSerialsRepository
 from app.features.warranties.warranties_model import WarrantyUpdate, WarrantiesFilter, CreateWarranty
@@ -64,9 +66,18 @@ class WarrantiesService:
             existing = WarrantiesRepository.find_active_warranty_by_serial(
                 data["product_serial"], connection
             )
-            
+
             if existing:
                 raise ServiceError("El producto ya tiene una garantía activa")
+
+            # Crear la orden de salida del producto
+            error, success, message = OutputDetailsRepository.create(
+                CreateOutputDetails(
+                    product_serial=data["product_serial"],
+                    out_product_garanty="",
+                    product_transformation="No necesita",
+                )
+            )
 
             # Actualizar estado del producto a en garantía (4)
             error, success, message = ProductsRepository.update_product_status(
