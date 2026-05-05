@@ -1,4 +1,5 @@
 from app.core.exception import ServiceError
+from app.features.warranties.technicians_repository import TechniciansRepository
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.features.warranties.warranties_repository import WarrantiesRepository
@@ -46,7 +47,7 @@ class WarrantiesService:
             return "Error al intentar obtener la garantía", None
 
     @staticmethod
-    def create_warranty(warranty_data: CreateWarranty):
+    def create_warranty(warranty_data: CreateWarranty, user_id: int):
         data = warranty_data.model_dump()
 
         connection = get_connection()
@@ -63,6 +64,7 @@ class WarrantiesService:
             existing = WarrantiesRepository.find_active_warranty_by_serial(
                 data["product_serial"], connection
             )
+            
             if existing:
                 raise ServiceError("El producto ya tiene una garantía activa")
 
@@ -74,7 +76,7 @@ class WarrantiesService:
                 raise ServiceError(error)
 
             error, success, message = WarrantiesRepository.create_warranty(
-                data, connection
+                data, user_id, connection
             )
             if error:
                 raise ServiceError(error)
@@ -94,7 +96,7 @@ class WarrantiesService:
             connection.close()
 
     @staticmethod
-    def update_warranty(warranty_incidents_id: int, warranty_data: WarrantyUpdate):
+    def update_warranty(warranty_incidents_id: int, user_id: int, warranty_data: WarrantyUpdate):
         data = warranty_data.model_dump(exclude_none=True)
         connection = get_connection()
 
@@ -106,6 +108,7 @@ class WarrantiesService:
         }
 
         try:
+            # Buscamos si existe la garantía
             warranty = WarrantiesRepository.find_warranty_by_id(
                 warranty_incidents_id, connection
             )
@@ -116,6 +119,21 @@ class WarrantiesService:
                 return "No hay campos para actualizar", False, None
 
             new_status = data.get("status")
+            current_status = warranty["warranty_status"]
+
+            if new_status == 3 and current_status == 2:
+                error, success, message = TechniciansRepository.assign_technician(
+                    warranty_incidents_id, user_id, connection
+                )
+                if error:
+                    raise ServiceError(error)
+
+            elif new_status == 1 and current_status in (2, 3, 4):
+                error, success, message = TechniciansRepository.unassign_technician(
+                    warranty_incidents_id, connection
+                )
+                if error:
+                    raise ServiceError(error)
 
             if new_status in WARRANTY_STATUS_PRODUCT_MAP:
                 product_serial = data.get("product_serial")
