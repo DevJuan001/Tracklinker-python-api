@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from fastapi_limiter.depends import RateLimiter
+from app.middlewares.jwt_middleware import verify_jwt
 from app.middlewares.roles_middleware import require_roles
 from app.features.warranties.warranties_controller import WarrantiesController
 from app.features.warranties.warranties_model import WarrantyUpdate, WarrantiesFilter, CreateWarranty
@@ -39,8 +40,11 @@ def get_warranty_by_id(warranty_incidents_id: int):
         Depends(require_roles(["Admin"]))
     ]
 )
-def create_warranty(warranty_data: CreateWarranty):
-    return WarrantiesController.create_warranty(warranty_data)
+def create_warranty(
+    warranty_data: CreateWarranty,
+    payload: dict = Depends(verify_jwt)
+):
+    return WarrantiesController.create_warranty(warranty_data, payload)
 
 # Endpoint para actualizar la informacion de la garantía mediante su id
 @router.put(
@@ -53,5 +57,6 @@ def create_warranty(warranty_data: CreateWarranty):
 def update_warranty(
     warranty_incidents_id: int,
     warranty_data: WarrantyUpdate,
+    payload: dict = Depends(verify_jwt)
 ):
-    return WarrantiesController.update_warranty(warranty_incidents_id, warranty_data)
+    return WarrantiesController.update_warranty(warranty_incidents_id, payload, warranty_data)
