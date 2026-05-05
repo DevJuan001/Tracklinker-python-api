@@ -301,16 +301,18 @@ class ProductsRepository:
         SELECT
             pd.product_detail_date,
             ps.product_serial,
-            pd.product_detail_model,
+            pm.product_model_name,
             pb.product_brand_name,
             p.product_status
         FROM PRODUCT_SERIALS as ps
         INNER JOIN PRODUCTS as p
-        ON ps.product_id = p.product_id
+            ON ps.product_id = p.product_id
         INNER JOIN PRODUCT_DETAILS as pd
-        ON p.product_details_id = pd.product_details_id
+            ON p.product_details_id = pd.product_details_id
+        INNER JOIN PRODUCT_MODELS as pm
+            ON pd.product_model_id = pm.product_model_id
         INNER JOIN PRODUCT_BRANDS as pb
-        ON pd.product_brand_id = pb.product_brand_id
+            ON pm.product_brand_id = pb.product_brand_id
         ORDER BY pd.product_detail_date DESC
         LIMIT 6
         """
@@ -322,7 +324,7 @@ class ProductsRepository:
                 {
                     "input_date": date_formatter(item["product_detail_date"]),
                     "serial": item["product_serial"],
-                    "model": item["product_detail_model"],
+                    "model": item["product_model_name"],
                     "brand": item["product_brand_name"],
                     "status": item["product_status"]
                 }
@@ -366,8 +368,11 @@ class ProductsRepository:
             results = cursor.fetchall()
             return None, results
         except Exception as e:
-            logger.error("Error en find_products_by_status: %s",
-                         e, exc_info=True)
+            logger.error(
+                "Error en find_products_by_status: %s",
+                e,
+                exc_info=True
+            )
             return "Error al intentar obtener los productos por estado", None
         finally:
             cursor.close()
@@ -433,8 +438,10 @@ class ProductsRepository:
         FROM PRODUCTS as p
         INNER JOIN PRODUCT_DETAILS as pd
             ON p.product_details_id = pd.product_details_id
+        INNER JOIN PRODUCT_MODELS as pm
+            ON pd.product_model_id = pm.product_model_id
         INNER JOIN PRODUCT_BRANDS as pb
-            ON pd.product_brand_id = pb.product_brand_id
+            ON pm.product_brand_id = pb.product_brand_id
         WHERE pd.product_detail_date >= DATE_SUB(NOW(), INTERVAL {interval})
         GROUP BY pb.product_brand_name
         ORDER BY pb.product_brand_name ASC
