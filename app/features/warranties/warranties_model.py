@@ -6,6 +6,8 @@ class Warranty(BaseModel):
     id: int
     product_serial: str
     customer: str
+    created_by: str
+    assigned_to: Optional[str] = None
     phone: str
     address: str
     description: str
