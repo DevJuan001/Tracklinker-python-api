@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from app.middlewares.roles_middleware import require_roles
-from app.controllers.reports_controller import ReportsController
+from app.features.reports.reports_controller import ReportsController
 
 router = APIRouter(
     prefix="/api/reports",
