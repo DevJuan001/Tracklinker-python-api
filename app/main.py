@@ -5,8 +5,8 @@ from fastapi_limiter import FastAPILimiter
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import get_connection
 from app.routes import user_routes, dashboard_routes, category_routes, subcategories_routes, auth_routes, suggestion_routes, suppliers_routes
-from app.features.reports import reports_routes
-from app.features.products import products_routes
+from app.features.reports.routes import reports_routes
+from app.features.products.routes import products_routes
 from app.features.warranties.routes import warranties_routes
 from app.features.output_orders.routes import output_orders_routes
 
