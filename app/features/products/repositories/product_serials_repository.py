@@ -9,17 +9,25 @@ logger = get_logger("product_serials.repository")
 class ProductSerialsRepository:
 
     @staticmethod
-    def find_product_id_by_serial(serial: str, connection):
+    def find_product_by_serial(serial: str, connection):
         cursor = connection.cursor()
         try:
             cursor.execute("""
-            SELECT product_id FROM PRODUCT_SERIALS WHERE product_serial = %s
+            SELECT
+                ps.product_id,
+                p.product_status
+            FROM PRODUCT_SERIALS AS ps
+            INNER JOIN PRODUCTS as p
+                ON ps.product_id = p.product_id
+            WHERE product_serial = %s
             """, (serial,))
-            row = cursor.fetchone()
-            if not row:
+
+            product = cursor.fetchone()
+
+            if not product:
                 return "Serial no encontrado"
 
-            return row[0]
+            return product
         except Exception as e:
             logger.error(
                 "Error en find_product_id_by_serial: %s",
@@ -42,7 +50,7 @@ class ProductSerialsRepository:
 
             cursor.execute("""
             SELECT product_id FROM PRODUCT_SERIALS WHERE product_serial = %s 
-            """, (data["serial"],))
+            """, (data["product_serial"],))
 
             if cursor.fetchone():
                 return "Este serial ya esta registrado", False, None
@@ -55,9 +63,9 @@ class ProductSerialsRepository:
                 product_garanty_input
             ) VALUES (%s, %s, %s, %s)
             """, (
-                data["serial"],
+                data["product_serial"],
                 data["product_id"],
-                data["input_order"],
+                data["input_order_id"],
                 warranty_time
             ))
 
@@ -75,12 +83,14 @@ class ProductSerialsRepository:
             cursor.close()
 
     @staticmethod
-    def update_product_serial(serial_data: UpdateProductSerial, cursor):
+    def update_product_serial(serial_data: UpdateProductSerial, connection):
         SERIAL_FIELD_MAP = {
-            "serial":       "product_serial",
-            "input_order":  "input_order_id",
+            "product_serial": "product_serial",
+            "input_order_id": "input_order_id",
             "warranty_time": "product_garanty_input",
         }
+
+        cursor = connection.cursor()
 
         data = serial_data.model_dump(exclude_none=True)
         data.pop("id", None)
