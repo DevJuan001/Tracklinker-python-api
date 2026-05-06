@@ -1,7 +1,8 @@
 from app.utils.logger import get_logger
 from app.utils.date_formatter import date_formatter
+from app.core.database import get_connection
 from app.utils.periods import period_map, daily_periods
-from app.features.warranties.warranties_model import Warranty, WarrantyUpdate, WarrantiesFilter, CreateWarranty
+from app.features.warranties.models.warranties_model import Warranty, WarrantyUpdate, WarrantiesFilter, CreateWarranty
 
 logger = get_logger("warranties.repository")
 
@@ -26,10 +27,18 @@ class WarrantiesRepository:
             wi.warranty_city,
             c.city_name,
             wi.warranty_date,
-            wi.warranty_status
+            wi.warranty_status,
+            CONCAT(u.user_name, ' ', u.user_first_surname) AS created_by,
+            CONCAT(tech.user_name, ' ', tech.user_first_surname) AS assigned_to
         FROM WARRANTY_INCIDENTS AS wi
         INNER JOIN CITIES as c
             ON wi.warranty_city = c.city_id
+        INNER JOIN USERS AS u
+            ON wi.created_by = u.user_id
+        LEFT JOIN TECHNICAL AS t
+            ON wi.warranty_incidents_id = t.warranty_incidents_id
+        LEFT JOIN USERS AS tech
+            ON t.user_id = tech.user_id
         """
 
         filters = []
@@ -63,6 +72,8 @@ class WarrantiesRepository:
                     id=item["warranty_incidents_id"],
                     product_serial=item["product_serial"],
                     customer=item["warranty_customer"],
+                    created_by=item["created_by"],
+                    assigned_to=item["assigned_to"],
                     phone=item["warranty_phone"],
                     address=item["warranty_address"],
                     description=item["warranty_description"],
@@ -89,7 +100,7 @@ class WarrantiesRepository:
 
         # Petición a la base de datos
         query = """
-        SELECT warranty_customer FROM WARRANTY_INCIDENTS WHERE warranty_incidents_id = %s
+        SELECT warranty_customer, warranty_status FROM WARRANTY_INCIDENTS WHERE warranty_incidents_id = %s
         """
         try:
             cursor.execute(query, (warranty_incidents_id,))
@@ -105,21 +116,22 @@ class WarrantiesRepository:
         cursor = connection.cursor(dictionary=True)
         try:
             cursor.execute("""
-                SELECT warranty_incidents_id 
+                SELECT
+                    warranty_incidents_id 
                 FROM WARRANTY_INCIDENTS 
-                WHERE product_serial = %s 
-                AND warranty_status NOT IN (1, 4)
+                    WHERE product_serial = %s 
+                    AND warranty_status IN (2, 3)
             """, (product_serial,))
             return cursor.fetchone()
         except Exception as e:
-            logger.error("Error en find_active_warranty_by_serial: %s", e, exc_info=True)
+            logger.error(
+                "Error en find_active_warranty_by_serial: %s", e, exc_info=True)
             return None
         finally:
             cursor.close()
 
     @staticmethod
-    def create_warranty(warranty_data: CreateWarranty, connection):
-
+    def create_warranty(warranty_data: CreateWarranty, user_id: int, connection):
         cursor = connection.cursor()
 
         # Petición a la base de datos
@@ -131,8 +143,9 @@ class WarrantiesRepository:
             warranty_address,
             warranty_description,
             warranty_link_attachments,
-            warranty_city
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            warranty_city,
+            created_by
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
 
         try:
@@ -144,13 +157,13 @@ class WarrantiesRepository:
                 warranty_data["description"],
                 warranty_data["link_attachments"],
                 warranty_data["city"],
+                user_id
             ))
             connection.commit()
 
             return None, True, "Garantía creada correctamente"
         except Exception as e:
             logger.error("Error en create_warranty: %s", e, exc_info=True)
-
             return "Error al intentar crear la garantía", None, None
         finally:
             cursor.close()
@@ -195,7 +208,6 @@ class WarrantiesRepository:
 
 
 #   ------------ REPORTES DE GARANTÍAS ------------
-
 
     @staticmethod
     def find_recent_warranties():

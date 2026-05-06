@@ -1,6 +1,6 @@
 from fastapi import HTTPException
-from app.features.warranties.warranties_model import WarrantyUpdate, WarrantiesFilter, CreateWarranty
-from app.features.warranties.warranties_service import WarrantiesService
+from app.features.warranties.services.warranties_service import WarrantiesService
+from app.features.warranties.models.warranties_model import WarrantyUpdate, WarrantiesFilter, CreateWarranty
 
 
 class WarrantiesController:
@@ -26,9 +26,9 @@ class WarrantiesController:
         }
 
     @staticmethod
-    def create_warranty(warranty_data: CreateWarranty):
+    def create_warranty(warranty_data: CreateWarranty, payload: dict):
         error, success, message = WarrantiesService.create_warranty(
-            warranty_data
+            warranty_data, payload["user_id"]
         )
         if error:
             raise HTTPException(status_code=400, detail=error)
@@ -38,9 +38,9 @@ class WarrantiesController:
         }
 
     @staticmethod
-    def update_warranty(warranty_incidents_id: int, warranty_data: WarrantyUpdate):
+    def update_warranty(warranty_incidents_id: int, payload: int, warranty_data: WarrantyUpdate):
         error, success, message = WarrantiesService.update_warranty(
-            warranty_incidents_id, warranty_data
+            warranty_incidents_id, payload["user_id"], warranty_data
         )
         if error:
             raise HTTPException(status_code=400, detail=error)

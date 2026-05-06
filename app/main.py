@@ -4,10 +4,11 @@ from fastapi import FastAPI
 from fastapi_limiter import FastAPILimiter
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import get_connection
-from app.routes import user_routes, dashboard_routes, category_routes, subcategories_routes, auth_routes, output_details_routes, suggestion_routes, suppliers_routes
-from app.features.warranties import warranties_routes
-from app.features.products import products_routes
-from app.features.reports import reports_routes
+from app.routes import user_routes, dashboard_routes, category_routes, subcategories_routes, auth_routes, suggestion_routes, suppliers_routes
+from app.features.reports.routes import reports_routes
+from app.features.products.routes import products_routes
+from app.features.warranties.routes import warranties_routes
+from app.features.output_orders.routes import output_orders_routes
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -64,7 +65,7 @@ app.include_router(user_routes.router)
 # Rutas para el modúlo de Garantias
 app.include_router(warranties_routes.router)
 # Rutas para tabla de detalles de salida
-app.include_router(output_details_routes.router)
+app.include_router(output_orders_routes.router)
 # Rutas para el modulo de categorias
 app.include_router(category_routes.router)
 # Rutas para el modulo de subcategorias

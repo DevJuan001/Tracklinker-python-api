@@ -301,10 +301,16 @@ CREATE TABLE WARRANTY_INCIDENTS (
   warranty_link_attachments VARCHAR(255) NOT NULL COMMENT'Campo que contiene la URL o el path a los archivos adjuntos (imágenes, documentos) de la garantía, como facturas o fotos del producto.',
   warranty_city INT NOT NULL COMMENT'Nombre de la ciudad del cliente. Utilizado para determinar la ubicación geográfica y asignar el caso a un centro de servicio local.' ,
   warranty_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora en que se reportó el incidente de garantía al sistema.' ,
-  warranty_status INT NOT NULL DEFAULT 2 COMMENT 'Estado actual de la garantía , 1 = Sin Completar, 2 = En Proceso, 3 = Sin Completar, Al momento de ingresar la garantia nueva se le da un estado de 0 o Sin completar',
+  warranty_status INT NOT NULL DEFAULT 2 COMMENT 'Estado actual de la garantía , 1 = Deshabilitada, 2 = Sin Empezar o pendiente, 3 = En proceso 4 = Completada, Al momento de ingresar la garantia nueva se le da un estado de 0 o Sin completar',
+  created_by INT NOT NULL COMMENT 'Usuario que creó la garantía.',
   PRIMARY KEY (warranty_incidents_id),
   UNIQUE INDEX warranty_incidents_id_UNIQUE (warranty_incidents_id ASC),
   INDEX fk_warranty_incidents_output_details_idx (product_serial ASC),
+  CONSTRAINT fk_warranties_created_by
+    FOREIGN KEY (created_by)
+    REFERENCES USERS (user_id)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE,
   CONSTRAINT fk_warranty_incidents_output_details
     FOREIGN KEY (product_serial)
     REFERENCES OUTPUT_DETAILS (product_serial)
@@ -324,6 +330,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE TECHNICAL (
   user_id INT NOT NULL COMMENT 'Identificador único y primario del usuario. Esta columna se enlaza con la tabla de usuarios.',
+  assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Cuando se asignó el técnico a la garantía.',
+  started_at TIMESTAMP NULL COMMENT 'Cuando el técnico le dio empezar (status → En Proceso). NULL si aún no ha iniciado.',
   warranty_incidents_id INT NOT NULL  COMMENT 'Identificador único para cada incidente de garantía.',
   INDEX fk_technical_warranty_incidents_idx (warranty_incidents_id ASC),
   INDEX fk_technical_users_idx (user_id ASC),
