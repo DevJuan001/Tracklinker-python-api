@@ -25,16 +25,16 @@ class ProductSerialsRepository:
             product = cursor.fetchone()
 
             if not product:
-                return "Serial no encontrado"
+                return "Serial no encontrado", None
 
-            return product
+            return product, None
         except Exception as e:
             logger.error(
                 "Error en find_product_id_by_serial: %s",
                 e,
                 exc_info=True
             )
-            return "Error al buscar el serial"
+            return "Error al buscar el serial", None
 
     @staticmethod
     def create_product_serial(serial_data: CreateProductSerial, connection):
