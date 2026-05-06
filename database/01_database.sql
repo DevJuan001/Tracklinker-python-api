@@ -272,8 +272,7 @@ CREATE TABLE OUTPUT_DETAILS (
   output_details_id INT NOT NULL AUTO_INCREMENT COMMENT ' Identificador de detalle de salida\n,  Clave primaria única que identifica cada registro individual en la tabla de detalles de salida. Este identificador se genera automáticamente por el sistema en orden secuencial y no puede ser nulo. Se utiliza para distinguir y rastrear cada línea o componente dentro de una orden de salida.',
   out_product_garanty DATE NOT NULL COMMENT 'Garantía del producto en salida\n\nIndica si el producto entregado o despachado cuenta con garantía activa o especifica el período de garantía ofrecido. Este campo es obligatorio, ya que permite hacer seguimiento a las condiciones de postventa o soporte del producto.',
   product_transformation VARCHAR(255) NOT NULL COMMENT 'Transformación del producto\n.\nIndica si el producto ha sido sometido a algún tipo de transformación antes de su salida del inventario. Esto puede incluir procesos como ensamblaje, personalización, reempaque, reparación, entre otros. El campo es obligatorio, ya que influye en el seguimiento de procesos logísticos y de control de calidad.',
-  UNIQUE INDEX idOUTPUT_DETAILS_UNIQUE (product_serial ASC),
-  INDEX fk_output_details_output_oder_idx (out_order_id ASC),
+  INDEX fk_output_details_output_order_idx (out_order_id ASC),
   PRIMARY KEY (output_details_id),
   CONSTRAINT fk_output_details_output_oder
     FOREIGN KEY (out_order_id)
