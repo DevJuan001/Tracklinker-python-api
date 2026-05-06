@@ -79,7 +79,7 @@ class WarrantiesService:
                 raise ServiceError("El producto ya tiene una garantía activa")
 
             # Crear la orden de salida del producto
-            error, success, message = OutputOrdersService.create(
+            error, success, message = OutputOrdersService.create_output_order(
                 CreateOutputDetails(
                     product_serial=data["product_serial"],
                     out_product_garanty="2040-01-01",
