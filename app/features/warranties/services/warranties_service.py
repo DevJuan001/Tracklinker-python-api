@@ -129,6 +129,15 @@ class WarrantiesService:
         }
 
         try:
+            # Verificamos que el serial existe
+            if "product_serial" in data:
+                error, product = ProductSerialsRepository.find_product_by_serial(
+                    data["product_serial"],
+                    connection
+                )
+                if error or not product:
+                    raise ServiceError(error)
+
             # Buscamos si existe la garantía
             warranty = WarrantiesRepository.find_warranty_by_id(
                 warranty_incidents_id, connection
