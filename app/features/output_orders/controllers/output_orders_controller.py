@@ -1,13 +1,14 @@
 from fastapi import HTTPException
 from app.features.output_orders.services.output_orders_service import OutputOrdersService
-from app.features.output_orders.models.output_orders_model import CreateOutputOrder, OutputOrdersFilters
+from app.features.output_orders.models.output_orders_model import CreateOutputOrder, OutputOrdersFilters, UpdateOutputOrder
 
 
 class OutputOrdersController:
 
     @staticmethod
     def get_all_output_orders(filters: OutputOrdersFilters):
-        error, output_orders = OutputOrdersService.get_all_output_orders(filters)
+        error, output_orders = OutputOrdersService.get_all_output_orders(
+            filters)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
@@ -33,26 +34,37 @@ class OutputOrdersController:
         if error:
             raise HTTPException(status_code=400, detail=error)
         return {
-            "seccess": success,
+            "success": success,
             "message": message
         }
 
     @staticmethod
-    def update_output_order(output_order_id: int, output_order_data: dict):
-        error, message, output_order = OutputOrdersService.update_output_order(
+    def update_output_order(output_order_id: int, output_order_data: UpdateOutputOrder):
+        error, success, message = OutputOrdersService.update_output_order(
             output_order_id, output_order_data
         )
         if error:
             raise HTTPException(status_code=400, detail=error)
         return {
-            "message": message,
-            "data": output_order
-
+            "success": success,
+            "message": message
         }
 
     @staticmethod
-    def delete_output_order(output_order_id: int):
-        error, success, message = OutputOrdersService.delete_output_order(
+    def disable_output_order(output_order_id: int):
+        error, success, message = OutputOrdersService.disable_output_order(
+            output_order_id
+        )
+        if error:
+            raise HTTPException(status_code=400, detail=error)
+        return {
+            "success": success,
+            "message": message
+        }
+
+    @staticmethod
+    def enable_output_order(output_order_id: int):
+        error, success, message = OutputOrdersService.enable_output_order(
             output_order_id
         )
         if error:
