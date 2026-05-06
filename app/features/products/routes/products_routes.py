@@ -3,10 +3,10 @@ from app.core.cache import invalidate_cache
 from fastapi import APIRouter, Depends, Body
 from fastapi_limiter.depends import RateLimiter
 from app.middlewares.roles_middleware import require_roles
-from app.features.products.products_controller import ProductsController
 from app.features.products.models.input_order_model import CreateInputOrder
 from app.features.products.models.product_brand_model import CreateProductBrand
 from app.features.products.models.product_models_model import CreateProductModel
+from app.features.products.controllers.products_controller import ProductsController
 from app.features.products.models.product_model import CreateProduct, UpdateProductStatus, UpdateProduct, ProductsFilter
 
 router = APIRouter(
