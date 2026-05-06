@@ -1,10 +1,15 @@
-from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
+from pydantic import BaseModel
+
 
 class CreateOutputDetails(BaseModel):
-    product_serial: str 
-    output_details_id: Optional[int] = None
-    out_product_garanty: datetime
+    product_serial: str
+    output_product_garanty: datetime
     product_transformation: str
-   
+
+
+class UpdateOutputDetails(BaseModel):
+    product_serial: Optional[str] = None
+    output_product_garanty: Optional[datetime] = None
+    product_transformation: Optional[str] = None
