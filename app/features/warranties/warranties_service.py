@@ -1,3 +1,4 @@
+from errno import EROFS
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
@@ -56,11 +57,19 @@ class WarrantiesService:
 
         try:
             # Verificar que el serial existe
-            product_id = ProductSerialsRepository.find_product_id_by_serial(
-                data["product_serial"], connection
+            product = ProductSerialsRepository.find_product_by_serial(
+                serial=data["product_serial"], connection=connection
             )
-            if not product_id:
-                raise ServiceError("Serial no encontrado")
+            if not product:
+                raise ServiceError(
+                    "Este serial no existe, rectifica que el serial este bien escrito e intentalo nuevamente"
+                )
+
+            # Validamos que el producto no este deshabilitado
+            if product[1] == 1:
+                raise ServiceError(
+                    "No puedes crear una garantía con un producto deshabilitado"
+                )
 
             # Verificar que el producto no tenga una garantía activa
             existing = WarrantiesRepository.find_active_warranty_by_serial(
@@ -74,14 +83,16 @@ class WarrantiesService:
             error, success, message = OutputDetailsRepository.create(
                 CreateOutputDetails(
                     product_serial=data["product_serial"],
-                    out_product_garanty="",
+                    out_product_garanty="2040-01-01",
                     product_transformation="No necesita",
                 )
             )
+            if error:
+                raise ServiceError(error)
 
-            # Actualizar estado del producto a en garantía
+            # Actualizar estado del producto y lo ponemos en garantía
             error, success, message = ProductsRepository.update_product_status(
-                product_id, 4, connection
+                product[0], 4, connection
             )
             if error:
                 raise ServiceError(error)
