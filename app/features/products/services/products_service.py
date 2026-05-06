@@ -1,10 +1,8 @@
-from fastapi import status
-from app.features.warranties.warranties_model import WarrantyUpdate
-from app.features.warranties.warranties_repository import WarrantiesRepository
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
 from app.features.products.repositories.products_repository import ProductsRepository
+from app.features.warranties.repositories.warranties_repository import WarrantiesRepository
 from app.features.products.repositories.product_details_repository import ProductDetailsRepository
 from app.features.products.repositories.product_serials_repository import ProductSerialsRepository
 from app.features.products.models.product_model import ProductsFilter, UpdateProduct, CreateProduct, UpdateProductStatus
@@ -64,7 +62,7 @@ class ProductsService:
         try:
             error, success, message, product_details_id = ProductDetailsRepository.create_product_details(
                 CreateProductDetails(
-                    model=data["model"],
+                    model_id=data["model_id"],
                 ), connection)
 
             if error is not None or not success:
@@ -76,9 +74,9 @@ class ProductsService:
 
             error, success, message = ProductSerialsRepository.create_product_serial(
                 CreateProductSerial(
-                    serial=data["serial"],
+                    product_serial=data["product_serial"],
                     product_id=product_id,
-                    input_order=data["input_order"],
+                    input_order_id=data["input_order_id"],
                     warranty_time=data["warranty_time"]
                 ), connection)
 
@@ -117,12 +115,13 @@ class ProductsService:
             # Actualizar details si vino brand o model
             if details_fields := {
                 key: data[key]
-                for key in ["brand", "model"]
+                for key in ["brand_id", "model_id"]
                 if key in data
             }:
                 error, success, message = ProductDetailsRepository.update_product_details(
                     UpdateProductDetails(
-                        product_details_id=data["product_details_id"], **details_fields),
+                        product_details_id=data["product_details_id"], **details_fields
+                    ),
                     connection
                 )
                 if error or not success:
@@ -131,7 +130,7 @@ class ProductsService:
              # Actualizar serial si vino alguno de estos campos
             if serial_fields := {
                 key: data[key]
-                for key in ["serial", "input_order", "warranty_time"]
+                for key in ["product_serial", "input_order_id", "warranty_time"]
                 if key in data
             }:
                 error, success, message = ProductSerialsRepository.update_product_serial(

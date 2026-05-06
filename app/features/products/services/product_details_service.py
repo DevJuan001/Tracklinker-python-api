@@ -1,7 +1,7 @@
-from app.features.products.repositories.product_details_repository import ProductDetailsRepository
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.features.products.models.product_details_model import CreateProductDetails
+from app.features.products.repositories.product_details_repository import ProductDetailsRepository
 
 
 logger = get_logger("product_details.service")

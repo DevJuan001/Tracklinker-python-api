@@ -74,7 +74,7 @@ class ProductsController:
         if error:
             raise HTTPException(status_code=400, detail=error)
         return {
-            "sucess": success,
+            "success": success,
             "message": message
         }
 

@@ -1,7 +1,7 @@
 from app.utils.logger import get_logger
 from app.core.database import get_connection
-from app.features.products.repositories.input_orders_repository import InputOrdersRepository
 from app.features.products.models.input_order_model import CreateInputOrder
+from app.features.products.repositories.input_orders_repository import InputOrdersRepository
 
 logger = get_logger("input_orders.service")
 

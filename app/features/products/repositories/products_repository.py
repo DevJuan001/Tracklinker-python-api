@@ -197,7 +197,7 @@ class ProductsRepository:
                 subcategory_id,
                 product_details_id
             ) VALUES (%s, %s)""", (
-                product_data["subcategory"],
+                product_data["subcategory_id"],
                 product_details_id
             ))
 
@@ -215,9 +215,8 @@ class ProductsRepository:
         cursor = connection.cursor()
 
         PRODUCT_FIELD_MAP = {
-            "subcategory": "subcategory_id",
+            "subcategory_id": "subcategory_id",
             "status": "product_status",
-            "model": "product_details_id",
         }
 
         ALLOWED_COLUMNS = {
@@ -230,7 +229,7 @@ class ProductsRepository:
             # Campos de PRODUCTS — traduce con el mapa antes de construir el query
             product_fields = {
                 key: product_data[key]
-                for key in ["subcategory", "status", "model"]
+                for key in ["subcategory", "status"]
                 if key in product_data
             }
 

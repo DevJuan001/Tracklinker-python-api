@@ -1,6 +1,6 @@
-from app.features.products.models.product_brand_model import CreateProductBrand
 from app.utils.logger import get_logger
 from app.core.database import get_connection
+from app.features.products.models.product_brand_model import CreateProductBrand
 from app.features.products.repositories.product_brands_repository import ProductBrandsRepository
 
 logger = get_logger("product_brands.service")
