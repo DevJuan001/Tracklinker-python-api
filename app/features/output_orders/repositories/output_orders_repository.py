@@ -1,74 +1,112 @@
-from app. core.database import get_connection
-from app.utils.periods import period_map, daily_periods
+from app.features.output_orders.models.output_orders_model import OutputOrdersFilters
+from app.utils import logger
+from app.core.database import get_connection
 from app.utils.date_formatter import date_formatter
+from app.utils.periods import period_map, daily_periods
+
+logger = logger.get_logger("output_orders.repository")
 
 
 class OutputOrdersRepository:
 
     @staticmethod
-    def find_all_output_orders():
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_all_output_orders(filters: OutputOrdersFilters, connection):
+        cursor = connection.cursor()
 
         query = """
         SELECT * FROM get_output_products ORDER BY out_order_id DESC
         """
         try:
             cursor.execute(query)
+
             results = cursor.fetchall()
+
             return None, results
         except Exception as e:
-            return f"❌ Error al ejecutar la consulta: {e}", None
+            logger.error(
+                "Error en find_all_output_orders: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener las ordenes de salida", None
         finally:
             cursor.close()
-            connection.close()
 
     # Obtener una orden de salida por ID
-
     @staticmethod
-    def find_by_id(out_order_id: int):
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_output_order_by_id(out_order_id: int, connection):
+        cursor = connection.cursor()
 
         # Petición a la base de datos
-        query = """ 
-        SELECT * FROM OUTPUT_ORDERS WHERE out_order_id = %s
+        query = """
+        SELECT
+        oo.out_order_id,
+        oo.out_order_date,
+        oo.out_order_status,
+        od.output_details_id,
+        od.product_serial,
+        od.out_product_garanty,
+        od.product_transformation,
+        pm.product_model_description,
+        pm.product_model_name,
+        pb.product_brand_name
+        FROM OUTPUT_DETAILS AS od 
+        INNER JOIN OUTPUT_ORDERS AS oo
+            ON oo.out_order_id = od.out_order_id
+        INNER JOIN PRODUCT_SERIALS AS ps
+            ON od.product_serial = ps.product_serial
+        INNER JOIN PRODUCTS AS p
+            ON ps.product_id = p.product_id
+        INNER JOIN PRODUCT_DETAILS AS pd
+            ON p.product_details_id = pd.product_details_id
+        INNER JOIN PRODUCT_MODELS AS pm
+            ON pd.product_model_id = pm.product_model_id 
+        INNER JOIN PRODUCT_BRANDS AS pb
+            ON pm.product_brand_id = pb.product_brand_id;
         """
         try:
             cursor.execute(query, (out_order_id,))
+
             result = cursor.fetchall()
+
             return None, result
         except Exception as e:
-            return f"❌ Error al ejecutar la consulta: {e}", None
+            logger.error(
+                "Error en find_output_order_by_id: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener la orden de salida", None
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def create():
-        connection = get_connection()
+    def create_output_order(connection):
         cursor = connection.cursor()
 
-        # Construir la consulta SQL dinamicamente
         query = """
-        INSERT INTO OUTPUT_ORDERS (out_order_status)
-        VALUES (1)
+        INSERT INTO OUTPUT_ORDERS (out_order_status) VALUES (2)
         """
         try:
             cursor.execute(query)
-            connection.commit()
+
             output_order_id = cursor.lastrowid
+
             return None, True, output_order_id
         except Exception as e:
-            return f"Error al ejecutar la consulta: {e}", False, None
+            logger.error(
+                "Error en create_output_order: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar crear la orden de salida", False, None
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def update(output_order_id: int, output_order_data: dict):
+    def update_output_order(output_order_id: int, output_order_data: dict):
         connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+        cursor = connection.cursor()
 
         query = """
         UPDATE OUTPUT_ORDERS SET 
@@ -89,6 +127,8 @@ class OutputOrdersRepository:
 
             return None, "Orden de salida actualizada exitosamente.", updated_order
         except Exception as e:
+            logger.error("Error en find_all_output_orders: %s",
+                         e, exc_info=True)
             return f"Error al ejecutar la consulta: {e}", None, None
         finally:
             cursor.close()
@@ -97,11 +137,10 @@ class OutputOrdersRepository:
 
 #   ------------ REPORTES DE ORDENES DE SALIDA ------------
 
-
     @staticmethod
     def find_recent_outputs():
         connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+        cursor = connection.cursor()
 
         query = """
         SELECT
@@ -130,6 +169,8 @@ class OutputOrdersRepository:
             ]
             return None, data
         except Exception as e:
+            logger.error("Error en find_all_output_orders: %s",
+                         e, exc_info=True)
             return f"Error al ejecutar la consulta", None
         finally:
             cursor.close()
@@ -138,7 +179,7 @@ class OutputOrdersRepository:
     @staticmethod
     def find_outputs_by_brand(period: str):
         connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+        cursor = connection.cursor()
 
         interval = period_map.get(period, "30 DAY")
 
@@ -175,6 +216,8 @@ class OutputOrdersRepository:
             ]
             return None, data
         except Exception as e:
+            logger.error("Error en find_all_output_orders: %s",
+                         e, exc_info=True)
             return f"Error al ejecutar la consulta: {e}", None
         finally:
             cursor.close()
@@ -183,7 +226,7 @@ class OutputOrdersRepository:
     @staticmethod
     def find_outputs_by_status():
         connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+        cursor = connection.cursor()
 
         query = """
         SELECT
@@ -199,6 +242,8 @@ class OutputOrdersRepository:
             results = cursor.fetchall()
             return None, results
         except Exception as e:
+            logger.error("Error en find_all_output_orders: %s",
+                         e, exc_info=True)
             return f"Error al ejecutar la consulta: {e}", None
         finally:
             cursor.close()
@@ -207,7 +252,7 @@ class OutputOrdersRepository:
     @staticmethod
     def find_outputs_growth(period: str):
         connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+        cursor = connection.cursor()
 
         if period not in period_map:
             period = "30d"
@@ -237,6 +282,8 @@ class OutputOrdersRepository:
             results = cursor.fetchall()
             return None, results
         except Exception as e:
+            logger.error("Error en find_all_output_orders: %s",
+                         e, exc_info=True)
             return f"Error al ejecutar la consulta: {e}", None
         finally:
             cursor.close()
