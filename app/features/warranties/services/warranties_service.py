@@ -1,14 +1,13 @@
-from errno import EROFS
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
-from app.models.output_details_model import CreateOutputDetails
-from app.repository.output_details_repository import OutputDetailsRepository
-from app.features.warranties.warranties_repository import WarrantiesRepository
-from app.features.warranties.technicians_repository import TechniciansRepository
 from app.features.products.repositories.products_repository import ProductsRepository
+from app.features.output_orders.models.output_details_model import CreateOutputDetails
+from app.features.output_orders.services.output_orders_service import OutputOrdersService
+from app.features.warranties.repositories.warranties_repository import WarrantiesRepository
+from app.features.warranties.repositories.technicians_repository import TechniciansRepository
 from app.features.products.repositories.product_serials_repository import ProductSerialsRepository
-from app.features.warranties.warranties_model import WarrantyUpdate, WarrantiesFilter, CreateWarranty
+from app.features.warranties.models.warranties_model import WarrantyUpdate, WarrantiesFilter, CreateWarranty
 
 logger = get_logger("warranties.service")
 
@@ -80,7 +79,7 @@ class WarrantiesService:
                 raise ServiceError("El producto ya tiene una garantía activa")
 
             # Crear la orden de salida del producto
-            error, success, message = OutputDetailsRepository.create(
+            error, success, message = OutputOrdersService.create(
                 CreateOutputDetails(
                     product_serial=data["product_serial"],
                     out_product_garanty="2040-01-01",

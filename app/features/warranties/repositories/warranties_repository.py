@@ -2,7 +2,7 @@ from app.utils.logger import get_logger
 from app.utils.date_formatter import date_formatter
 from app.core.database import get_connection
 from app.utils.periods import period_map, daily_periods
-from app.features.warranties.warranties_model import Warranty, WarrantyUpdate, WarrantiesFilter, CreateWarranty
+from app.features.warranties.models.warranties_model import Warranty, WarrantyUpdate, WarrantiesFilter, CreateWarranty
 
 logger = get_logger("warranties.repository")
 

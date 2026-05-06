@@ -1,6 +1,6 @@
 from fastapi import HTTPException
-from app.features.warranties.warranties_model import WarrantyUpdate, WarrantiesFilter, CreateWarranty
-from app.features.warranties.warranties_service import WarrantiesService
+from app.features.warranties.services.warranties_service import WarrantiesService
+from app.features.warranties.models.warranties_model import WarrantyUpdate, WarrantiesFilter, CreateWarranty
 
 
 class WarrantiesController:
