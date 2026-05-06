@@ -132,7 +132,6 @@ class WarrantiesRepository:
 
     @staticmethod
     def create_warranty(warranty_data: CreateWarranty, user_id: int, connection):
-
         cursor = connection.cursor()
 
         # Petición a la base de datos
@@ -165,7 +164,6 @@ class WarrantiesRepository:
             return None, True, "Garantía creada correctamente"
         except Exception as e:
             logger.error("Error en create_warranty: %s", e, exc_info=True)
-
             return "Error al intentar crear la garantía", None, None
         finally:
             cursor.close()
