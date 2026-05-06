@@ -1,7 +1,7 @@
+from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.features.products.models.product_models_model import CreateProductModel
 from app.features.products.repositories.product_models_repository import ProductModelsRepository
-from app.utils.logger import get_logger
 
 
 logger = get_logger("product_models.service")
