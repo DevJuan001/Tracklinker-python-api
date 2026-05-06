@@ -1,7 +1,7 @@
 from app.core.database import get_connection
-from app.models.output_details_model import OutputDetails
-from app.repository.output_orders_repository import OutputOrdersRepository
-from app.models.output_orders_model import OutputOrder
+from app.features.output_orders.models.output_orders_model import CreateOutputOrder
+from app.features.output_orders.models.output_details_model import CreateOutputDetails
+from app.features.output_orders.repositories.output_orders_repository import OutputOrdersRepository
 
 
 class OutputDetailsRepository:
@@ -72,7 +72,7 @@ class OutputDetailsRepository:
             return "Error al ejecutar la consulta", None, None
 
     @staticmethod
-    def create(output_details_data: OutputDetails):
+    def create(output_details_data: CreateOutputDetails):
         data = output_details_data.model_dump()
 
         connection = get_connection()
@@ -88,7 +88,7 @@ class OutputDetailsRepository:
         ) VALUES (%s, %s, %s, %s)"""
 
         try:
-            error, success, out_order_id = OutputOrdersRepository.create()
+            error, success, out_order_id = OutputOrdersRepository.create_output_order()
 
             if error is not None or not success:
                 return error, False, None
