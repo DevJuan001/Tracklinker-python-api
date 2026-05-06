@@ -62,7 +62,8 @@ class OutputOrdersRepository:
         INNER JOIN PRODUCT_MODELS AS pm
             ON pd.product_model_id = pm.product_model_id 
         INNER JOIN PRODUCT_BRANDS AS pb
-            ON pm.product_brand_id = pb.product_brand_id;
+            ON pm.product_brand_id = pb.product_brand_id
+        WHERE oo.out_order_id = %s
         """
         try:
             cursor.execute(query, (out_order_id,))
