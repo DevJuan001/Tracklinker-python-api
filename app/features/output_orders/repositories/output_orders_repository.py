@@ -1,8 +1,8 @@
-from app.features.output_orders.models.output_orders_model import OutputOrdersFilters
 from app.utils import logger
 from app.core.database import get_connection
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
+from app.features.output_orders.models.output_orders_model import OutputOrder, OutputOrdersFilters
 
 logger = logger.get_logger("output_orders.repository")
 
@@ -11,17 +11,77 @@ class OutputOrdersRepository:
 
     @staticmethod
     def find_all_output_orders(filters: OutputOrdersFilters, connection):
+        data = filters.model_dump(exclude_none=True)
+
         cursor = connection.cursor()
 
         query = """
-        SELECT * FROM get_output_products ORDER BY out_order_id DESC
+        SELECT
+            oo.out_order_id,
+            oo.out_order_date,
+            oo.out_order_status,
+            od.output_details_id,
+            od.product_serial,
+            od.out_product_garanty,
+            od.product_transformation,
+            pb.product_brand_name,
+            pm.product_model_name,
+            pm.product_model_description
+        FROM OUTPUT_DETAILS AS od 
+        INNER JOIN OUTPUT_ORDERS AS oo
+            ON oo.out_order_id = od.out_order_id
+        INNER JOIN PRODUCT_SERIALS AS ps
+            ON od.product_serial = ps.product_serial
+        INNER JOIN PRODUCTS AS p
+            ON ps.product_id = p.product_id
+        INNER JOIN PRODUCT_DETAILS AS pd
+            ON p.product_details_id = pd.product_details_id
+        INNER JOIN PRODUCT_MODELS AS pm
+            ON pd.product_model_id = pm.product_model_id 
+        INNER JOIN PRODUCT_BRANDS AS pb
+            ON pm.product_brand_id = pb.product_brand_id
         """
+
+        filters = []
+        values = []
+
+        if "start_date" in data:
+            filters.append("DATE(oo.out_order_date) >= %s")
+            values.append(data["start_date"])
+
+        if "end_date" in data:
+            filters.append("DATE(oo.out_order_date) <= %s")
+            values.append(data["end_date"])
+
+        if "status" in data:
+            filters.append("oo.out_order_status = %s")
+            values.append(data["status"])
+
+        if filters:
+            query += " WHERE " + " AND ".join(filters)
+
         try:
-            cursor.execute(query)
+            cursor.execute(query, values)
 
             results = cursor.fetchall()
 
-            return None, results
+            orders = [
+                OutputOrder(
+                    output_order_id=item[0],
+                    output_order_date=date_formatter(item[1]),
+                    output_order_status=item[2],
+                    output_details_id=item[3],
+                    product_serial=item[4],
+                    output_product_garanty=date_formatter(item[5]),
+                    product_transformation=item[6],
+                    product_brand_name=item[7],
+                    product_model_name=item[8],
+                    product_model_description=item[9],
+                )
+                for item in results
+            ]
+
+            return None, orders
         except Exception as e:
             logger.error(
                 "Error en find_all_output_orders: %s",
@@ -34,22 +94,22 @@ class OutputOrdersRepository:
 
     # Obtener una orden de salida por ID
     @staticmethod
-    def find_output_order_by_id(out_order_id: int, connection):
+    def find_output_order_by_id(output_order_id: int, connection):
         cursor = connection.cursor()
 
         # Petición a la base de datos
         query = """
         SELECT
-        oo.out_order_id,
-        oo.out_order_date,
-        oo.out_order_status,
-        od.output_details_id,
-        od.product_serial,
-        od.out_product_garanty,
-        od.product_transformation,
-        pm.product_model_description,
-        pm.product_model_name,
-        pb.product_brand_name
+            oo.out_order_id,
+            oo.out_order_date,
+            oo.out_order_status,
+            od.output_details_id,
+            od.product_serial,
+            od.out_product_garanty,
+            od.product_transformation,
+            pb.product_brand_name,
+            pm.product_model_name,
+            pm.product_model_description
         FROM OUTPUT_DETAILS AS od 
         INNER JOIN OUTPUT_ORDERS AS oo
             ON oo.out_order_id = od.out_order_id
@@ -66,11 +126,27 @@ class OutputOrdersRepository:
         WHERE oo.out_order_id = %s
         """
         try:
-            cursor.execute(query, (out_order_id,))
+            cursor.execute(query, (output_order_id,))
 
             result = cursor.fetchall()
 
-            return None, result
+            data = [
+                OutputOrder(
+                    output_order_id=item[0],
+                    output_order_date=date_formatter(item[1]),
+                    output_order_status=item[2],
+                    output_details_id=item[3],
+                    product_serial=item[4],
+                    output_product_garanty=date_formatter(item[5]),
+                    product_transformation=item[6],
+                    product_brand_name=item[7],
+                    product_model_name=item[8],
+                    product_model_description=item[9],
+                )
+                for item in result
+            ]
+
+            return None, data
         except Exception as e:
             logger.error(
                 "Error en find_output_order_by_id: %s",
@@ -105,8 +181,7 @@ class OutputOrdersRepository:
             cursor.close()
 
     @staticmethod
-    def update_output_order(output_order_id: int, output_order_data: dict):
-        connection = get_connection()
+    def update_output_order(output_order_id: int, output_order_data: dict, connection):
         cursor = connection.cursor()
 
         query = """
@@ -116,27 +191,66 @@ class OutputOrdersRepository:
         """
         try:
             cursor.execute(query, (
-                output_order_data["out_order_status"],
+                output_order_data["output_order_status"],
                 output_order_id
             ))
-            connection.commit()
 
-            # Obtener la orden de salida actualizada
-            cursor.execute(
-                "SELECT * FROM OUTPUT_ORDERS WHERE out_order_id = %s", (output_order_id,))
-            updated_order = cursor.fetchone()
-
-            return None, "Orden de salida actualizada exitosamente.", updated_order
+            return None, True, "Orden de salida actualizada exitosamente"
         except Exception as e:
-            logger.error("Error en find_all_output_orders: %s",
-                         e, exc_info=True)
-            return f"Error al ejecutar la consulta: {e}", None, None
+            logger.error(
+                "Error en update_output_order: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar actualizar la orden de salida", False, None
         finally:
             cursor.close()
-            connection.close()
+
+    @staticmethod
+    def disable_output_order(out_order_id: int, connection):
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(
+                "UPDATE OUTPUT_ORDERS SET out_order_status = 1 WHERE out_order_id = %s",
+                (out_order_id,)
+            )
+
+            return None, True, "Orden de salida deshabilitada correctamente"
+        except Exception as e:
+            logger.error(
+                "Error en disable_output_order: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar deshabilitar la orden de salida", False, None
+        finally:
+            cursor.close()
+
+    @staticmethod
+    def enable_output_order(out_order_id: int, connection):
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(
+                "UPDATE OUTPUT_ORDERS SET out_order_status = 2 WHERE out_order_id = %s",
+                (out_order_id,)
+            )
+
+            return None, True, "Orden de salida habilitada correctamente"
+        except Exception as e:
+            logger.error(
+                "Error en enable_output_order: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar habilitar la orden de salida", False, None
+        finally:
+            cursor.close()
 
 
 #   ------------ REPORTES DE ORDENES DE SALIDA ------------
+
 
     @staticmethod
     def find_recent_outputs():
