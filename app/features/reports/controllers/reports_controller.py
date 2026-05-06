@@ -2,10 +2,10 @@ from fastapi import HTTPException
 from app.repository.user_repository import UserRepository
 from app.repository.category_repository import CategoryRepository
 from app.repository.suppliers_repository import SuppliersRepository
-from app.repository.output_orders_repository import OutputOrdersRepository
 from app.repository.subcategories_repository import SubcategoriesRepository
-from app.features.warranties.warranties_repository import WarrantiesRepository
 from app.features.products.repositories.products_repository import ProductsRepository
+from app.features.warranties.repositories.warranties_repository import WarrantiesRepository
+from app.features.output_orders.repositories.output_orders_repository import OutputOrdersRepository
 
 
 class ReportsController:
