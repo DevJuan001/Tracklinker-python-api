@@ -18,7 +18,7 @@ class ProductDetailsRepository:
                     product_model_id
                 ) VALUES (%s)
                 """,
-                (data["model"],)
+                (data["model_id"],)
             )
 
             product_details_id = cursor.lastrowid
@@ -35,8 +35,10 @@ class ProductDetailsRepository:
             cursor.close()
 
     @staticmethod
-    def update_product_details(details_data: UpdateProductDetails, cursor):
+    def update_product_details(details_data: UpdateProductDetails, connection):
         data = details_data.model_dump()
+
+        cursor = connection.cursor()
 
         try:
             cursor.execute(
@@ -45,7 +47,7 @@ class ProductDetailsRepository:
                     product_model_id = %s
                 WHERE product_details_id = %s
                 """,
-                (data["model"], data["product_details_id"])
+                (data["model_id"], data["product_details_id"])
             )
 
             return None, True, "Detalles del producto actualizados correctamente"
