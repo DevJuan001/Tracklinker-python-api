@@ -39,20 +39,20 @@ class ProductsFilter(BaseModel):
 class UpdateProduct(BaseModel):
     id: int
     product_details_id: int
-    input_order: Optional[int] = None
-    subcategory: Optional[int] = None
-    serial: Optional[str] = None
-    brand: Optional[int] = None
-    model: Optional[int] = None
+    input_order_id: Optional[int] = None
+    subcategory_id: Optional[int] = None
+    product_serial: Optional[str] = None
+    brand_id: Optional[int] = None
+    model_id: Optional[int] = None
     warranty_time: Optional[datetime] = None
     status: Optional[int] = None
 
 class CreateProduct(BaseModel):
-    brand: int
-    input_order: int
-    subcategory: int
-    serial: str
-    model: int
+    brand_id: int
+    input_order_id: int
+    subcategory_id: int
+    product_serial: str
+    model_id: int
     warranty_time: int
 
 class UpdateProductStatus(BaseModel):
