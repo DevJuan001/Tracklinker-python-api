@@ -1,8 +1,8 @@
+from app.features.output_orders.models.output_orders_model import CreateOutputOrder
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
 from app.features.products.repositories.products_repository import ProductsRepository
-from app.features.output_orders.models.output_details_model import CreateOutputDetails
 from app.features.output_orders.services.output_orders_service import OutputOrdersService
 from app.features.warranties.repositories.warranties_repository import WarrantiesRepository
 from app.features.warranties.repositories.technicians_repository import TechniciansRepository
@@ -17,7 +17,7 @@ class WarrantiesService:
     @staticmethod
     def get_all_warranties(filters: WarrantiesFilter):
         connection = get_connection()
-        
+
         try:
             error, warranties = WarrantiesRepository.find_all_warranties(
                 filters, connection
@@ -76,11 +76,13 @@ class WarrantiesService:
             )
 
             if existing:
-                raise ServiceError("El producto ya tiene una garantía activa")
+                raise ServiceError(
+                    "El producto ya cuenta con una garantía activa, debes completar o deshabilitar esa garantía  e intentarlo nuevamente"
+                )
 
             # Crear la orden de salida del producto
             error, success, message = OutputOrdersService.create_output_order(
-                CreateOutputDetails(
+                CreateOutputOrder(
                     product_serial=data["product_serial"],
                     output_product_garanty="2040-01-01",
                     product_transformation="No necesita",
