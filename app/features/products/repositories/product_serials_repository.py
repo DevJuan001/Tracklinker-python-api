@@ -27,7 +27,7 @@ class ProductSerialsRepository:
             if not product:
                 return "Serial no encontrado", None
 
-            return product, None
+            return None, product
         except Exception as e:
             logger.error(
                 "Error en find_product_id_by_serial: %s",
