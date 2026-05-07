@@ -1,8 +1,8 @@
+from app.features.output_orders.models.output_orders_model import CreateOutputOrder
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
 from app.features.products.repositories.products_repository import ProductsRepository
-from app.features.output_orders.models.output_details_model import CreateOutputDetails
 from app.features.output_orders.services.output_orders_service import OutputOrdersService
 from app.features.warranties.repositories.warranties_repository import WarrantiesRepository
 from app.features.warranties.repositories.technicians_repository import TechniciansRepository
@@ -76,13 +76,15 @@ class WarrantiesService:
             )
 
             if existing:
-                raise ServiceError("El producto ya tiene una garantía activa")
+                raise ServiceError(
+                    "El producto ya cuenta con una garantía activa, debes completar o deshabilitar esa garantía  e intentarlo nuevamente"
+                )
 
             # Crear la orden de salida del producto
             error, success, message = OutputOrdersService.create_output_order(
-                CreateOutputDetails(
+                CreateOutputOrder(
                     product_serial=data["product_serial"],
-                    out_product_garanty="2040-01-01",
+                    output_product_garanty="2040-01-01",
                     product_transformation="No necesita",
                 )
             )
@@ -173,16 +175,16 @@ class WarrantiesService:
                         "Serial requerido para cambiarle el estado"
                     )
 
-                product_id = ProductSerialsRepository.find_product_id_by_serial(
+                product = ProductSerialsRepository.find_product_by_serial(
                     product_serial, connection
                 )
 
-                if not product_id:
+                if not product:
                     raise ServiceError("Serial no encontrado")
 
                 new_product_status = WARRANTY_STATUS_PRODUCT_MAP[new_status]
                 error, success, message = ProductsRepository.update_product_status(
-                    product_id, new_product_status, connection
+                    product[0], new_product_status, connection
                 )
 
                 if error:
