@@ -17,7 +17,7 @@ class WarrantiesService:
     @staticmethod
     def get_all_warranties(filters: WarrantiesFilter):
         connection = get_connection()
-
+        
         try:
             error, warranties = WarrantiesRepository.find_all_warranties(
                 filters, connection
@@ -82,7 +82,7 @@ class WarrantiesService:
             error, success, message = OutputOrdersService.create_output_order(
                 CreateOutputDetails(
                     product_serial=data["product_serial"],
-                    out_product_garanty="2040-01-01",
+                    output_product_garanty="2040-01-01",
                     product_transformation="No necesita",
                 )
             )
@@ -173,16 +173,16 @@ class WarrantiesService:
                         "Serial requerido para cambiarle el estado"
                     )
 
-                product_id = ProductSerialsRepository.find_product_id_by_serial(
+                product = ProductSerialsRepository.find_product_by_serial(
                     product_serial, connection
                 )
 
-                if not product_id:
+                if not product:
                     raise ServiceError("Serial no encontrado")
 
                 new_product_status = WARRANTY_STATUS_PRODUCT_MAP[new_status]
                 error, success, message = ProductsRepository.update_product_status(
-                    product_id, new_product_status, connection
+                    product[0], new_product_status, connection
                 )
 
                 if error:
