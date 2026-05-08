@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from app.repository.user_repository import UserRepository
+from app.features.users.repositories.users_repository import UsersRepository
 from app.repository.category_repository import CategoryRepository
 from app.repository.suppliers_repository import SuppliersRepository
 from app.repository.subcategories_repository import SubcategoriesRepository
@@ -13,7 +13,7 @@ class ReportsController:
     #   ------------ REPORTES DE USUARIOS ------------
     @staticmethod
     def get_recent_users():
-        error, user = UserRepository.find_recent_users()
+        error, user = UsersRepository.find_recent_users()
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
@@ -22,7 +22,7 @@ class ReportsController:
 
     @staticmethod
     def get_users_by_rol(period: str):
-        error, user = UserRepository.find_users_by_rol(period)
+        error, user = UsersRepository.find_users_by_rol(period)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
@@ -31,7 +31,7 @@ class ReportsController:
 
     @staticmethod
     def get_users_by_month(period: str):
-        error, data = UserRepository.find_users_by_month(period)
+        error, data = UsersRepository.find_users_by_month(period)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
@@ -40,7 +40,7 @@ class ReportsController:
 
     @staticmethod
     def get_user_growth(period: str):
-        error, data = UserRepository.find_users_growth(period)
+        error, data = UsersRepository.find_users_growth(period)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
@@ -49,7 +49,7 @@ class ReportsController:
 
     @staticmethod
     def get_users_by_status():
-        error, data = UserRepository.find_users_by_status()
+        error, data = UsersRepository.find_users_by_status()
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
