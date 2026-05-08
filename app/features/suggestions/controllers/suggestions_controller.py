@@ -1,17 +1,15 @@
-from app.core.mail import config
+from app.core.mail import fm
 from app.core.config import settings
-from fastapi_mail import FastMail, MessageSchema
 from fastapi import HTTPException
-from app.repository.user_repository import UserRepository
+from fastapi_mail import MessageSchema
+from app.features.users.services.users_service import UsersService
 
 
 class SuggestionsController:
     @staticmethod
     async def send_suggestion_mail(suggestion: str, payload: dict):
 
-        error, user = UserRepository.find_by_id(int(payload["user_id"]))
-
-        data = user[0]
+        error, user = UsersService.get_user_by_id(payload["user_id"])
 
         if error:
             raise HTTPException(status_code=404, detail=error)
@@ -19,11 +17,10 @@ class SuggestionsController:
         message = MessageSchema(
             subject="Sugerencia o error",
             recipients=[settings.MAIL_FROM],
-            template_body={"email": data["email"], "suggestion": suggestion},
+            template_body={"email": user[0].email, "suggestion": suggestion},
             subtype="html",
         )
 
-        fm = FastMail(config)
         await fm.send_message(message, template_name="suggestion_mail.html")
 
         return {
