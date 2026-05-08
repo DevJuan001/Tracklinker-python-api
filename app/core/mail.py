@@ -1,4 +1,4 @@
-from fastapi_mail import ConnectionConfig
+from fastapi_mail import ConnectionConfig, FastMail
 from app.core.config import settings
 from pathlib import Path
 
@@ -10,5 +10,7 @@ config = ConnectionConfig(
     MAIL_SERVER="smtp.gmail.com",
     MAIL_STARTTLS=True,
     MAIL_SSL_TLS=False,
-    TEMPLATE_FOLDER=Path(__file__).parent.parent / "templates",
+    TEMPLATE_FOLDER="app/templates",
 )
+
+fm = FastMail(config)

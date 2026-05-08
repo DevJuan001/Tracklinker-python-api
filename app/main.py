@@ -4,7 +4,9 @@ from fastapi import FastAPI
 from fastapi_limiter import FastAPILimiter
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import get_connection
-from app.routes import user_routes, dashboard_routes, category_routes, subcategories_routes, auth_routes, suggestion_routes, suppliers_routes
+from app.routes import dashboard_routes, category_routes, subcategories_routes, suggestion_routes, suppliers_routes
+from app.features.auth.routes import auth_routes
+from app.features.users.routes import users_routes
 from app.features.reports.routes import reports_routes
 from app.features.products.routes import products_routes
 from app.features.warranties.routes import warranties_routes
@@ -61,7 +63,7 @@ def root():
 # Rutas de autenticación
 app.include_router(auth_routes.router)
 # Rutas para el modúlo de Usuarios
-app.include_router(user_routes.router)
+app.include_router(users_routes.router)
 # Rutas para el modúlo de Garantias
 app.include_router(warranties_routes.router)
 # Rutas para tabla de detalles de salida

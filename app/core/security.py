@@ -74,9 +74,9 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
     )
 
 # Función para verificar la contraseña del usuario
-def verify_password(user, password: str):
+def verify_password(user_password: str, password: str):
     password_bytes = password.encode("utf-8")
-    hashed_bytes = user["user_password"].encode("utf-8")
+    hashed_bytes = user_password.encode("utf-8")
 
     if not bcrypt.checkpw(password_bytes, hashed_bytes):
         raise HTTPException(
