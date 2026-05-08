@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends
 from app.middlewares.jwt_middleware import verify_jwt
-from app.models.suggestion_model import SuggestionModel
-from app.controllers.suggestions_controller import SuggestionsController
+from app.features.suggestions.models.suggestion_model import SuggestionModel
+from app.features.suggestions.controllers.suggestions_controller import SuggestionsController
 
 router = APIRouter(
     prefix="/api/suggestions",
