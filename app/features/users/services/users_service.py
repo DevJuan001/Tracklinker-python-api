@@ -1,0 +1,371 @@
+import bcrypt
+from app.core.mail import fm
+from pydantic import EmailStr
+from fastapi_mail import MessageSchema
+from app.core.exception import ServiceError
+from app.core.security import generate_temporal_password, verify_password
+from app.utils.logger import get_logger
+from app.core.database import get_connection
+from app.features.users.repositories.users_repository import UsersRepository
+from app.features.users.models.users_model import UpdatePassword, UsersFilters, CreateUser, UpdateUser
+
+logger = get_logger("users.service")
+
+
+class UsersService:
+    @staticmethod
+    def get_all_users(filters: UsersFilters):
+        connection = get_connection()
+
+        try:
+            error, users = UsersRepository.find_all_users(
+                filters, connection
+            )
+
+            if error:
+                raise ServiceError(error)
+
+            return None, users
+        except ServiceError as e:
+            return e.message, None
+
+        except Exception as e:
+            logger.error("Error en get_all_users: %s", e, exc_info=True)
+            return "Error al intentar obtener los usuarios", None
+
+        finally:
+            connection.close()
+
+    @staticmethod
+    def get_user_by_id(user_id: int):
+        connection = get_connection()
+
+        try:
+            error, user = UsersRepository.find_user_by_id(
+                user_id, connection
+            )
+
+            if error or not user:
+                raise ServiceError(error)
+
+            return None, user
+
+        except ServiceError as e:
+            return e.message, None
+
+        except Exception as e:
+            logger.error(
+                "Error en create_user: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener el usuario mediante el id", None
+
+    @staticmethod
+    def get_user_by_email(email: EmailStr):
+        connection = get_connection()
+
+        try:
+            error, user = UsersRepository.find_user_by_email(
+                email, connection
+            )
+
+            if error or not user:
+                raise ServiceError(error)
+
+            return None, user
+
+        except ServiceError as e:
+            return e.message, False, None
+
+        except Exception as e:
+            logger.error(
+                "Error en get_user_by_email: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener el usuario mediante el correo", False, None
+
+    @staticmethod
+    def get_all_roles():
+        connection = get_connection()
+
+        try:
+            error, roles = UsersRepository.find_all_roles(
+                connection
+            )
+
+            if error or not roles:
+                raise ServiceError(error)
+
+            return None, roles
+
+        except ServiceError as e:
+            return e.message, False, None
+
+        except Exception as e:
+            logger.error(
+                "Error en create_user: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener los roles", False, None
+
+    @staticmethod
+    def get_all_cities():
+        connection = get_connection()
+
+        try:
+            error, cities = UsersRepository.find_all_cities(
+                connection
+            )
+
+            if error or not cities:
+                raise ServiceError(error)
+
+            return None, cities
+
+        except ServiceError as e:
+            return e.message, None
+
+        except Exception as e:
+            logger.error(
+                "Error en create_user: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener las ciudades", None
+
+    @staticmethod
+    async def create_user(user_data: CreateUser):
+        data = user_data.model_dump()
+
+        connection = get_connection()
+
+        try:
+            error, user = UsersRepository.find_user_by_email(
+                email=data["email"],
+                connection=connection
+            )
+
+            if error:
+                raise ServiceError(error)
+
+            if user:
+                raise ServiceError(
+                    "Este correo ya esta registrado, intenta ingresar otro correo e intentalo nuevamente"
+                )
+
+            temporal_password = generate_temporal_password()
+
+            # Hashear la contraseña
+            password = temporal_password.encode("utf-8")
+            hash_password = bcrypt.hashpw(
+                password, bcrypt.gensalt(rounds=12)
+            ).decode("utf-8")
+
+            error, success, message = UsersRepository.create_user(
+                user_data=user_data,
+                hash_password=hash_password,
+                connection=connection
+            )
+
+            if error or not success:
+                raise ServiceError(error)
+
+            if success == True:
+                emailMessage = MessageSchema(
+                    subject="Bienvenido a Tracklinker",
+                    recipients=[data["email"]],
+                    template_body={
+                        "name": data["name"],
+                        "surname": data["first_surname"],
+                        "email": data["email"],
+                        "password": temporal_password
+                    },
+                    subtype="html",
+                )
+
+                await fm.send_message(emailMessage, template_name="welcome_mail.html")
+
+            connection.commit()
+
+            return None, True, "Usuario Creado Correctamente"
+
+        except ServiceError as e:
+            return e.message, False, None
+
+        except Exception as e:
+            logger.error(
+                "Error en create_user: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar crear el usuario", False, None
+
+    @staticmethod
+    def update_user(user_id: int, user_data: UpdateUser):
+        connection = get_connection()
+
+        try:
+            # Verificar si existe el usuario
+            error, user = UsersRepository.find_user_by_id(
+                user_id, connection
+            )
+
+            if not user:
+                raise ServiceError(error)
+
+            # Verificar si el correo ya esta siendo usado y no duplicarlo
+            if "email" in user_data:
+                error, user = UsersRepository.find_user_by_email(
+                    user_data["email"]
+                )
+
+                if user and user["user_id"] != user_id:
+                    raise ServiceError(
+                        "El correo ya está registrado, ingresa un correo diferente y intentalo nuevamente"
+                    )
+
+            error, success, message = UsersRepository.update_user(
+                user_id, user_data, connection
+            )
+
+            if error or not success:
+                raise ServiceError(error)
+
+            connection.commit()
+
+            return None, True, "Usuario Actualizado Correctamente"
+
+        except ServiceError as e:
+            return e.message, False, None
+
+        except Exception as e:
+            logger.error(
+                "Error en update_user: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar actualizar el usuario", False, None
+
+        finally:
+            connection.close()
+
+    @staticmethod
+    def update_user_password(password_data: UpdatePassword, user_id: int):
+        data = password_data.model_dump()
+
+        connection = get_connection()
+
+        if data["new_password"] != data["repeat_password"]:
+            raise ServiceError(error)
+
+        try:
+            error, user = UsersRepository.find_user_password_by_id(
+                user_id, connection
+            )
+
+            # Validación de lo que retorna la función find_user_password_by_id
+            if error or not user:
+                raise ServiceError(error)
+
+            # Validación de que la contraseña antigua sea igual a la que esta registrada
+            verify_password(
+                user[0], data["old_password"]
+            )
+
+            error, success, message = UsersRepository.update_password(
+                user_id, data["new_password"]
+            )
+
+            if error or not success:
+                raise ServiceError(error)
+
+            connection.commit()
+
+            return None, True, "Contraseña actualizada correctamente"
+
+        except ServiceError as e:
+            return e.message, False, None
+
+        except Exception as e:
+            logger.error(
+                "Error en update_user_password: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar actualizar la contraseña", False, None
+
+        finally:
+            connection.close()
+
+    @staticmethod
+    def disable_user(user_id: int):
+        connection = get_connection()
+
+        try:
+            # Validar que el usuario exista
+            error, user = UsersRepository.find_user_by_id(
+                user_id, connection
+            )
+
+            if error or not user:
+                raise ServiceError(error)
+
+            error, success, message = UsersRepository.disable_user(
+                user_id, connection
+            )
+
+            if error or not success:
+                raise ServiceError(error)
+
+            connection.commit()
+
+            return None, True, "Usuario deshabilitado correctamente"
+
+        except ServiceError as e:
+            return e.message, False, None
+
+        except Exception as e:
+            logger.error(
+                "Error en update_user_password: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar deshabilitar el usuario", False, None
+
+    @staticmethod
+    def enable_user(user_id: int):
+        connection = get_connection()
+
+        try:
+            # Validar que el usuario exista
+            error, user = UsersRepository.find_user_by_id(
+                user_id, connection
+            )
+
+            if error or not user:
+                raise ServiceError(error)
+
+            error, success, message = UsersRepository.enable_user(
+                user_id, connection
+            )
+
+            if error or not success:
+                raise ServiceError(error)
+
+            connection.commit()
+
+            return None, True, "Usuario habilitado correctamente"
+
+        except ServiceError as e:
+            return e.message, False, None
+
+        except Exception as e:
+            logger.error(
+                "Error en update_user_password: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar habilitar el usuario", False, None
