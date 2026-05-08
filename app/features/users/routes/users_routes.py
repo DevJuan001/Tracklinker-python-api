@@ -78,6 +78,17 @@ async def create_user(
 ):
     return await UsersController.create_user(user_data)
 
+# Endpoint para actualizar la informacion del usuario
+@router.put(
+    "/update/me",
+    dependencies=[
+        Depends(RateLimiter(times=10, seconds=60)),
+        Depends(require_roles(["Admin", "Almacen", "Tecnico"]))
+    ]
+)
+def update_me(user_data: UpdateCurrentUser, payload: dict = Depends(verify_jwt)):
+    return UsersController.update_current_user(user_data, payload)
+
 # Endpoint para actualizar la información de un usuario existente mediante su id
 @router.put(
     "/update/{user_id}",
@@ -92,16 +103,6 @@ def update_user(
 ):
     return UsersController.update_user(user_id, user_data)
 
-#Endpoint para actualizar la informacion del usuario
-@router.put(
-    "/update/me",
-    dependencies=[
-        Depends(RateLimiter(times=10, seconds=60)),
-        Depends(require_roles(["Admin", "Almacen", "Tecnico"]))
-    ]
-)
-def update_me(user_data: UpdateCurrentUser, payload: dict = Depends(verify_jwt)):
-    return UsersController.update_current_user(user_data, payload)
 
 # Endpoint para actualizar la contraseña del usuario
 @router.put("/update-password")
