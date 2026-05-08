@@ -1,9 +1,9 @@
 from datetime import timedelta
 from jose import jwt, JWTError
-from app.core.mail import config
+from app.core.mail import fm
 from app.core.config import settings
 from app.core.security import verify_password
-from fastapi_mail import FastMail, MessageSchema
+from fastapi_mail import MessageSchema
 from fastapi import HTTPException, Response, Request
 from app.features.users.services.users_service import UsersService
 from app.core.security import set_auth_cookies, create_access_token, create_refresh_token
@@ -127,7 +127,6 @@ class AuthController:
             subtype="html",
         )
 
-        fm = FastMail(config)
         await fm.send_message(message, template_name="recover_password.html")
 
         return {
