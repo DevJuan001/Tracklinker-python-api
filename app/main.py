@@ -4,13 +4,15 @@ from fastapi import FastAPI
 from fastapi_limiter import FastAPILimiter
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import get_connection
-from app.routes import dashboard_routes, category_routes, subcategories_routes, suggestion_routes, suppliers_routes
+from app.routes import dashboard_routes, category_routes, subcategories_routes, suppliers_routes
 from app.features.auth.routes import auth_routes
 from app.features.users.routes import users_routes
 from app.features.reports.routes import reports_routes
 from app.features.products.routes import products_routes
 from app.features.warranties.routes import warranties_routes
+from app.features.suggestions.routes import suggestion_routes
 from app.features.output_orders.routes import output_orders_routes
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,6 +41,8 @@ app.add_middleware(
 )
 
 # Endpoint para probar conexión a la base de datos
+
+
 @app.get("/ping-db")
 def ping_db():
     connection = get_connection()
@@ -53,6 +57,8 @@ def ping_db():
         }
 
 # Endpoint raíz para probar ejecución de la API
+
+
 @app.get("/")
 def root():
     return {
