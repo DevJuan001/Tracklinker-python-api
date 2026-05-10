@@ -4,10 +4,10 @@ from app.utils.date_formatter import date_formatter
 from app.utils.logger import get_logger
 from app.utils.periods import period_map, daily_periods
 
-logger = get_logger(__name__)
+logger = get_logger("categories.repository")
 
 
-class CategoryRepository:
+class CategoriesRepository:
 
     # Obtener todas las categorias
     @staticmethod
