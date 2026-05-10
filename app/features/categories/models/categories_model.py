@@ -2,6 +2,14 @@ from pydantic import BaseModel
 from typing import Optional
 
 
+class Category(BaseModel):
+    id: int
+    name: str
+    description: str
+    date: str
+    status: int
+
+
 class CategoriesFilters(BaseModel):
     name_order: Optional[str] = None
     start_date: Optional[str] = None
