@@ -113,6 +113,7 @@ class UsersRepository:
         # Petición a la base de datos
         query = """
         SELECT
+            u.user_id,
             u.user_name,
             u.user_first_surname,
             u.user_second_surname,
@@ -138,13 +139,14 @@ class UsersRepository:
 
             data = [
                 CurrentUser(
-                    name=item[0],
-                    first_surname=item[1],
-                    second_surname=item[2],
-                    phone=item[3],
-                    email=item[4],
-                    address=item[5],
-                    city=item[6],
+                    id=item[0],
+                    name=item[1],
+                    first_surname=item[2],
+                    second_surname=item[3],
+                    phone=item[4],
+                    email=item[5],
+                    address=item[6],
+                    city=item[7],
                 )
                 for item in result
             ]
@@ -190,7 +192,7 @@ class UsersRepository:
     # Obtener un usuario mediante el correo
     @staticmethod
     def find_user_by_email(email: str, connection):
-        cursor = connection.cursor()
+        cursor = connection.cursor(buffered=True)
 
         # Petición a la base de datos
         query = """
@@ -205,7 +207,7 @@ class UsersRepository:
         FROM USERS AS u 
         INNER JOIN ROLES AS r 
             ON r.rol_id = u.rol_id 
-        WHERE u.user_email = %s AND u.user_status = 2
+        WHERE u.user_email = %s
         """
 
         try:

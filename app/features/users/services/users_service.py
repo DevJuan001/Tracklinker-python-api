@@ -205,6 +205,7 @@ class UsersService:
 
     @staticmethod
     def update_user(user_id: int, user_data: UpdateUser):
+        data = user_data.model_dump(exclude_none=True)
         connection = get_connection()
 
         try:
@@ -217,14 +218,14 @@ class UsersService:
                 raise ServiceError(error)
 
             # Verificar si el correo ya esta siendo usado y no duplicarlo
-            if "email" in user_data:
-                error, user = UsersRepository.find_user_by_email(
-                    user_data["email"]
+            if "email" in data:
+                error, existing_user = UsersRepository.find_user_by_email(
+                    data["email"], connection
                 )
 
-                if user and user["user_id"] != user_id:
+                if existing_user and (existing_user[1] != user_id):
                     raise ServiceError(
-                        "El correo ya está registrado, ingresa un correo diferente y intentalo nuevamente"
+                        "El correo ya está registrado, ingresa un correo diferente e intentalo nuevamente"
                     )
 
             error, success, message = UsersRepository.update_user(

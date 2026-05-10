@@ -18,6 +18,7 @@ class User(BaseModel):
     status:int
 
 class CurrentUser(BaseModel):
+    id: int
     name: str
     first_surname: str
     second_surname: str
