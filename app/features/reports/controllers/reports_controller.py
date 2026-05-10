@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from app.features.users.repositories.users_repository import UsersRepository
-from app.repository.category_repository import CategoryRepository
+from app.features.categories.repositories.categories_repository import CategoriesRepository
 from app.repository.suppliers_repository import SuppliersRepository
 from app.repository.subcategories_repository import SubcategoriesRepository
 from app.features.products.repositories.products_repository import ProductsRepository
@@ -98,7 +98,7 @@ class ReportsController:
 
     @staticmethod
     def get_recent_categories():
-        error, categories = CategoryRepository.find_recent_categories()
+        error, categories = CategoriesRepository.find_recent_categories()
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
@@ -107,7 +107,7 @@ class ReportsController:
 
     @staticmethod
     def get_categories_growth(period: str):
-        error, data = CategoryRepository.find_categories_growth(period)
+        error, data = CategoriesRepository.find_categories_growth(period)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
@@ -116,7 +116,7 @@ class ReportsController:
 
     @staticmethod
     def get_categories_by_brand(period: str):
-        error, data = CategoryRepository.find_categories_by_brand(period)
+        error, data = CategoriesRepository.find_categories_by_brand(period)
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
@@ -125,7 +125,7 @@ class ReportsController:
 
     @staticmethod
     def get_categories_by_status():
-        error, data = CategoryRepository.find_categories_by_status()
+        error, data = CategoriesRepository.find_categories_by_status()
         if error:
             raise HTTPException(status_code=404, detail=error)
         return {
