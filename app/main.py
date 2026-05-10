@@ -4,11 +4,12 @@ from fastapi import FastAPI
 from fastapi_limiter import FastAPILimiter
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import get_connection
-from app.routes import dashboard_routes, category_routes, subcategories_routes, suppliers_routes
+from app.routes import dashboard_routes, subcategories_routes, suppliers_routes
 from app.features.auth.routes import auth_routes
 from app.features.users.routes import users_routes
 from app.features.reports.routes import reports_routes
 from app.features.products.routes import products_routes
+from app.features.categories.routes import categories_routes
 from app.features.warranties.routes import warranties_routes
 from app.features.suggestions.routes import suggestion_routes
 from app.features.output_orders.routes import output_orders_routes
@@ -41,8 +42,6 @@ app.add_middleware(
 )
 
 # Endpoint para probar conexión a la base de datos
-
-
 @app.get("/ping-db")
 def ping_db():
     connection = get_connection()
@@ -57,8 +56,6 @@ def ping_db():
         }
 
 # Endpoint raíz para probar ejecución de la API
-
-
 @app.get("/")
 def root():
     return {
@@ -75,7 +72,7 @@ app.include_router(warranties_routes.router)
 # Rutas para tabla de detalles de salida
 app.include_router(output_orders_routes.router)
 # Rutas para el modulo de categorias
-app.include_router(category_routes.router)
+app.include_router(categories_routes.router)
 # Rutas para el modulo de subcategorias
 app.include_router(subcategories_routes.router)
 # Rutas para el modúlo de Panel de control
