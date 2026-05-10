@@ -76,7 +76,7 @@ class UsersService:
             return None, user
 
         except ServiceError as e:
-            return e.message, False, None
+            return e.message, None
 
         except Exception as e:
             logger.error(
@@ -84,7 +84,7 @@ class UsersService:
                 e,
                 exc_info=True
             )
-            return "Error al intentar obtener el usuario mediante el correo", False, None
+            return "Error al intentar obtener el usuario mediante el correo", None
 
     @staticmethod
     def get_all_roles():
@@ -276,7 +276,7 @@ class UsersService:
                 user[0], data["old_password"]
             )
 
-            error, success, message = UsersRepository.update_password(
+            error, success, message = UsersRepository.update_user_password(
                 user_id, data["new_password"]
             )
 
