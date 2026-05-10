@@ -1,8 +1,8 @@
-from app.core.database import get_connection
-from app.models.category_model import CategoryUpdate
-from app.utils.date_formatter import date_formatter
 from app.utils.logger import get_logger
+from app.core.database import get_connection
+from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
+from app.features.categories.models.categories_model import CategoriesFilters, Category, CreateCategory, UpdateCategory
 
 logger = get_logger("categories.repository")
 
@@ -11,15 +11,10 @@ class CategoriesRepository:
 
     # Obtener todas las categorias
     @staticmethod
-    def find_all_categories(
-        name_order: str = None,
-        start_date: str = None,
-        end_date: str = None,
-        status: int = None,
-    ):
+    def find_all_categories(filters_data: CategoriesFilters, connection):
+        data = filters_data.model_dump(exclude_none=True)
 
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+        cursor = connection.cursor(buffered=True)
 
         query = """
         SELECT 
@@ -33,52 +28,53 @@ class CategoriesRepository:
         filters = []
         values = []
 
-        if start_date:
+        if "start_date" in data:
             filters.append("DATE(category_date) >= %s")
-            values.append(start_date)
+            values.append(data["start_date"])
 
-        if end_date:
+        if "end_date" in data:
             filters.append("DATE(category_date) <= %s")
-            values.append(end_date)
+            values.append(data["end_date"])
 
-        if name_order == "asc":
-            query += " ORDER BY category_name ASC"
-        elif name_order == "desc":
-            query += " ORDER BY category_name DESC"
-
-        if status:
+        if "status" in data:
             filters.append("category_status = %s")
-            values.append(status)
+            values.append(data["status"])
 
         if filters:
             query += " WHERE " + " AND ".join(filters)
 
+        if data.get("name_order") == "asc":
+            query += " ORDER BY category_name ASC"
+        elif data.get("name_order") == "desc":
+            query += " ORDER BY category_name DESC"
+
         try:
             cursor.execute(query, values)
             result = cursor.fetchall()
+
             data = [
-                {
-                    "id": item["category_id"],
-                    "name": item["category_name"],
-                    "description": item["category_description"],
-                    "date": date_formatter(item["category_date"]),
-                    "status": item["category_status"]
-                }
+                Category(
+                    id=item[0],
+                    name=item[1],
+                    description=item[2],
+                    date=date_formatter(item[3]),
+                    status=item[4]
+                )
                 for item in result
             ]
             return None, data
+
         except Exception as e:
             logger.error("Error en find_all_categories: %s", e, exc_info=True)
             return "Error al intentar obtener las categorias", None
+
         finally:
             cursor.close()
-            connection.close()
 
     # Obtener una categoria por el ID
     @staticmethod
-    def find_by_id(category_id: int):
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_category_by_id(category_id: int, connection):
+        cursor = connection.cursor(buffered=True)
 
         query = """
         SELECT
@@ -92,19 +88,72 @@ class CategoriesRepository:
 
         try:
             cursor.execute(query, (category_id,))
-            result = cursor.fetchone()
-            return None, result
+            result = cursor.fetchall()
+
+            data = [
+                Category(
+                    id=item[0],
+                    name=item[1],
+                    description=item[2],
+                    date=date_formatter(item[3]),
+                    status=item[4]
+                )
+                for item in result
+            ]
+
+            return None, data
+
         except Exception as e:
             logger.error("Error en find_by_id: %s", e, exc_info=True)
             return "Error al intentar obtener la categoría", None
+
         finally:
             cursor.close()
-            connection.close()
+
+    # Obtener una categoria por el ID
+    @staticmethod
+    def find_category_by_name(category_name: str, connection):
+        cursor = connection.cursor(buffered=True)
+
+        query = """
+        SELECT
+            category_id,
+            category_name,
+            category_description,
+            category_date,
+            category_status
+        FROM CATEGORIES
+        WHERE LOWER(category_name) = LOWER(%s)"""
+
+        try:
+            cursor.execute(query, (category_name,))
+            result = cursor.fetchall()
+
+            data = [
+                Category(
+                    id=item[0],
+                    name=item[1],
+                    description=item[2],
+                    date=date_formatter(item[3]),
+                    status=item[4]
+                )
+                for item in result
+            ]
+
+            return None, data
+
+        except Exception as e:
+            logger.error("Error en find_by_id: %s", e, exc_info=True)
+            return "Error al intentar obtener la categoría", None
+
+        finally:
+            cursor.close()
 
     @staticmethod
-    def create_category(category_data: dict):
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def create_category(category_data: CreateCategory, connection):
+        data = category_data.model_dump()
+
+        cursor = connection.cursor(buffered=True)
 
         try:
             # Validar nombre duplicado
@@ -114,52 +163,38 @@ class CategoriesRepository:
                 category_name
             FROM CATEGORIES
             WHERE category_name = %s
-            """, (category_data["name"],))
+            """, (data["name"],))
 
             category_exist = cursor.fetchone()
 
             if category_exist:
-                return "La categoría ya existe", None, None
+                return "Ya existe un categoria con este nombre, usa uno diferente e intentalo nuevamente", False, None
 
             query = "INSERT INTO categories (category_name, category_description) VALUES (%s, %s)"
 
             cursor.execute(
-                query, (category_data["name"], category_data["description"]))
-            connection.commit()
+                query, (data["name"], data["description"])
+            )
 
             return None, True, "Categoría creada correctamente"
 
         except Exception as e:
-            connection.rollback()
             logger.error("Error en create_category: %s", e, exc_info=True)
             return "Error al intentar crear la categoría", None, None
 
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def update_category(category_id: int, category_data: CategoryUpdate):
-        data = category_data.model_dump()
+    def update_category(category_id: int, category_data: UpdateCategory, connection):
+        data = category_data.model_dump(exclude_none=True)
 
         CATEGORY_FIELDS = {
             "name": "category_name",
             "description": "category_description"
         }
 
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
-
-        # Verificar si existe la categoría
-        cursor.execute(
-            "SELECT category_name FROM categories WHERE category_id = %s", (category_id,))
-        category = cursor.fetchone()
-
-        if not category:
-            return "Categoría no encontrada", None, None
-
-        if not category_data:
-            return "No se proporcionaron datos para actualizar", None, None
+        cursor = connection.cursor(buffered=True)
 
         try:
             category_fields = {
@@ -170,7 +205,9 @@ class CategoriesRepository:
 
             if category_fields:
                 mapped = {
-                    CATEGORY_FIELDS[key]: value for key, value in category_fields.items()}
+                    CATEGORY_FIELDS[key]: value for key,
+                    value in category_fields.items()
+                }
 
                 columns = ", ".join(f"{col} = %s" for col in mapped.keys())
                 values = list(mapped.values()) + [category_id]
@@ -179,31 +216,26 @@ class CategoriesRepository:
                     f"UPDATE CATEGORIES SET {columns} WHERE category_id = %s",
                     values
                 )
-            connection.commit()
 
             return None, True, "Categoría actualizada correctamente"
 
         except Exception as e:
-            connection.rollback()
             logger.error("Error en update_category: %s", e, exc_info=True)
             return "Error al intentar actualizar la categoría", None, None
 
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def disable_category(category_id: int):
-        connection = get_connection()
+    def disable_category(category_id: int, connection):
         cursor = connection.cursor()
 
         cursor.execute(
             "SELECT category_name FROM CATEGORIES WHERE category_id = %s", (category_id,))
 
         category = cursor.fetchone()
+
         if not category:
-            cursor.close()
-            connection.close()
             return "Categoría no encontrada", False, None
 
         query = """
@@ -213,29 +245,29 @@ class CategoriesRepository:
 
         try:
             cursor.execute(query, (category_id,))
-            connection.commit()
 
             return None, True, "Categoría deshabilitada correctamente"
+
         except Exception as e:
             logger.error("Error en disable_category: %s", e, exc_info=True)
             return "Error al intentar deshabilitar la categoría", False, None
+
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def enable_category(category_id: int):
-        connection = get_connection()
+    def enable_category(category_id: int, connection):
         cursor = connection.cursor()
 
         cursor.execute(
-            "SELECT category_name FROM CATEGORIES WHERE category_id = %s", (category_id,))
+            "SELECT category_name FROM CATEGORIES WHERE category_id = %s", (
+                category_id,
+            )
+        )
 
         category = cursor.fetchone()
 
         if not category:
-            cursor.close()
-            connection.close()
             return "Categoría no encontrada", False, None
 
         query = """
@@ -245,14 +277,15 @@ class CategoriesRepository:
 
         try:
             cursor.execute(query, (category_id,))
-            connection.commit()
+
             return None, True, "Categoría habilitada correctamente"
+
         except Exception as e:
             logger.error("Error en enable_category: %s", e, exc_info=True)
             return "Error al intentar habilitar la categoría", False, None
+
         finally:
             cursor.close()
-            connection.close()
 
 #   ------------ REPORTES DE CATEGORIAS ------------
 
