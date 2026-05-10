@@ -3,7 +3,7 @@ from app.models.category_model import CategoryCreate, CategoryUpdate
 from fastapi import HTTPException
 
 
-class CategoryController:
+class CategoriesController:
 
     @staticmethod
     def get_all_categories(
