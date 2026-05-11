@@ -70,7 +70,8 @@ class DashboardRepository:
             s.supplier_name,
             COUNT(*) AS orders
             FROM INPUT_ORDERS io
-            JOIN SUPPLIERS s ON io.supplier_id = s.supplier_id
+            JOIN SUPPLIERS s 
+                ON io.supplier_id = s.supplier_id
             GROUP BY s.supplier_id
         """
 
@@ -81,8 +82,8 @@ class DashboardRepository:
 
             data = [
                 SupplierInputSchema(
-                    supplier_name=item["supplier_name"],
-                    orders=item["orders"]
+                    supplier_name=item[0],
+                    orders=item[1]
                 )
                 for item in result
             ]
