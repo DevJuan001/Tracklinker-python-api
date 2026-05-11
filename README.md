@@ -1,37 +1,374 @@
-Para correr el backend es necesario ejecutar estos comandos
+# Tracklinker API
+
+API REST para el sistema de gestión de inventario **Tracklinker**, construida con **FastAPI**, **MySQL**, **Celery** y **Redis**.
+
+---
+
+## Tabla de Contenidos
+
+- [Tech Stack](#tech-stack)
+- [Prerrequisitos](#prerrequisitos)
+- [Instalación](#instalación)
+- [Variables de Entorno](#variables-de-entorno)
+- [Ejecución](#ejecución)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Arquitectura](#arquitectura)
+- [Convenciones de Código](#convenciones-de-código)
+- [Testing](#testing)
+- [Contribuciones](#contribuciones)
+
+---
+
+## Tech Stack
+
+
+| Tecnología                               | Versión   | Descripción                                  |
+| ---------------------------------------- | --------- | -------------------------------------------- |
+| [Python](https://www.python.org/)        | `>= 3.13` | Lenguaje principal del backend               |
+| [FastAPI](https://fastapi.tiangolo.com/) | `latest`  | Framework web asíncrono de alto rendimiento  |
+| [Uvicorn](https://www.uvicorn.org/)      | `latest`  | Servidor ASGI para ejecutar la aplicación    |
+| [MySQL](https://www.mysql.com/)          | `>= 8.0`  | Base de datos relacional                     |
+| [Redis](https://redis.io/)               | `7.4.8`   | Broker de mensajes y caché en memoria        |
+| [Celery](https://docs.celeryq.dev/)      | `5.6.3`   | Cola de tareas distribuidas en segundo plano |
+| [Docker](https://www.docker.com/)        | `latest`  | Contenedorización de la aplicación           |
+
+
+---
+
+## Prerrequisitos
+
+Antes de comenzar, asegúrate de tener instalado:
+
+- **Python** `>= 3.13` → [Descargar](https://www.python.org/downloads/)
+- **MySQL** `>= 8.0` → [Descargar](https://dev.mysql.com/downloads/)
+- **Redis** `7.4.8` → [Descargar](https://redis.io/downloads/)
+- **Git** → [Descargar](https://git-scm.com/)
+
+> [!NOTE]
+> Redis es necesario tanto para el **rate limiting** (FastAPI Limiter) como para el **broker de Celery** que gestiona las tareas asíncronas como el envío de correos.
+
+---
+
+## Instalación
 
 ```bash
-# 1: Crear el entorno virtual
+# 1. Clonar el repositorio
+git clone https://github.com/DevJuan001/Tracklinker-python-api.git
+cd Tracklinker-python-api
+
+# 2. Crear el entorno virtual
 python -m venv venv
 
-# 2: Activar el entorno virtual 
+# 3. Activar el entorno virtual
 # En Windows:
 venv\Scripts\activate
-# En mac o linux
+# En Mac / Linux:
 source venv/bin/activate
 
-# 3: Instalar todas las dependencias
+# 4. Instalar todas las dependencias
 pip install -r requirements.txt
 
-# 4: Iniciar el servidor de FastAPI
-uvicorn app.main:app --reload
-
-# 5: Y al terminar se desactiva el entorno virtual
-deactivate
-
-# Si agregas nuevas dependencias utiliza el siguiente comando para actualizar el requirements.txt
-pip freeze > requirements.txt
-
-
+# 5. Configurar las variables de entorno
+# Copiar el archivo de ejemplo y completar los valores
+cp .env.example .env
 ```
 
-Para nombrar cualquier cosa aqui en el backend se debe seguir este formato:
+> [!IMPORTANT]
+> Antes de iniciar la API debes configurar **todas** las variables del archivo `.env`. Pydantic validará que no falte ninguna al arrancar.
 
-| Tipo de elemento                        | Estilo recomendado                        | Ejemplo correcto                | Ejemplo incorrecto        |
-| --------------------------------------- | ----------------------------------------- | ------------------------------- | ------------------------  |
-| **Clases**                              | `PascalCase`                              | `class UserModel:` ✅             | `class user_model:` ❌    |
-| **Funciones / métodos**                 | `snake_case`                              | `def get_all_users():`  ✅         | `def GetAllUsers():` ❌   |
-| **Variables**                           | `snake_case`                              | `user_name = "Juan"` ✅           | `UserName = "Juan"` ❌    |
-| **Constantes**                          | `UPPER_CASE`                              | `DB_HOST = "localhost"` ✅        | `dbHost = "localhost"` ❌ |
-| **Módulos (archivos .py)**              | `snake_case`                              | `user_model.py`    ✅             | `UserModel.py` ❌         |
-| **Paquetes (carpetas con **init**.py)** | `snake_case`                              | `core`, `models`, `controllers` | `Core`, `Models` ❌       |
+---
+
+## Variables de Entorno
+
+Crea un archivo `.env` en la raíz del proyecto basándote en `.env.example`:
+
+
+| Variable                   | Tipo    | Descripción                                            |
+| -------------------------- | ------- | ------------------------------------------------------ |
+| `DB_HOST`                  | `str`   | Host de la base de datos MySQL                         |
+| `DB_PORT`                  | `int`   | Puerto de conexión a MySQL                             |
+| `DB_USER`                  | `str`   | Usuario de la base de datos                            |
+| `DB_PASSWORD`              | `str`   | Contraseña de la base de datos                         |
+| `DB_NAME`                  | `str`   | Nombre de la base de datos                             |
+| `REDIS_URL`                | `str`   | URL de conexión a Redis (ej: `redis://localhost:6379`) |
+| `ENVIRONMENT`              | `str`   | Entorno actual (`development` o `production`)          |
+| `ACCESS_TOKEN_SECRET_KEY`  | `str`   | Clave secreta para firmar el Access Token JWT          |
+| `REFRESH_TOKEN_SECRET_KEY` | `str`   | Clave secreta para firmar el Refresh Token JWT         |
+| `ALGORITHM`                | `str`   | Algoritmo de cifrado JWT (ej: `HS256`)                 |
+| `ACCESS_TOKEN_EXPIRE`      | `int`   | Tiempo de expiración del Access Token en **minutos**   |
+| `REFRESH_TOKEN_EXPIRE`     | `int`   | Tiempo de expiración del Refresh Token en **días**     |
+| `MAIL_USERNAME`            | `email` | Correo electrónico para enviar emails                  |
+| `MAIL_PASSWORD`            | `str`   | Contraseña del correo electrónico                      |
+| `MAIL_FROM`                | `email` | Dirección de correo del remitente                      |
+
+
+> [!TIP]
+> Puedes generar claves secretas seguras con herramientas como [Random Key Generator](https://www.vondy.com/random-key-generator--ZzGGMYgS?lc=5).
+
+---
+
+## ▶ Ejecución
+
+### Servidor de la API
+
+```bash
+# Iniciar el servidor de FastAPI con recarga automática
+uvicorn app.main:app --reload
+```
+
+La API estará disponible en `http://localhost:8000` y la documentación interactiva en `http://localhost:8000/docs`.
+
+### Worker de Celery
+
+En una **segunda terminal** (con el entorno virtual activado):
+
+```bash
+celery -A app.core.celery_app.celery worker --loglevel=info --pool=solo
+```
+
+> [!WARNING]
+> El flag `--pool=solo` es necesario en **Windows**. En Linux o Mac puedes omitirlo.
+
+### Con Docker
+
+```bash
+docker build -t tracklinker-api .
+docker run -p 8000:8000 tracklinker-api
+```
+
+### Desactivar el entorno virtual
+
+```bash
+deactivate
+```
+
+### Actualizar dependencias
+
+```bash
+# Si agregas nuevas dependencias utiliza el siguiente comando
+pip freeze > requirements.txt
+```
+
+---
+
+## Estructura del Proyecto
+
+```
+Tracklinker-python-api/
+│
+├── 📄 .env.example              # Plantilla de variables de entorno
+├── 📄 .gitignore                 # Archivos y carpetas ignorados por Git
+├── 📄 Dockerfile                # Configuración para contenedor Docker
+├── 📄 README.md                  # Documentación del proyecto
+├── 📄 requirements.txt           # Dependencias de Python
+│
+├── 📂 app/                       # ← Código fuente principal
+│   ├── 📄 main.py                # Punto de entrada de la API (FastAPI app)
+│   │
+│   ├── 📂 core/                  # ← Configuración central de la aplicación
+│   │   ├── 📄 cache.py           # Utilidad para invalidar caché en Redis
+│   │   ├── 📄 celery_app.py      # Instancia y configuración de Celery
+│   │   ├── 📄 config.py          # Carga y validación de variables de entorno (Pydantic)
+│   │   ├── 📄 database.py        # Conexión a la base de datos MySQL
+│   │   ├── 📄 exception.py       # Excepciones personalizadas (ServiceError)
+│   │   ├── 📄 mail.py            # Configuración de FastMail para envío de correos
+│   │   ├── 📄 redis.py           # Inicialización y gestión del cliente Redis
+│   │   └── 📄 security.py        # JWT (access/refresh tokens), hashing, cookies
+│   │
+│   ├── 📂 middlewares/           # ← Middlewares de la API
+│   │   ├── 📄 jwt_middleware.py      # Verificación de JWT en rutas protegidas
+│   │   ├── 📄 roles_middleware.py    # Control de acceso basado en roles
+│   │   └── 📄 validate_request.py   # Validación de peticiones (cancelación)
+│   │
+│   ├── 📂 features/             # ← Módulos de negocio (arquitectura por feature)
+│   │   ├── 📂 auth/             # Autenticación (login, registro, refresh token)
+│   │   │   ├── 📂 controllers/
+│   │   │   ├── 📂 models/
+│   │   │   ├── 📂 routes/
+│   │   │   └── 📂 services/
+│   │   │
+│   │   ├── 📂 categories/       # Gestión de categorías de productos
+│   │   │   ├── 📂 controllers/
+│   │   │   ├── 📂 models/
+│   │   │   ├── 📂 repositories/
+│   │   │   ├── 📂 routes/
+│   │   │   └── 📂 services/
+│   │   │
+│   │   ├── 📂 dashboard/        # Panel de control y estadísticas
+│   │   │   ├── 📂 controllers/
+│   │   │   ├── 📂 repositories/
+│   │   │   ├── 📂 routes/
+│   │   │   └── 📂 services/
+│   │   │
+│   │   ├── 📂 output_orders/    # Órdenes de salida de inventario
+│   │   │   ├── 📂 controllers/
+│   │   │   ├── 📂 models/
+│   │   │   ├── 📂 repositories/
+│   │   │   ├── 📂 routes/
+│   │   │   └── 📂 services/
+│   │   │
+│   │   ├── 📂 products/         # Gestión de productos del inventario
+│   │   │   ├── 📂 controllers/
+│   │   │   ├── 📂 models/
+│   │   │   ├── 📂 repositories/
+│   │   │   ├── 📂 routes/
+│   │   │   └── 📂 services/
+│   │   │
+│   │   ├── 📂 reports/          # Generación de reportes
+│   │   │   ├── 📂 controllers/
+│   │   │   └── 📂 routes/
+│   │   │
+│   │   ├── 📂 subcategories/    # Gestión de subcategorías
+│   │   │   ├── 📂 controllers/
+│   │   │   ├── 📂 repositories/
+│   │   │   ├── 📂 routes/
+│   │   │   └── 📂 services/
+│   │   │
+│   │   ├── 📂 suggestions/     # Módulo de ayuda y sugerencias
+│   │   │   ├── 📂 controllers/
+│   │   │   ├── 📂 models/
+│   │   │   └── 📂 routes/
+│   │   │
+│   │   ├── 📂 suppliers/       # Gestión de proveedores
+│   │   │   ├── 📂 controllers/
+│   │   │   ├── 📂 repositories/
+│   │   │   ├── 📂 routes/
+│   │   │   └── 📂 services/
+│   │   │
+│   │   ├── 📂 users/           # Gestión de usuarios del sistema
+│   │   │   ├── 📂 controllers/
+│   │   │   ├── 📂 models/
+│   │   │   ├── 📂 repositories/
+│   │   │   ├── 📂 routes/
+│   │   │   └── 📂 services/
+│   │   │
+│   │   └── 📂 warranties/      # Gestión de garantías
+│   │       ├── 📂 controllers/
+│   │       ├── 📂 models/
+│   │       ├── 📂 repositories/
+│   │       ├── 📂 routes/
+│   │       └── 📂 services/
+│   │
+│   ├── 📂 controllers/          # ← Controladores legacy (migración pendiente)
+│   │   ├── 📄 dashboard_controller.py
+│   │   ├── 📄 subcategories_controller.py
+│   │   └── 📄 suppliers_controller.py
+│   │
+│   ├── 📂 models/               # ← Modelos legacy (migración pendiente)
+│   │   └── 📄 suppliers_model.py
+│   │
+│   ├── 📂 repository/           # ← Repositorios legacy (migración pendiente)
+│   │   ├── 📄 dashboard_repository.py
+│   │   ├── 📄 subcategories_repository.py
+│   │   └── 📄 suppliers_repository.py
+│   │
+│   ├── 📂 routes/               # ← Rutas legacy (migración pendiente)
+│   │   ├── 📄 dashboard_routes.py
+│   │   ├── 📄 subcategories_routes.py
+│   │   └── 📄 suppliers_routes.py
+│   │
+│   ├── 📂 tasks/                # ← Tareas asíncronas de Celery
+│   │   └── 📄 email_tasks.py    # Envío de correos (bienvenida, recuperación)
+│   │
+│   ├── 📂 templates/            # ← Plantillas HTML para correos electrónicos
+│   │   ├── 📄 recover_password.html   # Email de recuperación de contraseña
+│   │   ├── 📄 suggestion_mail.html    # Email de sugerencias
+│   │   └── 📄 welcome_mail.html       # Email de bienvenida al sistema
+│   │
+│   └── 📂 utils/                # ← Utilidades y funciones auxiliares
+│       ├── 📄 date_formatter.py  # Formateo de fechas en español
+│       ├── 📄 logger.py          # Logger personalizado con formato estándar
+│       └── 📄 periods.py         # Mapeo de períodos para consultas temporales
+│
+├── 📂 database/                  # ← Scripts SQL para la base de datos
+│   ├── 📄 01_database.sql        # DDL: Creación de tablas y estructura
+│   ├── 📄 02_dml.sql             # DML: Datos iniciales (seeds)
+│   └── 📄 03_views.sql           # Vistas SQL para consultas complejas
+│
+└── 📂 test/                      # ← Pruebas automatizadas
+    ├── 📄 conftest.py            # Configuración compartida de pytest
+    ├── 📂 bdd/                   # Pruebas de comportamiento (BDD)
+    │   └── 📄 test_flujo_auth.py # Test del flujo completo de autenticación
+    └── 📂 unit/                  # Pruebas unitarias
+        └── 📄 test_user_models.py # Tests de modelos de usuario
+```
+
+---
+
+## Arquitectura
+
+El proyecto utiliza una **arquitectura por features** (modular) con una capa de servicios centralizada:
+
+```
+Ruta (Route) → Controlador (Controller) → Servicio (Service) → Repositorio (Repository) → Base de Datos
+```
+
+
+| Capa             | Responsabilidad                                        |
+| ---------------- | ------------------------------------------------------ |
+| **Routes**       | Definición de endpoints y middlewares aplicados        |
+| **Controllers**  | Recepción de la petición HTTP y delegación al servicio |
+| **Services**     | Lógica de negocio y orquestación de operaciones        |
+| **Repositories** | Acceso a datos y consultas SQL                         |
+| **Models**       | Esquemas de validación con Pydantic                    |
+
+
+Cada módulo dentro de `features/` es autocontenido y sigue esta estructura de capas.
+
+> [!NOTE]
+> Las carpetas `controllers/`, `models/`, `repository/` y `routes/` en la raíz de `app/` son **legacy** y están en proceso de migración hacia la arquitectura por features.
+
+---
+
+## Convenciones de Código
+
+
+| Tipo de elemento           | Estilo       | Ejemplo correcto        | Ejemplo incorrecto     |
+| -------------------------- | ------------ | ----------------------- | ---------------------- |
+| **Clases**                 | `PascalCase` | `class UserModel:`      | `class user_model:`    |
+| **Funciones / métodos**    | `snake_case` | `def get_all_users():`  | `def GetAllUsers():`   |
+| **Variables**              | `snake_case` | `user_name = "Juan"`    | `UserName = "Juan"`    |
+| **Constantes**             | `UPPER_CASE` | `DB_HOST = "localhost"` | `dbHost = "localhost"` |
+| **Módulos (archivos .py)** | `snake_case` | `user_model.py`         | `UserModel.py`         |
+| **Paquetes (carpetas)**    | `snake_case` | `core`, `models`        | `Core`, `Models`       |
+
+
+---
+
+## Testing
+
+```bash
+# Ejecutar todas las pruebas
+pytest
+
+# Ejecutar solo pruebas unitarias
+pytest test/unit/
+
+# Ejecutar solo pruebas BDD
+pytest test/bdd/
+```
+
+---
+
+## Contribuciones
+
+Cualquier contribución es bienvenida. Si deseas colaborar con el proyecto, sigue estos pasos:
+
+1. Haz un **fork** del repositorio
+2. Crea una rama para tu feature o fix:
+   ```bash
+   git checkout -b feat/mi-nueva-feature
+   ```
+3. Realiza tus cambios siguiendo las [convenciones de código](#convenciones-de-código)
+4. Haz commit de tus cambios:
+   ```bash
+   git commit -m "feat: descripción breve del cambio"
+   ```
+5. Sube tu rama:
+   ```bash
+   git push origin feat/mi-nueva-feature
+   ```
+6. Abre un **Pull Request** hacia la rama `main`
+
+> [!NOTE]
+> Asegúrate de que tu código sigue las convenciones del proyecto y de que las pruebas existentes siguen pasando antes de abrir un PR.

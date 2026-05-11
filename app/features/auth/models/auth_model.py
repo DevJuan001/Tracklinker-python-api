@@ -6,3 +6,6 @@ class LoginModel(BaseModel):
 
 class RecoverPassword(BaseModel):
     email: EmailStr
+
+class VerifyRoleModel(BaseModel):
+    roles: list[str]

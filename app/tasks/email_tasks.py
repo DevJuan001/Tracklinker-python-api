@@ -1,4 +1,6 @@
 import asyncio
+
+from pydantic import EmailStr
 from app.core.mail import fm
 from app.core.celery_app import celery
 from app.features.users.models.users_model import User
@@ -6,7 +8,7 @@ from fastapi_mail import MessageSchema
 
 
 @celery.task(bind=True, max_retries=3)
-def send_welcome_email(self, user_name: str, user_first_surname: str, user_email: str, password: str):
+def send_welcome_email(self, user_name: str, user_first_surname: str, user_email: EmailStr, password: str):
     try:
         message = MessageSchema(
             subject="Bienvenido a Tracklinker",
@@ -31,7 +33,7 @@ def send_welcome_email(self, user_name: str, user_first_surname: str, user_email
 
 
 @celery.task(bind=True, max_retries=3)
-def recovery_password_email(self, user_email: str, user_name: str):
+def recovery_password_email(self, user_email: EmailStr, user_name: str):
     try:
         message = MessageSchema(
             subject="Recuperación de contraseña",
