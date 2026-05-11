@@ -1,18 +1,23 @@
+
+
 from contextlib import asynccontextmanager
-from app.core.redis import init_redis, close_redis
+
 from fastapi import FastAPI
-from fastapi_limiter import FastAPILimiter
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_limiter import FastAPILimiter
+
 from app.core.database import get_connection
-from app.routes import dashboard_routes, subcategories_routes, suppliers_routes
+from app.core.redis import close_redis, init_redis
 from app.features.auth.routes import auth_routes
-from app.features.users.routes import users_routes
-from app.features.reports.routes import reports_routes
-from app.features.products.routes import products_routes
 from app.features.categories.routes import categories_routes
-from app.features.warranties.routes import warranties_routes
-from app.features.suggestions.routes import suggestion_routes
+from app.features.dashboard.routes import dashboard_routes
 from app.features.output_orders.routes import output_orders_routes
+from app.features.products.routes import products_routes
+from app.features.reports.routes import reports_routes
+from app.features.suggestions.routes import suggestion_routes
+from app.features.users.routes import users_routes
+from app.features.warranties.routes import warranties_routes
+from app.routes import subcategories_routes, suppliers_routes
 
 
 @asynccontextmanager
@@ -41,6 +46,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Endpoint para probar conexión a la base de datos
 @app.get("/ping-db")
 def ping_db():
@@ -54,6 +60,7 @@ def ping_db():
         return {
             "status": "Error al intentar conectarse a la base de datos"
         }
+
 
 # Endpoint raíz para probar ejecución de la API
 @app.get("/")
