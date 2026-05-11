@@ -62,6 +62,7 @@ class DashboardService:
 
             )
             return "Error al intentar obtener las ordenes de entrada mensuales por proveedor", None
+        
         finally:
             connection.close()
 
