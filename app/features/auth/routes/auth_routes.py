@@ -58,5 +58,5 @@ def logout(response: Response):
         Depends(RateLimiter(times=3, seconds=60)),
     ]
 )
-async def recover_user_password(data: RecoverPassword):
-    return await AuthController.recover_user_password(data.email)
+async def recover_password(data: RecoverPassword):
+    return await AuthController.recover_password(data.email)
