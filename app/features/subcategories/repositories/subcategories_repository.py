@@ -1,3 +1,4 @@
+from tarfile import data_filter
 from app.core.database import get_connection
 from app.features.subcategories.models.subcategories_responses import ActiveCategoryResponse, SubcategoryResponse
 from app.features.subcategories.models.subcategories_schemas import CreateSubcategorySchema, SubcategoriesFiltersSchema, UpdateSubcategorySchema
@@ -34,26 +35,26 @@ class SubcategoriesRepository:
 
         if "start_date" in filters_data:
             filters.append("DATE(s.subcategory_date) >= %s")
-            values.append("start_date")
+            values.append(filters_data["start_date"])
 
         if "end_date" in filters_data:
             filters.append("DATE(s.subcategory_date) <= %s")
-            values.append("end_date")
+            values.append(filters_data["end_date"])
 
         if "category_order" in filters_data:
             filters.append("c.category_id = %s")
-            values.append("category_order")
+            values.append(filters_data["category_order"])
 
         if "status" in filters_data:
             filters.append("s.subcategory_status = %s")
-            values.append("status")
+            values.append(filters_data["status"])
 
         if filters:
             query += " WHERE " + " AND ".join(filters)
 
-        if "name_order" == "asc":
+        if filters_data.get("name_order") == "asc":
             query += " ORDER BY s.subcategory_name ASC"
-        elif "name_order" == "desc":
+        elif filters_data.get("name_order") == "desc":
             query += " ORDER BY s.subcategory_name DESC"
 
         try:
