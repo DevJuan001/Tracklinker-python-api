@@ -333,6 +333,32 @@ Cada módulo dentro de `features/` es autocontenido y sigue esta estructura de c
 | **Paquetes (carpetas)**    | `snake_case` | `core`, `models`        | `Core`, `Models`       |
 
 
+### Nomenclatura de Modelos (Pydantic)
+
+Los modelos se nombran con un sufijo según su propósito:
+
+
+| Sufijo         | Uso                                           | Ejemplo                  |
+| -------------- | --------------------------------------------- | ------------------------ |
+| `Response`     | Respuestas que devuelve la API al cliente     | `ProductsAmountResponse` |
+| *(sin sufijo)* | Modelos internos que no salen de la API       | `ProductsAmount`         |
+| `Schema`       | Datos que se reciben en el body de la request | `ProductsAmountSchema`   |
+
+
+```python
+# Respuesta de la API → sufijo Response
+class SupplierInputResponse(BaseModel):
+    ...
+
+# Modelo interno → sin sufijo
+class SupplierInput(BaseModel):
+    ...
+
+# Datos de entrada (request body) → sufijo Schema
+class SupplierInputSchema(BaseModel):
+    ...
+```
+
 ---
 
 ## Testing
@@ -356,19 +382,20 @@ Cualquier contribución es bienvenida. Si deseas colaborar con el proyecto, sigu
 
 1. Haz un **fork** del repositorio
 2. Crea una rama para tu feature o fix:
-   ```bash
+  ```bash
    git checkout -b feat/mi-nueva-feature
-   ```
+  ```
 3. Realiza tus cambios siguiendo las [convenciones de código](#convenciones-de-código)
 4. Haz commit de tus cambios:
-   ```bash
+  ```bash
    git commit -m "feat: descripción breve del cambio"
-   ```
+  ```
 5. Sube tu rama:
-   ```bash
+  ```bash
    git push origin feat/mi-nueva-feature
-   ```
+  ```
 6. Abre un **Pull Request** hacia la rama `main`
 
 > [!NOTE]
 > Asegúrate de que tu código sigue las convenciones del proyecto y de que las pruebas existentes siguen pasando antes de abrir un PR.
+
