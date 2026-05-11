@@ -30,8 +30,8 @@ def login(credentials: LoginModel, response: Response):
         Depends(RateLimiter(times=30, seconds=60)),
     ]
 )
-def refresh_token(request: Request, response: Response):
-    return AuthController.update_tokens(request, response)
+def refresh_tokens(request: Request, response: Response):
+    return AuthController.refresh_tokens(request, response)
 
 
 # Endpoint para verificar el rol del usuario
