@@ -44,7 +44,7 @@ class SubcategoriesController:
 
     @staticmethod
     def create_subcategory(subcategory_data: CreateSubcategorySchema):
-        error, message = SubcategoriesService.create_subcategory(
+        error, success, message = SubcategoriesService.create_subcategory(
             subcategory_data
         )
 
@@ -52,7 +52,7 @@ class SubcategoriesController:
             raise HTTPException(status_code=400, detail=error)
 
         return {
-            "success": True,
+            "success": success,
             "message": message
         }
 
