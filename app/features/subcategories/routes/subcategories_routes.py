@@ -26,14 +26,14 @@ def get_all_subcategories(filters: SubcategoriesFiltersSchema = Depends()):
 
 # Endpoint para obtener las categorias activas
 @router.get(
-    "/categories",
+    "/active-categories",
     dependencies=[
         Depends(RateLimiter(times=30, seconds=60)),
         Depends(require_roles(["Admin"]))
     ]
 )
-def get_categories():
-    return SubcategoriesController.get_categories()
+def get_active_categories():
+    return SubcategoriesController.get_active_categories()
 
 
 # Endpoint para obtener una subcategoría mediante el id
