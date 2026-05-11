@@ -1,11 +1,10 @@
 import bcrypt
-from app.core.mail import fm
 from pydantic import EmailStr
-from fastapi_mail import MessageSchema
-from app.core.exception import ServiceError
-from app.core.security import generate_temporal_password, verify_password
 from app.utils.logger import get_logger
+from app.core.exception import ServiceError
 from app.core.database import get_connection
+from app.tasks.email_tasks import send_welcome_email
+from app.core.security import generate_temporal_password, verify_password
 from app.features.users.repositories.users_repository import UsersRepository
 from app.features.users.models.users_model import UpdatePassword, UsersFilters, CreateUser, UpdateUser
 
@@ -76,7 +75,7 @@ class UsersService:
             return None, user
 
         except ServiceError as e:
-            return e.message, False, None
+            return e.message, None
 
         except Exception as e:
             logger.error(
@@ -84,7 +83,7 @@ class UsersService:
                 e,
                 exc_info=True
             )
-            return "Error al intentar obtener el usuario mediante el correo", False, None
+            return "Error al intentar obtener el usuario mediante el correo", None
 
     @staticmethod
     def get_all_roles():
@@ -174,19 +173,12 @@ class UsersService:
                 raise ServiceError(error)
 
             if success == True:
-                emailMessage = MessageSchema(
-                    subject="Bienvenido a Tracklinker",
-                    recipients=[data["email"]],
-                    template_body={
-                        "name": data["name"],
-                        "surname": data["first_surname"],
-                        "email": data["email"],
-                        "password": temporal_password
-                    },
-                    subtype="html",
+                send_welcome_email.delay(
+                    user_name=data["name"],
+                    user_first_surname=data["first_surname"],
+                    user_email=data["email"],
+                    password=temporal_password
                 )
-
-                await fm.send_message(emailMessage, template_name="welcome_mail.html")
 
             connection.commit()
 
@@ -276,7 +268,7 @@ class UsersService:
                 user[0], data["old_password"]
             )
 
-            error, success, message = UsersRepository.update_password(
+            error, success, message = UsersRepository.update_user_password(
                 user_id, data["new_password"]
             )
 

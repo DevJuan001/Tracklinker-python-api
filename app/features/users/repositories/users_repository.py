@@ -346,74 +346,8 @@ class UsersRepository:
         finally:
             cursor.close()
 
-    # Actualizar la información de un usuario
     @staticmethod
-    def update_current_user(user_id: int, user_data: UpdateCurrentUser):
-        data = user_data.model_dump()
-
-        USER_FIELDS = {
-            "name": "user_name",
-            "first_surname": "user_first_surname",
-            "second_surname": "user_second_surname",
-            "email": "user_email",
-            "phone": "user_phone",
-            "city": "user_city",
-            "address": "user_address",
-            "status": "user_status"
-        }
-
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
-
-        # Verificar si existe el usuario
-        cursor.execute(
-            "SELECT user_name FROM USERS WHERE user_id = %s", (user_id,))
-        user = cursor.fetchone()
-
-        if not user:
-            return "Usuario no encontrado", None, None
-
-        # Verificar si existe el correo y no duplicarlo
-        if "user_email" in user_data:
-            cursor.execute(
-                "SELECT user_id FROM USERS WHERE user_email = %s", (user_data["user_email"],))
-            existing = cursor.fetchone()
-
-            if existing and existing["user_id"] != user_id:
-                cursor.close()
-                connection.close()
-                return None, False, "El correo ya está registrado"
-
-        try:
-            user_fields = {
-                key: data[key]
-                for key in USER_FIELDS.keys()
-                if key in data
-            }
-
-            if user_fields:
-                mapped = {
-                    USER_FIELDS[key]: value for key, value in user_fields.items()}
-
-                columns = ", ".join(f"{col} = %s" for col in mapped.keys())
-                values = list(mapped.values()) + [user_id]
-
-                cursor.execute(
-                    f"UPDATE USERS SET {columns} WHERE user_id = %s",
-                    values
-                )
-            return None, True, "Usuario actualizado correctamente"
-
-        except Exception as e:
-            logger.error("Error en update_current_user: %s", e, exc_info=True)
-            return "Error al intentar actualizar el usuario", False, None
-
-        finally:
-            cursor.close()
-            connection.close()
-
-    @staticmethod
-    def update_password(user_id: int, password: str, connection):
+    def update_user_password(user_id: int, password: str, connection):
         cursor = connection.cursor()
 
         query = """
