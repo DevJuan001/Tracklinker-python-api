@@ -23,6 +23,7 @@ class DashboardController:
 
         if error:
             raise HTTPException(status_code=404, detail=error)
+        
         return {
             "data": data
         }
