@@ -1,13 +1,13 @@
 from fastapi import HTTPException
-from app.features.subcategories.models.subcategories_schemas import SubcategoriesFiltersSchema
-from app.features.subcategories.repositories.subcategories_repository import SubcategoriesRepository
+from app.features.subcategories.models.subcategories_schemas import CreateSubcategorySchema, SubcategoriesFiltersSchema, UpdateSubcategorySchema
+from app.features.subcategories.services.subcategories_service import SubcategoriesService
 
 
 class SubcategoriesController:
 
     @staticmethod
     def get_all_subcategories(filters: SubcategoriesFiltersSchema):
-        error, subcategories = SubcategoriesRepository.find_all_subcategories(
+        error, subcategories = SubcategoriesService.get_all_subcategories(
             filters
         )
 
@@ -20,7 +20,9 @@ class SubcategoriesController:
 
     @staticmethod
     def get_subcategory_by_id(subcategory_id: int):
-        error, subcategory = SubcategoriesRepository.find_by_id(subcategory_id)
+        error, subcategory = SubcategoriesService.get_subcategory_by_id(
+            subcategory_id
+        )
 
         if error:
             raise HTTPException(status_code=404, detail=error)
@@ -30,8 +32,8 @@ class SubcategoriesController:
         }
 
     @staticmethod
-    def get_categories():
-        error, categories = SubcategoriesRepository.find_categories()
+    def get_active_categories():
+        error, categories = SubcategoriesService.get_active_categories()
 
         if error:
             raise HTTPException(status_code=404, detail=error)
@@ -41,11 +43,11 @@ class SubcategoriesController:
         }
 
     @staticmethod
-    def create_subcategory(subcategory_data: dict):
-        error, message = SubcategoriesRepository.create_subcategory(
+    def create_subcategory(subcategory_data: CreateSubcategorySchema):
+        error, message = SubcategoriesService.create_subcategory(
             subcategory_data
-            )
-        
+        )
+
         if error:
             raise HTTPException(status_code=400, detail=error)
 
@@ -55,80 +57,43 @@ class SubcategoriesController:
         }
 
     @staticmethod
-    def update_subcategory(subcategory_id: int, subcategory_data: dict):
-        error, message, subcategory = SubcategoriesRepository.update_subcategory(
+    def update_subcategory(subcategory_id: int, subcategory_data: UpdateSubcategorySchema):
+        error, success, message = SubcategoriesService.update_subcategory(
             subcategory_id, subcategory_data
-            )
-        
+        )
+
         if error:
             raise HTTPException(status_code=400, detail=error)
 
         return {
-            "success": True,
+            "success": success,
             "message": message,
         }
 
     @staticmethod
     def disable_subcategory(subcategory_id: int):
-        error, message = SubcategoriesRepository.disable_subcategory(
+        error, success, message = SubcategoriesService.disable_subcategory(
             subcategory_id
-            )
-        
+        )
+
         if error:
             raise HTTPException(status_code=400, detail=error)
 
         return {
-            "success": True,
+            "success": success,
             "message": message
         }
 
     @staticmethod
     def enable_subcategory(subcategory_id: int):
-        error, message = SubcategoriesRepository.enable_subcategory(
+        error, success, message = SubcategoriesService.enable_subcategory(
             subcategory_id
-            )
-        
+        )
+
         if error:
             raise HTTPException(status_code=400, detail=error)
 
         return {
-            "success": True,
+            "success": success,
             "message": message
-        }
-
-    @staticmethod
-    def get_subcategories_by_date_range(start_date: str, end_date: str):
-        error, subcategories = SubcategoriesRepository.find_subcategories_by_date_range(
-            start_date, end_date
-            )
-
-        if error:
-            raise HTTPException(status_code=404, detail=error)
-
-        return {
-            "data": subcategories
-        }
-
-    @staticmethod
-    def get_deleted_subcategories_by_date_range(start_date: str, end_date: str):
-        error, subcategories = SubcategoriesRepository.find_deleted_subcategories_by_date_range(
-            start_date, end_date
-            )
-
-        if error:
-            raise HTTPException(status_code=404, detail=error)
-
-        return {
-            "data": subcategories
-        }
-
-    @staticmethod
-    def get_disabled_subcategories():
-        error, subcategories = SubcategoriesRepository.find_disabled_subcategories()
-
-        if error:
-            raise HTTPException(status_code=404, detail=error)
-
-        return {
-            "data": subcategories
         }
