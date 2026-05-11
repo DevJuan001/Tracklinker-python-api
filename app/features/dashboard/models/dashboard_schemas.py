@@ -17,7 +17,7 @@ class OutputByMonthSchema(BaseModel):
 
 
 class WarrantyByStatusSchema(BaseModel):
-    status: str
+    status: int
     total: int
 
 
