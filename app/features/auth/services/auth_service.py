@@ -91,7 +91,7 @@ class AuthService:
     def verify_roles(body: VerifyRoleModel, payload: dict):
         try:
             user_role = payload.get("role")
-            roles = body.get("roles", [])
+            roles = body.roles
 
             if user_role not in roles:
                 raise ServiceError("No autorizado")
