@@ -1,15 +1,15 @@
 
 
-from app.features.dashboard.models.dashboard_schemas import (
-    OutputByMonthSchema,
-    OutputOrdersAmountSchema,
-    ProductsAmountSchema,
-    StockByBrandSchema,
-    SupplierInputSchema,
-    UsersAmountSchema,
-    WarrantyByStatusSchema,
-    CategoriesAmountSchema,
-    SubcategoryStockSchema
+from app.features.dashboard.models.dashboard_responses import (
+    OutputByMonthResponse,
+    OutputOrdersAmountResponse,
+    ProductsAmountResponse,
+    StockByBrandResponse,
+    SupplierInputResponse,
+    UsersAmountResponse,
+    WarrantyByStatusResponse,
+    CategoriesAmountResponse,
+    SubcategoryStockResponse
 )
 from app.utils.logger import get_logger
 
@@ -41,7 +41,7 @@ class DashboardRepository:
             result = cursor.fetchall()
 
             data = [
-                ProductsAmountSchema(
+                ProductsAmountResponse(
                     products=item[0],
                     new_products=item[1]
                 )
@@ -81,7 +81,7 @@ class DashboardRepository:
             result = cursor.fetchall()
 
             data = [
-                SupplierInputSchema(
+                SupplierInputResponse(
                     supplier_name=item[0],
                     orders=item[1]
                 )
@@ -119,7 +119,7 @@ class DashboardRepository:
             result = cursor.fetchall()
 
             data = [
-                OutputByMonthSchema(
+                OutputByMonthResponse(
                     month=item[0],
                     output_orders=item[1]
                 )
@@ -157,7 +157,7 @@ class DashboardRepository:
             result = cursor.fetchall()
 
             data = [
-                WarrantyByStatusSchema(
+                WarrantyByStatusResponse(
                     status=item[0],
                     total=item[1]
                 )
@@ -195,7 +195,7 @@ class DashboardRepository:
             result = cursor.fetchall()
 
             data = [
-                UsersAmountSchema(
+                UsersAmountResponse(
                     users=item[0],
                     new_users=item[1]
                 )
@@ -233,7 +233,7 @@ class DashboardRepository:
             result = cursor.fetchall()
 
             data = [
-                StockByBrandSchema(
+                StockByBrandResponse(
                     brand=item[0],
                     products=item[1]
                 )
@@ -271,7 +271,7 @@ class DashboardRepository:
             result = cursor.fetchall()
 
             data = [
-                OutputOrdersAmountSchema(
+                OutputOrdersAmountResponse(
                     orders=item[0],
                     new_orders=item[1]
                 )
@@ -309,7 +309,7 @@ class DashboardRepository:
             result = cursor.fetchall()
 
             data = [
-                CategoriesAmountSchema(
+                CategoriesAmountResponse(
                     categories=item[0],
                     new_categories=item[1]
                 )
@@ -347,7 +347,7 @@ class DashboardRepository:
             result = cursor.fetchall()
 
             data = [
-                SubcategoryStockSchema(
+                SubcategoryStockResponse(
                     subcategory=item[0],
                     stock=item[1]
                 )
