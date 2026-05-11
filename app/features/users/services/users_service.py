@@ -1,11 +1,10 @@
 import bcrypt
-from app.core.mail import fm
 from pydantic import EmailStr
-from fastapi_mail import MessageSchema
-from app.core.exception import ServiceError
-from app.core.security import generate_temporal_password, verify_password
 from app.utils.logger import get_logger
+from app.core.exception import ServiceError
 from app.core.database import get_connection
+from app.tasks.email_tasks import send_welcome_email
+from app.core.security import generate_temporal_password, verify_password
 from app.features.users.repositories.users_repository import UsersRepository
 from app.features.users.models.users_model import UpdatePassword, UsersFilters, CreateUser, UpdateUser
 
@@ -174,19 +173,12 @@ class UsersService:
                 raise ServiceError(error)
 
             if success == True:
-                emailMessage = MessageSchema(
-                    subject="Bienvenido a Tracklinker",
-                    recipients=[data["email"]],
-                    template_body={
-                        "name": data["name"],
-                        "surname": data["first_surname"],
-                        "email": data["email"],
-                        "password": temporal_password
-                    },
-                    subtype="html",
+                send_welcome_email.delay(
+                    user_name=data["name"],
+                    user_first_surname=data["first_surname"],
+                    user_email=data["email"],
+                    password=temporal_password
                 )
-
-                await fm.send_message(emailMessage, template_name="welcome_mail.html")
 
             connection.commit()
 
