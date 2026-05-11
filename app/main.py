@@ -14,10 +14,11 @@ from app.features.dashboard.routes import dashboard_routes
 from app.features.output_orders.routes import output_orders_routes
 from app.features.products.routes import products_routes
 from app.features.reports.routes import reports_routes
+from app.features.subcategories.routes import subcategories_routes
 from app.features.suggestions.routes import suggestion_routes
 from app.features.users.routes import users_routes
 from app.features.warranties.routes import warranties_routes
-from app.routes import subcategories_routes, suppliers_routes
+from app.routes import suppliers_routes
 
 
 @asynccontextmanager
