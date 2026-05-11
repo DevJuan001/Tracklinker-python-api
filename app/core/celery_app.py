@@ -9,6 +9,14 @@ celery = Celery(
     include=["app.tasks.email_tasks"]
 )
 
+"""
+    Esta es una instancia de Celery configurada con:
+    
+    - broker: URL de Redis para recibir tareas enviadas desde la API.
+    - backend: URL de Redis para almacenar resultados y estado de las tareas.
+    - include: lista de módulos de tareas que el worker descubre o utilizara al iniciar.
+"""
+
 celery.conf.update(
     task_serializer="json",
     accept_content=["json"],
