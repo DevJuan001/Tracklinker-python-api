@@ -96,6 +96,8 @@ class SubcategoriesService:
             if error or not success:
                 raise ServiceError(error)
 
+            connection.commit()
+
             return None, True, "Subcategoria creada correctamente"
 
         except ServiceError as e:
