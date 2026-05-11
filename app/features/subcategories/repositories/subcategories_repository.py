@@ -350,7 +350,7 @@ class SubcategoriesRepository:
 
         interval = period_map.get(period, "30 DAY")
 
-        query = """
+        query = f"""
         SELECT
             c.category_name,
             COUNT(DISTINCT sc.subcategory_id) as subcategories
@@ -425,7 +425,7 @@ class SubcategoriesRepository:
             group_expr = "DATE_FORMAT(subcategory_date, '%Y-%m')"
             select_expr = "DATE_FORMAT(subcategory_date, '%Y-%m') as label"
 
-        query = """
+        query = f"""
         SELECT
             {select_expr},
             COUNT(DISTINCT subcategory_id) as subcategories
