@@ -1,46 +1,46 @@
 from pydantic import BaseModel
 
 
-class ProductsAmountSchema(BaseModel):
+class ProductsAmountResponse(BaseModel):
     products: int
     new_products: int
 
 
-class SupplierInputSchema(BaseModel):
+class SupplierInputResponse(BaseModel):
     supplier_name: str
     orders: int
 
 
-class OutputByMonthSchema(BaseModel):
+class OutputByMonthResponse(BaseModel):
     month: str
     output_orders: int
 
 
-class WarrantyByStatusSchema(BaseModel):
+class WarrantyByStatusResponse(BaseModel):
     status: int
     total: int
 
 
-class UsersAmountSchema(BaseModel):
+class UsersAmountResponse(BaseModel):
     users: int
     new_users: int
 
 
-class StockByBrandSchema(BaseModel):
+class StockByBrandResponse(BaseModel):
     brand: str
     products: int
 
 
-class OutputOrdersAmountSchema(BaseModel):
+class OutputOrdersAmountResponse(BaseModel):
     orders: int
     new_orders: int
 
 
-class CategoriesAmountSchema(BaseModel):
+class CategoriesAmountResponse(BaseModel):
     categories: int
     new_categories: int
 
 
-class SubcategoryStockSchema(BaseModel):
+class SubcategoryStockResponse(BaseModel):
     subcategory: str
     stock: int
