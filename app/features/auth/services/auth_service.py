@@ -49,7 +49,7 @@ class AuthService:
             return e.message, False, "No autorizado"
 
     @staticmethod
-    def update_tokens(request: Request, response: Response):
+    def refresh_tokens(request: Request, response: Response):
         refresh_token = request.cookies.get("refresh_token")
 
         if not refresh_token:

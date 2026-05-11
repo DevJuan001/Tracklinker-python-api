@@ -23,8 +23,8 @@ class AuthController:
         }
 
     @staticmethod
-    def update_tokens(request: Request, response: Response):
-        error, success, message = AuthService.update_tokens(
+    def refresh_tokens(request: Request, response: Response):
+        error, success, message = AuthService.refresh_tokens(
             request, response
         )
 
