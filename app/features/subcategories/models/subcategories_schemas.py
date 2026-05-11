@@ -11,10 +11,10 @@ class SubcategoriesFiltersSchema(BaseModel):
 
 
 class CreateSubcategorySchema(BaseModel):
-    subcategory_name: str
     category_id: int
+    subcategory_name: str
 
 
 class UpdateSubcategorySchema(BaseModel):
-    subcategory_name: str
-    category_id: int
+    category_id: Optional[int] = None
+    subcategory_name: Optional[str] = None
