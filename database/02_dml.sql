@@ -370,21 +370,21 @@ INSERT INTO CUSTOMERS VALUES
 
 
 INSERT INTO OUTPUT_DETAILS VALUES
-(1, 'QTYC1123122', null, '2028-12-29', 'No necesita'),
-(2, 'QTYA9876543', null, '2029-01-15', 'Entregado'),
-(3, 'QTYB5554441', null, '2029-02-01', 'Pendiente de revisión'),
-(4, 'QTYC3332220', null, '2029-02-10', 'En ruta'),
-(5, 'QTYD1234567', null, '2029-03-05', 'Entregado'),
-(6, 'QTYE9876543', null, '2029-03-20', 'No necesita'),
-(7, 'QTYF1112223', null, '2029-04-01', 'Pendiente de revisión'),
-(8, 'QTYG7778889', null, '2029-04-18', 'En ruta'),
-(9, 'QTYH5556667', null, '2029-05-01', 'Entregado'),
-(10, 'QTYI9990001', null, '2029-05-15', 'No necesita'),
-(11, 'QTYJ1234567', null, '2029-06-01', 'En ruta'),
-(12, 'QTYK7654321', null, '2029-06-10', 'Pendiente de revisión'),
-(13, 'QTYL9876543', null, '2029-06-25', 'Entregado'),
-(14, 'QTYM5556667', null, '2029-07-08', 'No necesita'),
-(15, 'QTYS7654329', null, '2029-07-09', 'No necesita');
+(1, 'QTYC1123122', null, '2028-12-29'),
+(2, 'QTYA9876543', null, '2029-01-15'),
+(3, 'QTYB5554441', null, '2029-02-01'),
+(4, 'QTYC3332220', null, '2029-02-10'),
+(5, 'QTYD1234567', null, '2029-03-05'),
+(6, 'QTYE9876543', null, '2029-03-20'),
+(7, 'QTYF1112223', null, '2029-04-01'),
+(8, 'QTYG7778889', null, '2029-04-18'),
+(9, 'QTYH5556667', null, '2029-05-01'),
+(10, 'QTYI9990001', null, '2029-05-15'),
+(11, 'QTYJ1234567', null, '2029-06-01'),
+(12, 'QTYK7654321', null, '2029-06-10'),
+(13, 'QTYL9876543', null, '2029-06-25'),
+(14, 'QTYM5556667', null, '2029-07-08'),
+(15, 'QTYS7654329', null, '2029-07-09');
 
 
 INSERT INTO WARRANTY_INCIDENTS VALUES
