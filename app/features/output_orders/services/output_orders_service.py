@@ -1,19 +1,19 @@
-from app.features.products.repositories.product_serials_repository import ProductSerialsRepository
-from app.features.products.routes import products_routes
+from app.features.output_orders.models.output_orders_model import UpdateOutputOrderModel
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
-from app.features.output_orders.models.output_orders_model import CreateOutputOrder, OutputOrdersFilters, UpdateOutputOrder
-from app.features.output_orders.models.output_details_model import CreateOutputDetails, UpdateOutputDetails
+from app.features.products.repositories.product_serials_repository import ProductSerialsRepository
 from app.features.output_orders.repositories.output_orders_repository import OutputOrdersRepository
 from app.features.output_orders.repositories.output_details_repository import OutputDetailsRepository
+from app.features.output_orders.models.output_details_model import CreateOutputDetails, UpdateOutputDetails
+from app.features.output_orders.models.output_orders_schema import CreateOutputOrderSchema, OutputOrdersFiltersSchema, UpdateOutputOrderSchema
 
 logger = get_logger("output_orders.service")
 
 
 class OutputOrdersService:
     @staticmethod
-    def get_all_output_orders(filters: OutputOrdersFilters):
+    def get_all_output_orders(filters: OutputOrdersFiltersSchema):
         connection = get_connection()
 
         try:
@@ -36,6 +36,7 @@ class OutputOrdersService:
                 exc_info=True
             )
             return "Error al intentar obtener las ordenes de salida", None
+
         finally:
             connection.close()
 
@@ -62,11 +63,12 @@ class OutputOrdersService:
                 exc_info=True
             )
             return "Error al intentar obtener la orden de salida", None
+
         finally:
             connection.close()
 
     @staticmethod
-    def create_output_order(output_order_data: CreateOutputOrder):
+    def create_output_order(output_order_data: CreateOutputOrderSchema):
         data = output_order_data.model_dump()
 
         connection = get_connection()
@@ -82,7 +84,6 @@ class OutputOrdersService:
                 CreateOutputDetails(
                     product_serial=data["product_serial"],
                     output_product_garanty=data["output_product_garanty"],
-                    product_transformation=data["product_transformation"]
                 ),
                 connection
             )
@@ -99,11 +100,12 @@ class OutputOrdersService:
         except Exception as e:
             logger.error("Error en create_output_order: %s", e, exc_info=True)
             return "Error al intentar crear la orden de salida", False, None
+
         finally:
             connection.close()
 
     @staticmethod
-    def update_output_order(output_order_id: int, output_order_data: UpdateOutputOrder):
+    def update_output_order(output_order_id: int, output_order_data: UpdateOutputOrderSchema):
         data = output_order_data.model_dump(exclude_none=True)
 
         connection = get_connection()
@@ -126,7 +128,7 @@ class OutputOrdersService:
 
             if details_fields := {
                 key: data[key]
-                for key in ["product_serial", "output_product_garanty", "product_transformation"]
+                for key in ["product_serial", "output_product_garanty"]
                 if key in data
             }:
                 error, success, message = OutputDetailsRepository.update_output_details(
@@ -139,13 +141,18 @@ class OutputOrdersService:
                 if error or not success:
                     raise ServiceError(error)
 
-            error, success, message = OutputOrdersRepository.update_output_order(
-                output_order_id=output_order_id,
-                output_order_data={
-                    "output_order_status": data["output_order_status"]
-                },
-                connection=connection
-            )
+            if order_fields := {
+                key: data[key]
+                for key in ["output_order_status"]
+                if key in data
+            }:
+                error, success, message = OutputOrdersRepository.update_output_order(
+                    output_order_id=output_order_id,
+                    output_order_data=UpdateOutputOrderModel(
+                        output_order_status=data["output_order_status"]
+                    ),
+                    connection=connection
+                )
 
             if error or not success:
                 raise ServiceError(error)
@@ -159,6 +166,7 @@ class OutputOrdersService:
         except Exception as e:
             logger.error("Error en update_output_order: %s", e, exc_info=True)
             return "Error al intentar actualizar la orden de salida", False, None
+
         finally:
             connection.close()
 
@@ -193,6 +201,9 @@ class OutputOrdersService:
             logger.error("Error en disable_output_order: %s", e, exc_info=True)
             return "Error al intentar deshabilitar la orden de salida", False, None
 
+        finally:
+            connection.close()
+
     @staticmethod
     def enable_output_order(output_order_id: int):
         connection = get_connection()
@@ -223,3 +234,6 @@ class OutputOrdersService:
         except Exception as e:
             logger.error("Error en enable_output_order: %s", e, exc_info=True)
             return "Error al intentar habilitar la orden de salida", False, None
+
+        finally:
+            connection.close()
