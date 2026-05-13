@@ -108,7 +108,6 @@ CREATE VIEW get_output_products AS
     od.output_details_id,
     od.product_serial,
     od.out_product_garanty,
-    od.product_transformation,
     pm.product_model_description,
     pm.product_model_name,
     pb.product_brand_name
