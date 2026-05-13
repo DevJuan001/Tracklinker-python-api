@@ -1,8 +1,10 @@
+from app.features.output_orders.models.output_orders_model import UpdateOutputOrderModel
 from app.utils import logger
 from app.core.database import get_connection
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
-from app.features.output_orders.models.output_orders_model import OutputOrder, OutputOrdersFilters
+from app.features.output_orders.models.output_orders_responses import OutputOrderResponse
+from app.features.output_orders.models.output_orders_schema import OutputOrdersFiltersSchema
 
 logger = logger.get_logger("output_orders.repository")
 
@@ -10,7 +12,7 @@ logger = logger.get_logger("output_orders.repository")
 class OutputOrdersRepository:
 
     @staticmethod
-    def find_all_output_orders(filters: OutputOrdersFilters, connection):
+    def find_all_output_orders(filters: OutputOrdersFiltersSchema, connection):
         data = filters.model_dump(exclude_none=True)
 
         cursor = connection.cursor()
@@ -23,7 +25,6 @@ class OutputOrdersRepository:
             od.output_details_id,
             od.product_serial,
             od.out_product_garanty,
-            od.product_transformation,
             pb.product_brand_name,
             pm.product_model_name,
             pm.product_model_description
@@ -66,17 +67,16 @@ class OutputOrdersRepository:
             results = cursor.fetchall()
 
             orders = [
-                OutputOrder(
+                OutputOrderResponse(
                     output_order_id=item[0],
                     output_order_date=date_formatter(item[1]),
                     output_order_status=item[2],
                     output_details_id=item[3],
                     product_serial=item[4],
-                    output_product_garanty=date_formatter(item[5]),
-                    product_transformation=item[6],
-                    product_brand_name=item[7],
-                    product_model_name=item[8],
-                    product_model_description=item[9],
+                    output_product_garanty=item[5],
+                    product_brand_name=item[6],
+                    product_model_name=item[7],
+                    product_model_description=item[8],
                 )
                 for item in results
             ]
@@ -106,7 +106,6 @@ class OutputOrdersRepository:
             od.output_details_id,
             od.product_serial,
             od.out_product_garanty,
-            od.product_transformation,
             pb.product_brand_name,
             pm.product_model_name,
             pm.product_model_description
@@ -131,17 +130,16 @@ class OutputOrdersRepository:
             result = cursor.fetchall()
 
             data = [
-                OutputOrder(
+                OutputOrderResponse(
                     output_order_id=item[0],
                     output_order_date=date_formatter(item[1]),
                     output_order_status=item[2],
                     output_details_id=item[3],
                     product_serial=item[4],
-                    output_product_garanty=date_formatter(item[5]),
-                    product_transformation=item[6],
-                    product_brand_name=item[7],
-                    product_model_name=item[8],
-                    product_model_description=item[9],
+                    output_product_garanty=item[5],
+                    product_brand_name=item[6],
+                    product_model_name=item[7],
+                    product_model_description=item[8],
                 )
                 for item in result
             ]
@@ -181,7 +179,9 @@ class OutputOrdersRepository:
             cursor.close()
 
     @staticmethod
-    def update_output_order(output_order_id: int, output_order_data: dict, connection):
+    def update_output_order(output_order_id: int, output_order_data: UpdateOutputOrderModel, connection):
+        data = output_order_data.model_dump(exclude_none=True)
+
         cursor = connection.cursor()
 
         query = """
@@ -191,7 +191,7 @@ class OutputOrdersRepository:
         """
         try:
             cursor.execute(query, (
-                output_order_data["output_order_status"],
+                data["output_order_status"],
                 output_order_id
             ))
 
