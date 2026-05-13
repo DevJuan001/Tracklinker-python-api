@@ -1,12 +1,12 @@
 from fastapi import HTTPException
 from app.features.output_orders.services.output_orders_service import OutputOrdersService
-from app.features.output_orders.models.output_orders_model import CreateOutputOrder, OutputOrdersFilters, UpdateOutputOrder
+from app.features.output_orders.models.output_orders_schema import CreateOutputOrderSchema, OutputOrdersFiltersSchema, UpdateOutputOrderSchema
 
 
 class OutputOrdersController:
 
     @staticmethod
-    def get_all_output_orders(filters: OutputOrdersFilters):
+    def get_all_output_orders(filters: OutputOrdersFiltersSchema):
         error, output_orders = OutputOrdersService.get_all_output_orders(
             filters)
         if error:
@@ -27,7 +27,7 @@ class OutputOrdersController:
         }
 
     @staticmethod
-    def create_output_order(output_order_data: CreateOutputOrder):
+    def create_output_order(output_order_data: CreateOutputOrderSchema):
         error, success, message = OutputOrdersService.create_output_order(
             output_order_data
         )
@@ -39,7 +39,7 @@ class OutputOrdersController:
         }
 
     @staticmethod
-    def update_output_order(output_order_id: int, output_order_data: UpdateOutputOrder):
+    def update_output_order(output_order_id: int, output_order_data: UpdateOutputOrderSchema):
         error, success, message = OutputOrdersService.update_output_order(
             output_order_id, output_order_data
         )

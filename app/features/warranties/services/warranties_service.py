@@ -1,9 +1,9 @@
-from app.features.output_orders.models.output_orders_model import CreateOutputOrder
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
 from app.features.products.repositories.products_repository import ProductsRepository
 from app.features.output_orders.services.output_orders_service import OutputOrdersService
+from app.features.output_orders.models.output_orders_schema import CreateOutputOrderSchema
 from app.features.warranties.repositories.warranties_repository import WarrantiesRepository
 from app.features.warranties.repositories.technicians_repository import TechniciansRepository
 from app.features.products.repositories.product_serials_repository import ProductSerialsRepository
@@ -82,10 +82,9 @@ class WarrantiesService:
 
             # Crear la orden de salida del producto
             error, success, message = OutputOrdersService.create_output_order(
-                CreateOutputOrder(
+                CreateOutputOrderSchema(
                     product_serial=data["product_serial"],
                     output_product_garanty="2040-01-01",
-                    product_transformation="No necesita",
                 )
             )
             if error:

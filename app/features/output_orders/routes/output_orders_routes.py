@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends
 from fastapi_limiter.depends import RateLimiter
 from app.middlewares.roles_middleware import require_roles
+from app.features.output_orders.models.output_orders_schema import CreateOutputOrderSchema, OutputOrdersFiltersSchema, UpdateOutputOrderSchema
 from app.features.output_orders.controllers.output_orders_controller import OutputOrdersController
-from app.features.output_orders.models.output_orders_model import CreateOutputOrder, OutputOrdersFilters, UpdateOutputOrder
 
-router =APIRouter(
+router = APIRouter(
     prefix="/api/output_orders",
-    tags =["Output_orders"]
+    tags=["Output_orders"]
 )
+
 
 # Endpoint para obtener todas las órdenes de salida
 @router.get(
@@ -16,9 +17,10 @@ router =APIRouter(
         Depends(RateLimiter(times=30, seconds=60)),
         Depends(require_roles(["Admin"]))
     ]
-)       
-def get_all_output_orders(filters: OutputOrdersFilters = Depends()):
+)
+def get_all_output_orders(filters: OutputOrdersFiltersSchema = Depends()):
     return OutputOrdersController.get_all_output_orders(filters)
+
 
 # Endpoint para obtener una orden de salida por ID
 @router.get(
@@ -33,6 +35,7 @@ def get_output_order_by_id(
 ):
     return OutputOrdersController.get_output_order_by_id(out_order_id)
 
+
 # Endpoint para crear o registrar una orden de salida
 @router.post(
     "/create",
@@ -40,11 +43,12 @@ def get_output_order_by_id(
         Depends(RateLimiter(times=30, seconds=60)),
         Depends(require_roles(["Admin"]))
     ]
-)             
+)
 def create_output_order(
-    output_order_data: CreateOutputOrder,
+    output_order_data: CreateOutputOrderSchema,
 ):
     return OutputOrdersController.create_output_order(output_order_data)
+
 
 # Endpoint para actualizar la informacion de la orden de salida mediante su id
 @router.put(
@@ -56,9 +60,10 @@ def create_output_order(
 )
 def update_output_order(
     output_order_id: int,
-    output_order_data: UpdateOutputOrder,
+    output_order_data: UpdateOutputOrderSchema,
 ):
     return OutputOrdersController.update_output_order(output_order_id, output_order_data)
+
 
 # Endpoint para deshabilitar la orden de salida mediante el id
 @router.put(
@@ -71,7 +76,8 @@ def update_output_order(
 def disable_output_order(
     output_order_id: int,
 ):
-  return OutputOrdersController.disable_output_order(output_order_id)
+    return OutputOrdersController.disable_output_order(output_order_id)
+
 
 # Endpoint para habilitar la orden de entrada mediante el id
 @router.put(
@@ -84,6 +90,4 @@ def disable_output_order(
 def enable_output_order(
     output_order_id: int,
 ):
-  return OutputOrdersController.enable_output_order(output_order_id)
-
-
+    return OutputOrdersController.enable_output_order(output_order_id)
