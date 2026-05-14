@@ -1,11 +1,12 @@
 import bcrypt
-from app.features.users.models.cities_model import City
-from app.features.users.models.roles_model import Rol
+from app.features.users.models.cities_reponse import CityResponse
+from app.features.users.models.roles_response import RolResponse
+from app.features.users.models.user_response import CurrentUserResponse, UserResponse
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
-from app.features.users.models.users_model import CreateUser, CurrentUser, User, UpdateUser, UpdateCurrentUser, UsersFilters
+from app.features.users.models.users_schema import CreateUserSchema, UpdateUserSchema, UsersFiltersSchema
 
 logger = get_logger("users.repository")
 
@@ -14,7 +15,7 @@ class UsersRepository:
 
     # Obtener todos los usuarios
     @staticmethod
-    def find_all_users(filters_data: UsersFilters, connection):
+    def find_all_users(filters_data: UsersFiltersSchema, connection):
         data = filters_data.model_dump(exclude_none=True)
 
         cursor = connection.cursor()
@@ -79,7 +80,7 @@ class UsersRepository:
             results = cursor.fetchall()
 
             users = [
-                User(
+                UserResponse(
                     rol_id=item[0],
                     rol_name=item[1],
                     id=item[2],
@@ -138,7 +139,7 @@ class UsersRepository:
                 return "Usuario no encontrado", None
 
             data = [
-                CurrentUser(
+                CurrentUserResponse(
                     id=item[0],
                     name=item[1],
                     first_surname=item[2],
@@ -243,7 +244,7 @@ class UsersRepository:
             result = cursor.fetchall()
 
             data = [
-                City(
+                CityResponse(
                     id=item[0],
                     name=item[1]
                 )
@@ -261,7 +262,7 @@ class UsersRepository:
 
     # Crear un usuario
     @staticmethod
-    def create_user(user_data: CreateUser, hash_password: str, connection):
+    def create_user(user_data: CreateUserSchema, hash_password: str, connection):
         data = user_data.model_dump()
 
         cursor = connection.cursor()
@@ -302,7 +303,7 @@ class UsersRepository:
 
     # Actualizar la información de un usuario
     @staticmethod
-    def update_user(user_id: int, user_data: UpdateUser, connection):
+    def update_user(user_id: int, user_data: UpdateUserSchema, connection):
         data = user_data.model_dump(exclude_none=True)
 
         USER_FIELDS = {
@@ -418,7 +419,7 @@ class UsersRepository:
             result = cursor.fetchall()
 
             data = [
-                Rol(
+                RolResponse(
                     id=item[0],
                     name=item[1]
                 )
