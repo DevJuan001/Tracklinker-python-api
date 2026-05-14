@@ -317,7 +317,7 @@ La seguridad es una prioridad en Tracklinker, implementando estándares modernos
 - **Hashing**: Las contraseñas nunca se almacenan en texto plano, utilizamos `bcrypt` para un hashing robusto.
 - **RBAC (Role Based Access Control)**: Middleware dedicado para restringir endpoints según el rol del usuario (`Admin`, `Técnico`, etc.).
 - **Rate Limiting**: Protección contra ataques de fuerza bruta utilizando Redis para limitar las peticiones por IP en endpoints críticos.
-- **CORS**: Configurac
+- **CORS**: Configuración estricta de orígenes permitidos para proteger la integridad de la API.
 
 ---
 
