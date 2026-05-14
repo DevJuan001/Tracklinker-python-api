@@ -1,12 +1,14 @@
 import bcrypt
 from pydantic import EmailStr
+from app.features.users.repositories.cities_repository import CitiesRepository
+from app.features.users.repositories.roles_repository import RolesRepository
 from app.utils.logger import get_logger
 from app.core.exception import ServiceError
 from app.core.database import get_connection
 from app.tasks.email_tasks import send_welcome_email
 from app.core.security import generate_temporal_password, verify_password
 from app.features.users.repositories.users_repository import UsersRepository
-from app.features.users.models.users_schema import UpdatePasswordSchema, UsersFiltersSchema, CreateUserSchema, UpdateUserSchema
+from app.features.users.models.users_schemas import UpdatePasswordSchema, UsersFiltersSchema, CreateUserSchema, UpdateUserSchema
 
 logger = get_logger("users.service")
 
@@ -90,7 +92,7 @@ class UsersService:
         connection = get_connection()
 
         try:
-            error, roles = UsersRepository.find_all_roles(
+            error, roles = RolesRepository.find_all_roles(
                 connection
             )
 
@@ -115,7 +117,7 @@ class UsersService:
         connection = get_connection()
 
         try:
-            error, cities = UsersRepository.find_all_cities(
+            error, cities = CitiesRepository.find_all_cities(
                 connection
             )
 
