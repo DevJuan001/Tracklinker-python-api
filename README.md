@@ -13,6 +13,7 @@ API REST para el sistema de gestión de inventario **Tracklinker**, construida c
 - [Ejecución](#ejecución)
 - [Estructura del Proyecto](#estructura-del-proyecto)
 - [Arquitectura](#arquitectura)
+- [Seguridad](#seguridad)
 - [Convenciones de Código](#convenciones-de-código)
 - [Testing](#testing)
 - [Contribuciones](#contribuciones)
@@ -297,6 +298,26 @@ Ruta (Route) → Controlador (Controller) → Servicio (Service) → Repositorio
 
 
 Cada módulo dentro de `features/` es autocontenido y sigue esta estructura de capas.
+
+### Responsabilidades de las Capas
+
+1.  **Routes**: Define los endpoints, métodos HTTP y aplica middlewares (seguridad, rate limiting).
+2.  **Controllers**: Orquestan la entrada de datos, validan esquemas básicos y delegan la ejecución al servicio.
+3.  **Services**: Capa de **Lógica de Negocio**. Aquí se toman las decisiones, se procesan datos y se gestionan transacciones atómicas. No conocen detalles de la persistencia.
+4.  **Repositories**: Única capa que interactúa con la base de datos (SQL). Encapsula las consultas y devuelve datos crudos o modelos internos.
+5.  **Models/Schemas**: Pydantic se encarga de la validación de entrada (`Schema`) y el modelado de salida (`Response`).
+
+---
+
+## Seguridad
+
+La seguridad es una prioridad en Tracklinker, implementando estándares modernos:
+
+- **JWT con Cookies Seguras**: No enviamos el token en el cuerpo de la respuesta. Utilizamos cookies **HTTP-Only** y **Secure** para mitigar ataques XSS.
+- **Hashing**: Las contraseñas nunca se almacenan en texto plano, utilizamos `bcrypt` para un hashing robusto.
+- **RBAC (Role Based Access Control)**: Middleware dedicado para restringir endpoints según el rol del usuario (`Admin`, `Técnico`, etc.).
+- **Rate Limiting**: Protección contra ataques de fuerza bruta utilizando Redis para limitar las peticiones por IP en endpoints críticos.
+- **CORS**: Configurac
 
 ---
 
