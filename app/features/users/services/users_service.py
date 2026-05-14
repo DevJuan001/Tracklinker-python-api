@@ -6,7 +6,7 @@ from app.core.database import get_connection
 from app.tasks.email_tasks import send_welcome_email
 from app.core.security import generate_temporal_password, verify_password
 from app.features.users.repositories.users_repository import UsersRepository
-from app.features.users.models.users_schema import UpdatePasswordSchema, UsersFiltersSchema, CreateUserSchema, UpdateUserSchema
+from app.features.users.models.users_schemas import UpdatePasswordSchema, UsersFiltersSchema, CreateUserSchema, UpdateUserSchema
 
 logger = get_logger("users.service")
 
