@@ -1,13 +1,12 @@
 from fastapi import HTTPException
 from app.features.users.services.users_service import UsersService
-from app.features.users.models.users_model import UpdateCurrentUser, UsersFilters
-from app.features.users.models.users_model import CreateUser, UpdatePassword, UpdateUser, UsersFilters
+from app.features.users.models.users_schema import CreateUserSchema, UpdateCurrentUserSchema, UpdatePasswordSchema, UpdateUserSchema, UsersFiltersSchema
 
 
 class UsersController:
 
     @staticmethod
-    def get_all_users(filters: UsersFilters):
+    def get_all_users(filters: UsersFiltersSchema):
         error, users = UsersService.get_all_users(filters)
 
         if error:
@@ -73,7 +72,7 @@ class UsersController:
         }
 
     @staticmethod
-    async def create_user(user_data: CreateUser):
+    async def create_user(user_data: CreateUserSchema):
         error, success, message = await UsersService.create_user(
             user_data
         )
@@ -87,7 +86,7 @@ class UsersController:
         }
 
     @staticmethod
-    def update_user(user_id: int, user_data: UpdateUser):
+    def update_user(user_id: int, user_data: UpdateUserSchema):
         error, success, message = UsersService.update_user(
             user_id, user_data
         )
@@ -101,7 +100,7 @@ class UsersController:
         }
 
     @staticmethod
-    def update_current_user(user_data: UpdateCurrentUser, payload: dict):
+    def update_current_user(user_data: UpdateCurrentUserSchema, payload: dict):
         error, success, message = UsersService.update_user(
             payload["user_id"], user_data
         )
@@ -115,7 +114,7 @@ class UsersController:
         }
 
     @staticmethod
-    def update_user_password(password_data: UpdatePassword, payload: dict):
+    def update_user_password(password_data: UpdatePasswordSchema, payload: dict):
         error, success, message = UsersService.update_user_password(
             password_data, payload["user_id"]
         )
