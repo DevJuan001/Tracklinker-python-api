@@ -1,58 +1,55 @@
-from app.repository.suppliers_repository import SuppliersRepository
-from app.models.suppliers_model import Supplier, UpdateSupplier
 from fastapi import HTTPException
+from app.features.suppliers.services.suppliers_service import SuppliersService
+from app.features.suppliers.models.suppliers_schema import CreateSupplierSchema, FilterSuppliersSchema, UpdateSupplierSchema
 
 
 class SuppliersController:
 
     @staticmethod
-    def get_all_suppliers(
-        name_order: str = None,
-        start_date: str = None,
-        end_date: str = None,
-        status: int = None,
-        city: int = None,
-    ):
-        error, data = SuppliersRepository.find_all_suppliers(
-            name_order,
-            start_date,
-            end_date,
-            status,
-            city,
-        )
+    def get_all_suppliers(filters: FilterSuppliersSchema):
+        error, data = SuppliersService.get_all_suppliers(filters)
 
         if error:
             raise HTTPException(status_code=404, detail=error)
+
         return {
             "data": data
         }
 
     @staticmethod
     def get_supplier_by_id(supplier_id: int):
-        error, data = SuppliersRepository.find_supplier_by_id(supplier_id)
+        error, data = SuppliersService.find_supplier_by_id(supplier_id)
+
         if error:
             raise HTTPException(status_code=404, detail=error)
+
         return {
             "data": data
         }
 
     @staticmethod
-    def create_supplier(supplier_data: Supplier):
-        error, success, message = SuppliersRepository.create_supplier(
-            supplier_data)
+    def create_supplier(supplier_data: CreateSupplierSchema):
+        error, success, message = SuppliersService.create_supplier(
+            supplier_data
+        )
+
         if error:
             raise HTTPException(status_code=404, detail=error)
+
         return {
             "success": success,
             "message": message
         }
 
     @staticmethod
-    def update_supplier(supplier_id: int, supplier_data: UpdateSupplier):
-        error, success, message = SuppliersRepository.update_supplier(
-            supplier_id, supplier_data)
+    def update_supplier(supplier_id: int, supplier_data: UpdateSupplierSchema):
+        error, success, message = SuppliersService.update_supplier(
+            supplier_id, supplier_data
+        )
+
         if error:
             raise HTTPException(status_code=404, detail=error)
+
         return {
             "success": success,
             "message": message,
@@ -60,10 +57,13 @@ class SuppliersController:
 
     @staticmethod
     def disable_supplier(supplier_id: int):
-        error, success, message = SuppliersRepository.disable_supplier(
-            supplier_id)
+        error, success, message = SuppliersService.disable_supplier(
+            supplier_id
+        )
+
         if error:
             raise HTTPException(status_code=404, detail=error)
+
         return {
             "success": success,
             "message": message
@@ -71,10 +71,13 @@ class SuppliersController:
 
     @staticmethod
     def enable_supplier(supplier_id: int):
-        error, success, message = SuppliersRepository.enable_supplier(
-            supplier_id)
+        error, success, message = SuppliersService.enable_supplier(
+            supplier_id
+        )
+
         if error:
             raise HTTPException(status_code=404, detail=error)
+
         return {
             "success": success,
             "message": message
