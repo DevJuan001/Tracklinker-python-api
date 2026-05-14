@@ -224,41 +224,6 @@ class UsersRepository:
         finally:
             cursor.close()
 
-    # Obtener todas las ciudades
-    @staticmethod
-    def find_all_cities(connection):
-        cursor = connection.cursor()
-
-        # Petición a la base de datos
-        query = """
-        SELECT
-            city_id,
-            city_name
-        FROM CITIES
-        """
-
-        try:
-            cursor.execute(query)
-
-            result = cursor.fetchall()
-
-            data = [
-                CityResponse(
-                    id=item[0],
-                    name=item[1]
-                )
-                for item in result
-            ]
-
-            return None, data
-
-        except Exception as e:
-            logger.error("Error en find_all_cities: %s", e, exc_info=True)
-            return "Error al intentar obtener las ciudades", None
-
-        finally:
-            cursor.close()
-
     # Crear un usuario
     @staticmethod
     def create_user(user_data: CreateUserSchema, hash_password: str, connection):
@@ -404,30 +369,6 @@ class UsersRepository:
             logger.error("Error en enable_user: %s", e, exc_info=True)
             return "Error la intentar habilitar el usuario", False, None
 
-        finally:
-            cursor.close()
-
-    @staticmethod
-    def find_all_roles(connection):
-        cursor = connection.cursor()
-
-        query = "SELECT rol_id, rol_name FROM ROLES"
-
-        try:
-            cursor.execute(query)
-            result = cursor.fetchall()
-
-            data = [
-                RolResponse(
-                    id=item[0],
-                    name=item[1]
-                )
-                for item in result
-            ]
-            return None, data
-        except Exception as e:
-            logger.error("Error en find_all_roles: %s", e, exc_info=True)
-            return "Error al intentar obtener los roles"
         finally:
             cursor.close()
 
