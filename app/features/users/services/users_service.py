@@ -265,11 +265,11 @@ class UsersService:
 
             # Validación de que la contraseña antigua sea igual a la que esta registrada
             verify_password(
-                user[0], data["old_password"]
+                str(user[0]), data["old_password"]
             )
 
             error, success, message = UsersRepository.update_user_password(
-                user_id, data["new_password"]
+                user_id, data["new_password"], connection
             )
 
             if error or not success:
