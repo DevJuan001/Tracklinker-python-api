@@ -171,7 +171,7 @@ class UsersRepository:
 
         try:
             cursor.execute(query, (user_id,))
-            result = cursor.fetchall()
+            result = cursor.fetchone()
 
             if not result:
                 return "Usuario no encontrado", None
