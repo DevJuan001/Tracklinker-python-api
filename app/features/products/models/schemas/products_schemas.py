@@ -1,30 +1,10 @@
-from pydantic import BaseModel
-from datetime import date, datetime
+from datetime import datetime
 from typing import Optional
 
-
-class Product(BaseModel):
-    input_order_id: int
-    input_date: str
-    input_order: str
-    category: str
-    subcategory_id: int
-    subcategory: str
-    product_id: int
-    supplier: str
-    product_serial: str
-    model: str
-    model_id: int
-    description: str
-    brand_id: int
-    brand: str
-    warranty_time: date
-    product_details_id: int
-    status: int
-    
+from pydantic import BaseModel
 
 
-class ProductsFilter(BaseModel):
+class ProductsFilterSchema(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     input_order: Optional[int] = None
@@ -36,7 +16,7 @@ class ProductsFilter(BaseModel):
     product_model: Optional[int] = None
 
 
-class UpdateProduct(BaseModel):
+class UpdateProductSchema(BaseModel):
     id: int
     product_details_id: int
     input_order_id: Optional[int] = None
@@ -47,7 +27,8 @@ class UpdateProduct(BaseModel):
     warranty_time: Optional[datetime] = None
     status: Optional[int] = None
 
-class CreateProduct(BaseModel):
+
+class CreateProductSchema(BaseModel):
     brand_id: int
     input_order_id: int
     subcategory_id: int
@@ -55,7 +36,8 @@ class CreateProduct(BaseModel):
     model_id: int
     warranty_time: int
 
-class UpdateProductStatus(BaseModel):
+
+class UpdateProductStatusSchema(BaseModel):
     product_id: int
     product_serial: str
     status: int

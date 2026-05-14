@@ -1,5 +1,6 @@
 from app.utils.logger import get_logger
-from app.features.products.models.input_order_model import InputOrder, CreateInputOrder
+from app.features.products.models.schemas.input_orders_schemas import CreateInputOrderSchema
+from app.features.products.models.responses.input_orders_responses import InputOrderResponse
 
 logger = get_logger("input_orders.repository")
 
@@ -15,26 +16,30 @@ class InputOrdersRepository:
         try:
             cursor.execute(query)
             result = cursor.fetchall()
+
             data = [
-                InputOrder(
+                InputOrderResponse(
                     id=item[0],
                     bill=item[1]
                 )
                 for item in result
             ]
+
             return None, data
+
         except Exception as e:
             logger.error(
                 "Error en find_all_input_orders: %s",
                 e,
                 exc_info=True
             )
-            return "Error al obtener las ordenes de entrada", None
+            return "Error al intentar obtener las ordenes de entrada", None
+
         finally:
             cursor.close()
 
     @staticmethod
-    def create_input_order(input_order_data: CreateInputOrder, connection):
+    def create_input_order(input_order_data: CreateInputOrderSchema, connection):
         cursor = connection.cursor()
 
         try:
@@ -49,8 +54,10 @@ class InputOrdersRepository:
             ))
 
             return None, True, "Orden de entrada creada correctamente"
+
         except Exception as e:
             logger.error("Error en create_input_order: %s", e, exc_info=True)
             return "Error al intentar crear la orden de entrada", False, None
+
         finally:
             cursor.close()

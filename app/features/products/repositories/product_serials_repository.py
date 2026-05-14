@@ -1,7 +1,7 @@
 from datetime import datetime
 from app.utils.logger import get_logger
 from dateutil.relativedelta import relativedelta
-from app.features.products.models.product_serial_model import CreateProductSerial, UpdateProductSerial
+from app.features.products.models.schemas.product_serials_schemas import CreateProductSerialSchema, UpdateProductSerialSchema
 
 logger = get_logger("product_serials.repository")
 
@@ -37,7 +37,7 @@ class ProductSerialsRepository:
             return "Error al buscar el serial", None
 
     @staticmethod
-    def create_product_serial(serial_data: CreateProductSerial, connection):
+    def create_product_serial(serial_data: CreateProductSerialSchema, connection):
         data = serial_data.model_dump()
 
         cursor = connection.cursor()
@@ -83,7 +83,7 @@ class ProductSerialsRepository:
             cursor.close()
 
     @staticmethod
-    def update_product_serial(serial_data: UpdateProductSerial, connection):
+    def update_product_serial(serial_data: UpdateProductSerialSchema, connection):
         SERIAL_FIELD_MAP = {
             "product_serial": "product_serial",
             "input_order_id": "input_order_id",
