@@ -3,7 +3,7 @@ from fastapi_limiter.depends import RateLimiter
 from app.middlewares.jwt_middleware import verify_jwt
 from app.middlewares.roles_middleware import require_roles
 from app.features.users.controllers.users_controller import UsersController
-from app.features.users.models.users_model import CreateUser, UpdateCurrentUser, UpdatePassword, UpdateUser, UsersFilters
+from app.features.users.models.users_schema import CreateUserSchema, UpdateCurrentUserSchema, UpdatePasswordSchema, UpdateUserSchema, UsersFiltersSchema
 
 router = APIRouter(
     prefix="/api/users",
@@ -19,7 +19,7 @@ router = APIRouter(
         Depends(require_roles(["Admin"]))
     ]
 )
-def get_all_users(filters: UsersFilters = Depends()):
+def get_all_users(filters: UsersFiltersSchema = Depends()):
     return UsersController.get_all_users(filters)
 
 
@@ -79,7 +79,7 @@ def get_user_by_id(user_id: int):
     ]
 )
 async def create_user(
-    user_data: CreateUser
+    user_data: CreateUserSchema
 ):
     return await UsersController.create_user(user_data)
 
@@ -92,13 +92,13 @@ async def create_user(
         Depends(require_roles(["Admin", "Almacen", "Tecnico"]))
     ]
 )
-def update_me(user_data: UpdateCurrentUser, payload: dict = Depends(verify_jwt)):
+def update_me(user_data: UpdateCurrentUserSchema, payload: dict = Depends(verify_jwt)):
     return UsersController.update_current_user(user_data, payload)
 
 
 # Endpoint para actualizar la contraseña del usuario
 @router.put("/update-password")
-def update_user_password(password_data: UpdatePassword, payload: dict = Depends(verify_jwt)):
+def update_user_password(password_data: UpdatePasswordSchema, payload: dict = Depends(verify_jwt)):
     return UsersController.update_user_password(password_data, payload)
 
 
@@ -112,7 +112,7 @@ def update_user_password(password_data: UpdatePassword, payload: dict = Depends(
 )
 def update_user(
     user_id: int,
-    user_data: UpdateUser
+    user_data: UpdateUserSchema
 ):
     return UsersController.update_user(user_id, user_data)
 
