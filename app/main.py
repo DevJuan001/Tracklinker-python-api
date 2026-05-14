@@ -9,16 +9,16 @@ from fastapi_limiter import FastAPILimiter
 from app.core.database import get_connection
 from app.core.redis import close_redis, init_redis
 from app.features.auth.routes import auth_routes
-from app.features.categories.routes import categories_routes
-from app.features.dashboard.routes import dashboard_routes
-from app.features.output_orders.routes import output_orders_routes
-from app.features.products.routes import products_routes
-from app.features.reports.routes import reports_routes
-from app.features.subcategories.routes import subcategories_routes
-from app.features.suggestions.routes import suggestion_routes
 from app.features.users.routes import users_routes
+from app.features.reports.routes import reports_routes
+from app.features.products.routes import products_routes
+from app.features.dashboard.routes import dashboard_routes
+from app.features.suppliers.routes import suppliers_routes
+from app.features.categories.routes import categories_routes
 from app.features.warranties.routes import warranties_routes
-from app.routes import suppliers_routes
+from app.features.suggestions.routes import suggestion_routes
+from app.features.output_orders.routes import output_orders_routes
+from app.features.subcategories.routes import subcategories_routes
 
 
 @asynccontextmanager

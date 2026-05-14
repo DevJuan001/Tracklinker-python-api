@@ -249,23 +249,6 @@ Tracklinker-python-api/
 │   │       ├── 📂 routes/
 │   │       └── 📂 services/
 │   │
-│   ├── 📂 controllers/          # ← Controladores legacy (migración pendiente)
-│   │   ├── 📄 dashboard_controller.py
-│   │   ├── 📄 subcategories_controller.py
-│   │   └── 📄 suppliers_controller.py
-│   │
-│   ├── 📂 models/               # ← Modelos legacy (migración pendiente)
-│   │   └── 📄 suppliers_model.py
-│   │
-│   ├── 📂 repository/           # ← Repositorios legacy (migración pendiente)
-│   │   ├── 📄 dashboard_repository.py
-│   │   ├── 📄 subcategories_repository.py
-│   │   └── 📄 suppliers_repository.py
-│   │
-│   ├── 📂 routes/               # ← Rutas legacy (migración pendiente)
-│   │   ├── 📄 dashboard_routes.py
-│   │   ├── 📄 subcategories_routes.py
-│   │   └── 📄 suppliers_routes.py
 │   │
 │   ├── 📂 tasks/                # ← Tareas asíncronas de Celery
 │   │   └── 📄 email_tasks.py    # Envío de correos (bienvenida, recuperación)
@@ -314,9 +297,6 @@ Ruta (Route) → Controlador (Controller) → Servicio (Service) → Repositorio
 
 
 Cada módulo dentro de `features/` es autocontenido y sigue esta estructura de capas.
-
-> [!NOTE]
-> Las carpetas `controllers/`, `models/`, `repository/` y `routes/` en la raíz de `app/` son **legacy** y están en proceso de migración hacia la arquitectura por features.
 
 ---
 
