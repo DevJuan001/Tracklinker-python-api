@@ -1,23 +1,22 @@
-from app.core.database import get_connection
-from app.models.suppliers_model import Supplier, UpdateSupplier
-from app.utils.periods import period_map, daily_periods
-from app.utils.logger import get_logger
-from app.utils.date_formatter import date_formatter
 
-logger = get_logger(__name__)
+
+from app.utils.logger import get_logger
+from app.core.database import get_connection
+from app.utils.date_formatter import date_formatter
+from app.utils.periods import daily_periods, period_map
+from app.features.suppliers.models.suppliers_response import SupplierResponse
+from app.features.suppliers.models.suppliers_schema import CreateSupplierSchema, FilterSuppliersSchema, UpdateSupplierSchema
+
+
+logger = get_logger("suppliers.repository")
 
 
 class SuppliersRepository:
 
     @staticmethod
-    def find_all_suppliers(
-        name_order: str = None,
-        start_date: str = None,
-        end_date: str = None,
-        status: int = None,
-        city: int = None,
-    ):
-        connection = get_connection()
+    def find_all_suppliers(filters_data: FilterSuppliersSchema, connection):
+        data = filters_data.model_dump(exclude_none=True)
+
         cursor = connection.cursor()
 
         query = """
@@ -39,26 +38,26 @@ class SuppliersRepository:
         filters = []
         values = []
 
-        if start_date:
+        if "start_date" in data:
             filters.append("DATE(s.supplier_date) >= %s")
-            values.append(start_date)
+            values.append(data["start_date"])
 
-        if end_date:
+        if "end_date" in data:
             filters.append("DATE(s.supplier_date) <= %s")
-            values.append(end_date)
+            values.append(data["end_date"])
 
-        if name_order == "asc":
+        if data.get("name_order") == "asc":
             query += " ORDER BY s.supplier_name ASC"
-        elif name_order == "desc":
+        elif data.get("name_order") == "desc":
             query += " ORDER BY s.supplier_name DESC"
 
-        if status:
+        if "status" in data:
             filters.append("s.supplier_status = %s")
-            values.append(status)
+            values.append(data["status"])
 
-        if city:
+        if "city" in data:
             filters.append("s.supplier_city = %s")
-            values.append(city)
+            values.append(data["city"])
 
         if filters:
             query += " WHERE " + " AND ".join(filters)
@@ -68,30 +67,31 @@ class SuppliersRepository:
             result = cursor.fetchall()
 
             data = [
-                {
-                    "id": item[0],
-                    "name": item[1],
-                    "city": item[2],
-                    "city_name": item[3],
-                    "address": item[4],
-                    "email": item[5],
-                    "phone": item[6],
-                    "status": item[7],
-                    "date": date_formatter(item[8])
-                }
+                SupplierResponse(
+                    id=item[0],
+                    name=item[1],
+                    city_id=item[2],
+                    city_name=item[3],
+                    address=item[4],
+                    email=item[5],
+                    phone=item[6],
+                    status=item[7],
+                    date=date_formatter(item[8])
+                )
                 for item in result
             ]
+
             return None, data
+
         except Exception as e:
             logger.error("Error en find_all_suppliers: %s", e, exc_info=True)
             return "Error al intentar obtener los proveedores", None
+
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def find_supplier_by_id(supplier_id):
-        connection = get_connection()
+    def find_supplier_by_id(supplier_id: int, connection):
         cursor = connection.cursor()
 
         query = """
@@ -111,34 +111,59 @@ class SuppliersRepository:
             cursor.execute(query, (supplier_id,))
             result = cursor.fetchall()
             data = [
-                {
-                    "id": item[0],
-                    "name": item[1],
-                    "city": item[2],
-                    "address": item[3],
-                    "email": item[4],
-                    "phone": item[5],
-                    "status": item[6],
-                    "date": date_formatter(item[7])
-                }
+                SupplierResponse(
+                    id=item[0],
+                    name=item[1],
+                    city_id=item[2],
+                    city_name=item[3],
+                    address=item[4],
+                    email=item[5],
+                    phone=item[6],
+                    status=item[7],
+                    date=date_formatter(item[8])
+                )
+
                 for item in result
             ]
             return None, data
+
         except Exception as e:
             logger.error("Error en find_supplier_by_id: %s", e, exc_info=True)
             return "Error al intentar obtener el proveedor", None
+
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def create_supplier(supplier_data: Supplier):
-        data = supplier_data.model_dump()
-
-        connection = get_connection()
+    def find_supplier_by_name(supplier_name: str, connection):
         cursor = connection.cursor(dictionary=True)
 
-        # Petición a la base de datos
+        try:
+            cursor.execute("""
+            SELECT
+                supplier_id
+            FROM SUPPLIERS
+            WHERE LOWER(supplier_name) = LOWER(%s)
+            """, (supplier_name,))
+
+            supplier = cursor.fetchone()
+
+            return None, supplier
+
+        except Exception as e:
+            logger.error("Error en find_supplier_by_name: %s",
+                         e, exc_info=True)
+            return "Error al intentar obtener el proveedor mediante el nombre", None, None
+
+        finally:
+            cursor.close()
+
+    @staticmethod
+    def create_supplier(supplier_data: CreateSupplierSchema, connection):
+        data = supplier_data.model_dump()
+
+        cursor = connection.cursor()
+
         query = """
         INSERT INTO SUPPLIERS (
             supplier_name,
@@ -150,19 +175,25 @@ class SuppliersRepository:
 
         try:
             cursor.execute(
-                query, (data["name"], data["email"], data["phone"], data["city"], data["address"]))
-            connection.commit()
+                query, (
+                    data["name"],
+                    data["email"],
+                    data["phone"],
+                    data["city"],
+                    data["address"]
+                ))
 
             return None, True, "Proveedor creado correctamente"
+
         except Exception as e:
             logger.error("Error en create_supplier: %s", e, exc_info=True)
-            return "Error al intentar crear el proveedor", None, None
+            return "Error al intentar crear el proveedor", False, None
+
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def update_supplier(supplier_id: int, supplier_data: UpdateSupplier):
+    def update_supplier(supplier_id: int, supplier_data: UpdateSupplierSchema, connection):
         data = supplier_data.model_dump(exclude_none=True)
 
         SUPPLIER_FIELDS = {
@@ -174,7 +205,6 @@ class SuppliersRepository:
             "status": "supplier_status"
         }
 
-        connection = get_connection()
         cursor = connection.cursor(dictionary=True)
 
         try:
@@ -207,20 +237,18 @@ class SuppliersRepository:
                 values
             )
 
-            connection.commit()
-
             return None, True, "Proveedor actualizado correctamente"
+
         except Exception as e:
             connection.rollback()
             logger.error("Error en update_supplier: %s", e, exc_info=True)
             return "Error al ejecutar la consulta", False, None
+
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def disable_supplier(supplier_id: int):
-        connection = get_connection()
+    def disable_supplier(supplier_id: int, connection):
         cursor = connection.cursor()
 
         query = "UPDATE SUPPLIERS SET supplier_status = 1 WHERE supplier_id = %s"
@@ -236,7 +264,6 @@ class SuppliersRepository:
                 return "Proveedor no encontrado", False, None
 
             cursor.execute(query, (supplier_id,))
-            connection.commit()
 
             return None, True, "Proveedor deshabilitado correctamente"
         except Exception as e:
@@ -244,11 +271,9 @@ class SuppliersRepository:
             return "Error al intentar deshabilitar el proveedor", False, None
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def enable_supplier(supplier_id: int):
-        connection = get_connection()
+    def enable_supplier(supplier_id: int, connection):
         cursor = connection.cursor()
 
         query = "UPDATE SUPPLIERS SET supplier_status = 2 WHERE supplier_id = %s"
@@ -264,7 +289,6 @@ class SuppliersRepository:
                 return "Proveedor no encontrado", False, None
 
             cursor.execute(query, (supplier_id,))
-            connection.commit()
 
             return None, True, "Proveedor habilitado correctamente"
         except Exception as e:
@@ -272,7 +296,6 @@ class SuppliersRepository:
             return "Error al intentar habilitar el proveedor", False, None
         finally:
             cursor.close()
-            connection.close()
 
 #   ------------ REPORTES DE PROVEEDORES ------------
 
