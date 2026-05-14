@@ -252,7 +252,7 @@ class UsersService:
         connection = get_connection()
 
         if data["new_password"] != data["repeat_password"]:
-            raise ServiceError(error)
+            raise ServiceError("Las contraseñas no coiniciden")
 
         try:
             error, user = UsersRepository.find_user_password_by_id(
