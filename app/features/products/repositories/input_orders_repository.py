@@ -1,6 +1,6 @@
 from app.utils.logger import get_logger
-from app.features.products.models.input_orders_responses import InputOrderResponse
-from app.features.products.models.input_orders_schemas import CreateInputOrderSchema
+from app.features.products.models.schemas.input_orders_schemas import CreateInputOrderSchema
+from app.features.products.models.responses.input_orders_responses import InputOrderResponse
 
 logger = get_logger("input_orders.repository")
 
