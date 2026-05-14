@@ -3,7 +3,7 @@
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
-from app.features.products.models.product_brands_schemas import CreateProductBrandSchema
+from app.features.products.models.schemas.product_brands_schemas import CreateProductBrandSchema
 from app.features.products.repositories.product_brands_repository import ProductBrandsRepository
 
 
