@@ -1,12 +1,11 @@
 import bcrypt
-from app.features.users.models.cities_reponse import CityResponse
-from app.features.users.models.roles_response import RolResponse
-from app.features.users.models.user_response import CurrentUserResponse, UserResponse
 from app.utils.logger import get_logger
-from app.core.database import get_connection
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
-from app.features.users.models.users_schema import CreateUserSchema, UpdateUserSchema, UsersFiltersSchema
+from app.features.users.models.roles_responses import RolResponse
+from app.features.users.models.cities_reponses import CityResponse
+from app.features.users.models.users_schemas import CreateUserSchema, UpdateUserSchema, UsersFiltersSchema
+from app.features.users.models.users_responses import CurrentUserResponse, RecentUserResponse, UserResponse, UsersByRolResponse, UsersByStatusResponse, UsersGrowthResponse
 
 logger = get_logger("users.repository")
 
@@ -435,9 +434,9 @@ class UsersRepository:
     #   ------------ REPORTES DE USUARIOS ------------
 
     @staticmethod
-    def find_recent_users():
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_recent_users(connection):
+        cursor = connection.cursor()
+
         try:
 
             query = """
@@ -457,14 +456,14 @@ class UsersRepository:
             result = cursor.fetchall()
 
             data = [
-                {
-                    "name": item["user_name"],
-                    "surname": item["user_first_surname"],
-                    "email": item["user_email"],
-                    "phone": item["user_phone"],
-                    "date": date_formatter(item["user_date"]),
-                    "status": item["user_status"]
-                }
+                RecentUserResponse(
+                    name=item[0],
+                    surname=item[1],
+                    email=item[2],
+                    phone=item[3],
+                    date=date_formatter(item[4]),
+                    status=item[5]
+                )
                 for item in result
             ]
 
@@ -476,12 +475,11 @@ class UsersRepository:
 
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def find_users_by_rol(period: str):
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_users_by_rol(period: str, connection):
+        cursor = connection.cursor()
+
         try:
             if period not in period_map:
                 period = "30d"
@@ -502,7 +500,15 @@ class UsersRepository:
             cursor.execute(query)
             result = cursor.fetchall()
 
-            return None, result
+            data = [
+                UsersByRolResponse(
+                    rol=item[0],
+                    users=item[1]
+                )
+                for item in result
+            ]
+
+            return None, data
 
         except Exception as e:
             logger.error("Error en find_users_by_rol: %s", e, exc_info=True)
@@ -510,12 +516,10 @@ class UsersRepository:
 
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def find_users_growth(period: str):
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_users_growth(period: str, connection):
+        cursor = connection.cursor()
 
         if period not in period_map:
             period = "30d"
@@ -543,18 +547,27 @@ class UsersRepository:
         try:
             cursor.execute(query)
             results = cursor.fetchall()
-            return None, results
+
+            data = [
+                UsersGrowthResponse(
+                    date=item[0],
+                    users=item[1]
+                )
+                for item in results
+            ]
+
+            return None, data
+
         except Exception as e:
             logger.error("Error en find_users_growth: %s", e, exc_info=True)
             return "Error al intentar obtener el crecimiento de los usuarios", None
+
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def find_users_by_status():
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_users_by_status(connection):
+        cursor = connection.cursor()
 
         query = """
         SELECT
@@ -568,10 +581,22 @@ class UsersRepository:
         try:
             cursor.execute(query)
             results = cursor.fetchall()
-            return None, results
+
+            data = [
+                UsersByStatusResponse(
+                    recent_users=item[0],
+                    active_users=item[1],
+                    inactive_users=item[2],
+                    total_users=item[3]
+                )
+                for item in results
+            ]
+
+            return None, data
+
         except Exception as e:
             logger.error("Error en find_users_by_status: %s", e, exc_info=True)
             return "Error al intentar obtener los usuarios por estado", None
+
         finally:
             cursor.close()
-            connection.close()
