@@ -3,12 +3,13 @@ from fastapi_limiter.depends import RateLimiter
 from app.middlewares.jwt_middleware import verify_jwt
 from app.middlewares.roles_middleware import require_roles
 from app.features.users.controllers.users_controller import UsersController
-from app.features.users.models.users_model import CreateUser, UpdateCurrentUser, UpdatePassword, UpdateUser, UsersFilters
+from app.features.users.models.users_schema import CreateUserSchema, UpdateCurrentUserSchema, UpdatePasswordSchema, UpdateUserSchema, UsersFiltersSchema
 
 router = APIRouter(
     prefix="/api/users",
     tags=["Users"]
 )
+
 
 # Endpoint para obtener todos los usuarios
 @router.get(
@@ -18,8 +19,9 @@ router = APIRouter(
         Depends(require_roles(["Admin"]))
     ]
 )
-def get_all_users(filters: UsersFilters = Depends()):
+def get_all_users(filters: UsersFiltersSchema = Depends()):
     return UsersController.get_all_users(filters)
+
 
 # Endpoint para obtener la información del usuario autenticado
 @router.get(
@@ -43,7 +45,8 @@ def get_me(payload: dict = Depends(verify_jwt)):
 def get_all_roles():
     return UsersController.get_all_roles()
 
-#Endpoint para obtener todas las ciudades existentes
+
+# Endpoint para obtener todas las ciudades existentes
 @router.get(
     "/cities",
     dependencies=[
@@ -53,6 +56,7 @@ def get_all_roles():
 )
 def get_all_cities():
     return UsersController.get_all_cities()
+
 
 # Endpoint para obtener un usuario mediante el id
 @router.get(
@@ -64,7 +68,8 @@ def get_all_cities():
 )
 def get_user_by_id(user_id: int):
     return UsersController.get_user_by_id(user_id)
-    
+
+
 # Endpoint para crear o registrar un usuario
 @router.post(
     "/create",
@@ -74,9 +79,10 @@ def get_user_by_id(user_id: int):
     ]
 )
 async def create_user(
-    user_data: CreateUser
+    user_data: CreateUserSchema
 ):
     return await UsersController.create_user(user_data)
+
 
 # Endpoint para actualizar la informacion del usuario
 @router.put(
@@ -86,8 +92,15 @@ async def create_user(
         Depends(require_roles(["Admin", "Almacen", "Tecnico"]))
     ]
 )
-def update_me(user_data: UpdateCurrentUser, payload: dict = Depends(verify_jwt)):
+def update_me(user_data: UpdateCurrentUserSchema, payload: dict = Depends(verify_jwt)):
     return UsersController.update_current_user(user_data, payload)
+
+
+# Endpoint para actualizar la contraseña del usuario
+@router.put("/update-password")
+def update_user_password(password_data: UpdatePasswordSchema, payload: dict = Depends(verify_jwt)):
+    return UsersController.update_user_password(password_data, payload)
+
 
 # Endpoint para actualizar la información de un usuario existente mediante su id
 @router.put(
@@ -98,16 +111,11 @@ def update_me(user_data: UpdateCurrentUser, payload: dict = Depends(verify_jwt))
     ]
 )
 def update_user(
-    user_id: int, 
-    user_data: UpdateUser
+    user_id: int,
+    user_data: UpdateUserSchema
 ):
     return UsersController.update_user(user_id, user_data)
 
-
-# Endpoint para actualizar la contraseña del usuario
-@router.put("/update-password")
-def update_user_password(password_data: UpdatePassword, payload: dict = Depends(verify_jwt)):
-    return UsersController.update_user_password(password_data, payload)
 
 # Endpoint para deshabilitar un usuario mediante su id
 @router.put(
@@ -121,6 +129,7 @@ def disable_user(
     user_id: int
 ):
     return UsersController.disable_user(user_id)
+
 
 # Endpoint para habilitar un usuario mediante su id
 @router.put(
