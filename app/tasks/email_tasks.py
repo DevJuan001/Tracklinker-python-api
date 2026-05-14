@@ -3,7 +3,6 @@ import asyncio
 from pydantic import EmailStr
 from app.core.mail import fm
 from app.core.celery_app import celery
-from app.features.users.models.users_model import User
 from fastapi_mail import MessageSchema
 
 
