@@ -1,5 +1,6 @@
 from app.utils.logger import get_logger
-from app.features.products.models.product_brand_model import ProductBrand, CreateProductBrand
+from app.features.products.models.product_brands_responses import ProductBrandResponse
+from app.features.products.models.product_brands_schemas import CreateProductBrandSchema
 
 logger = get_logger("product_brands.repository")
 
@@ -30,14 +31,16 @@ class ProductBrandsRepository:
             result = cursor.fetchall()
 
             data = [
-                ProductBrand(
+                ProductBrandResponse(
                     subcategories=item[0],
                     id=item[1],
                     name=item[2]
                 )
                 for item in result
             ]
+            
             return None, data
+        
         except Exception as e:
             logger.error(
                 "Error en find_all_product_brands: %s",
@@ -45,11 +48,12 @@ class ProductBrandsRepository:
                 exc_info=True
             )
             return "Error al intentar obtener las marcas", None
+        
         finally:
             cursor.close()
 
     @staticmethod
-    def create_product_brand(data: CreateProductBrand, connection):
+    def create_product_brand(data: CreateProductBrandSchema, connection):
         cursor = connection.cursor()
 
         try:
@@ -69,12 +73,14 @@ class ProductBrandsRepository:
             connection.commit()
 
             return None, True, "Marca creada correctamente"
+        
         except Exception as e:
             logger.error(
                 "Error en find_all_product_brands: %s",
                 e,
                 exc_info=True
             )
-            return "Error al crear la marca", False, None
+            return "Error al intentar crear la marca", False, None
+        
         finally:
             cursor.close()
