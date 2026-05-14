@@ -6,14 +6,14 @@ from app.core.database import get_connection
 from app.tasks.email_tasks import send_welcome_email
 from app.core.security import generate_temporal_password, verify_password
 from app.features.users.repositories.users_repository import UsersRepository
-from app.features.users.models.users_model import UpdatePassword, UsersFilters, CreateUser, UpdateUser
+from app.features.users.models.users_schema import UpdatePasswordSchema, UsersFiltersSchema, CreateUserSchema, UpdateUserSchema
 
 logger = get_logger("users.service")
 
 
 class UsersService:
     @staticmethod
-    def get_all_users(filters: UsersFilters):
+    def get_all_users(filters: UsersFiltersSchema):
         connection = get_connection()
 
         try:
@@ -136,7 +136,7 @@ class UsersService:
             return "Error al intentar obtener las ciudades", None
 
     @staticmethod
-    async def create_user(user_data: CreateUser):
+    async def create_user(user_data: CreateUserSchema):
         data = user_data.model_dump()
 
         connection = get_connection()
@@ -196,7 +196,7 @@ class UsersService:
             return "Error al intentar crear el usuario", False, None
 
     @staticmethod
-    def update_user(user_id: int, user_data: UpdateUser):
+    def update_user(user_id: int, user_data: UpdateUserSchema):
         data = user_data.model_dump(exclude_none=True)
         connection = get_connection()
 
@@ -246,7 +246,7 @@ class UsersService:
             connection.close()
 
     @staticmethod
-    def update_user_password(password_data: UpdatePassword, user_id: int):
+    def update_user_password(password_data: UpdatePasswordSchema, user_id: int):
         data = password_data.model_dump()
 
         connection = get_connection()
