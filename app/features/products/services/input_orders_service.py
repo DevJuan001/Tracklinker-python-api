@@ -1,9 +1,9 @@
 
 
-from app.core.database import get_connection
 from app.utils.logger import get_logger
+from app.core.database import get_connection
 from app.core.exception import ServiceError
-from app.features.products.models.input_orders_schemas import CreateInputOrderSchema
+from app.features.products.models.schemas.input_orders_schemas import CreateInputOrderSchema
 from app.features.products.repositories.input_orders_repository import InputOrdersRepository
 
 
