@@ -1,12 +1,12 @@
 from app.utils.logger import get_logger
-from app.features.products.models.product_details_model import CreateProductDetails, UpdateProductDetails
+from app.features.products.models.entities.product_details_entity import CreateProductDetailsEntity, UpdateProductDetailsEntity
 
 logger = get_logger("product_details.repository")
 
 
 class ProductDetailsRepository:
     @staticmethod
-    def create_product_details(details_data: CreateProductDetails, connection):
+    def create_product_details(details_data: CreateProductDetailsEntity, connection):
         cursor = connection.cursor()
 
         data = details_data.model_dump()
@@ -24,6 +24,7 @@ class ProductDetailsRepository:
             product_details_id = cursor.lastrowid
 
             return None, True, "Detalles del producto creado correctamente", product_details_id
+        
         except Exception as e:
             logger.error(
                 "Error en create_products_details: %s",
@@ -31,11 +32,12 @@ class ProductDetailsRepository:
                 exc_info=True
             )
             return "Error al intentar crear los detalles del producto", False, None, None
+        
         finally:
             cursor.close()
 
     @staticmethod
-    def update_product_details(details_data: UpdateProductDetails, connection):
+    def update_product_details(details_data: UpdateProductDetailsEntity, connection):
         data = details_data.model_dump()
 
         cursor = connection.cursor()
@@ -51,6 +53,7 @@ class ProductDetailsRepository:
             )
 
             return None, True, "Detalles del producto actualizados correctamente"
+        
         except Exception as e:
             logger.error(
                 "Error en update_products_details: %s",
@@ -58,5 +61,6 @@ class ProductDetailsRepository:
                 exc_info=True
             )
             return "Error al actualizar los detalles", False, None
+        
         finally:
             cursor.close()

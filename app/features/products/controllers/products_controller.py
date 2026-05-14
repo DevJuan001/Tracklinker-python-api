@@ -1,17 +1,19 @@
+
+
 from fastapi import HTTPException
-from app.features.products.models.input_order_model import CreateInputOrder
-from app.features.products.models.product_brand_model import CreateProductBrand
-from app.features.products.models.product_models_model import CreateProductModel
 from app.features.products.services.products_service import ProductsService
 from app.features.products.services.input_orders_service import InputOrdersService
 from app.features.products.services.product_brands_service import ProductBrandsService
 from app.features.products.services.product_models_service import ProductModelsService
-from app.features.products.models.product_model import UpdateProduct, CreateProduct, ProductsFilter, UpdateProductStatus
+from app.features.products.models.schemas.input_orders_schemas import CreateInputOrderSchema
+from app.features.products.models.schemas.product_brands_schemas import CreateProductBrandSchema
+from app.features.products.models.schemas.product_models_schemas import CreateProductModelSchema
+from app.features.products.models.schemas.products_schemas import CreateProductSchema, ProductsFilterSchema, UpdateProductSchema, UpdateProductStatusSchema
 
 
 class ProductsController:
     @staticmethod
-    def get_all_products(filters: ProductsFilter):
+    def get_all_products(filters: ProductsFilterSchema):
         error, products = ProductsService.get_all_products(filters)
 
         if error:
@@ -66,7 +68,7 @@ class ProductsController:
         }
 
     @staticmethod
-    def create_product(product_data: CreateProduct):
+    def create_product(product_data: CreateProductSchema):
         error, success, message = ProductsService.create_product(
             product_data
         )
@@ -79,7 +81,7 @@ class ProductsController:
         }
 
     @staticmethod
-    def create_product_model(product_model: CreateProductModel):
+    def create_product_model(product_model: CreateProductModelSchema):
         error, success, message = ProductModelsService.create_product_model(
             product_model
         )
@@ -92,7 +94,7 @@ class ProductsController:
         }
 
     @staticmethod
-    def create_product_brand(product_brand: CreateProductBrand):
+    def create_product_brand(product_brand: CreateProductBrandSchema):
         error, success, message = ProductBrandsService.create_product_brand(
             product_brand
         )
@@ -105,7 +107,7 @@ class ProductsController:
         }
 
     @staticmethod
-    def create_input_order(input_order: CreateInputOrder):
+    def create_input_order(input_order: CreateInputOrderSchema):
         error, success, message = InputOrdersService.create_input_order(
             input_order
         )
@@ -118,7 +120,7 @@ class ProductsController:
         }
 
     @staticmethod
-    def update_product(product_data: UpdateProduct):
+    def update_product(product_data: UpdateProductSchema):
         error, success, message = ProductsService.update_product(
             product_data
         )
@@ -131,7 +133,7 @@ class ProductsController:
         }
 
     @staticmethod
-    def update_product_status(product_data: UpdateProductStatus):
+    def update_product_status(product_data: UpdateProductStatusSchema):
         error, success, message = ProductsService.update_product_status(
             product_data
         )

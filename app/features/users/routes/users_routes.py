@@ -3,7 +3,7 @@ from fastapi_limiter.depends import RateLimiter
 from app.middlewares.jwt_middleware import verify_jwt
 from app.middlewares.roles_middleware import require_roles
 from app.features.users.controllers.users_controller import UsersController
-from app.features.users.models.users_schema import CreateUserSchema, UpdateCurrentUserSchema, UpdatePasswordSchema, UpdateUserSchema, UsersFiltersSchema
+from app.features.users.models.users_schemas import CreateUserSchema, UpdateCurrentUserSchema, UpdatePasswordSchema, UpdateUserSchema, UsersFiltersSchema
 
 router = APIRouter(
     prefix="/api/users",

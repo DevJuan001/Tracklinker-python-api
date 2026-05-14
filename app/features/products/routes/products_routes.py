@@ -3,16 +3,17 @@ from app.core.cache import invalidate_cache
 from fastapi import APIRouter, Depends, Body
 from fastapi_limiter.depends import RateLimiter
 from app.middlewares.roles_middleware import require_roles
-from app.features.products.models.input_order_model import CreateInputOrder
-from app.features.products.models.product_brand_model import CreateProductBrand
-from app.features.products.models.product_models_model import CreateProductModel
 from app.features.products.controllers.products_controller import ProductsController
-from app.features.products.models.product_model import CreateProduct, UpdateProductStatus, UpdateProduct, ProductsFilter
+from app.features.products.models.schemas.input_orders_schemas import CreateInputOrderSchema
+from app.features.products.models.schemas.product_brands_schemas import CreateProductBrandSchema
+from app.features.products.models.schemas.product_models_schemas import CreateProductModelSchema
+from app.features.products.models.schemas.products_schemas import CreateProductSchema, UpdateProductStatusSchema, UpdateProductSchema, ProductsFilterSchema
 
 router = APIRouter(
     prefix="/api/products",
     tags=["Products"]
 )
+
 
 # Endpoint para obtener todos los productos
 @router.get(
@@ -23,11 +24,12 @@ router = APIRouter(
     ]
 )
 async def get_all_products(
-    filters: ProductsFilter = Depends(),
+    filters: ProductsFilterSchema = Depends(),
     redis=Depends(get_redis)
 ):
     result = ProductsController.get_all_products(filters)
     return result
+
 
 # Endpoint para obtener todas las marcas de productos
 @router.get(
@@ -40,6 +42,7 @@ async def get_all_products(
 def get_all_brands():
     return ProductsController.get_all_product_brands()
 
+
 # Endpoint para obtener todos los modelos de productos
 @router.get(
     "/models",
@@ -50,6 +53,7 @@ def get_all_brands():
 )
 def get_all_models():
     return ProductsController.get_all_product_models()
+
 
 # Endpoint para obtener las ordenes de entrada de productos
 @router.get(
@@ -62,6 +66,7 @@ def get_all_models():
 def get_all_input_orders():
     return ProductsController.get_all_input_orders()
 
+
 # Endpoint para obtener las estados de los productos
 @router.get(
     "/status",
@@ -73,6 +78,7 @@ def get_all_input_orders():
 def get_all_product_status():
     return ProductsController.get_all_product_status()
 
+
 # Endpoint para crear o agregar productos
 @router.post(
     "/create",
@@ -81,10 +87,11 @@ def get_all_product_status():
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
-async def create_product(product_data: CreateProduct, redis=Depends(get_redis)):
+async def create_product(product_data: CreateProductSchema, redis=Depends(get_redis)):
     result = ProductsController.create_product(product_data)
     await invalidate_cache(redis, "products:*")
     return result
+
 
 # Endpoint para crear o agregar modelos de productos
 @router.post(
@@ -94,8 +101,9 @@ async def create_product(product_data: CreateProduct, redis=Depends(get_redis)):
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
-def create_product_model(product_model: CreateProductModel):
+def create_product_model(product_model: CreateProductModelSchema):
     return ProductsController.create_product_model(product_model)
+
 
 # Endpoint para crear una marca de producto
 @router.post(
@@ -105,8 +113,9 @@ def create_product_model(product_model: CreateProductModel):
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
-def create_product_brand(product_brand: CreateProductBrand):
+def create_product_brand(product_brand: CreateProductBrandSchema):
     return ProductsController.create_product_brand(product_brand)
+
 
 # Endpoint para crear una orden de entrada de productos
 @router.post(
@@ -116,8 +125,9 @@ def create_product_brand(product_brand: CreateProductBrand):
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
-def create_product_entry(input_order: CreateInputOrder):
+def create_product_entry(input_order: CreateInputOrderSchema):
     return ProductsController.create_input_order(input_order)
+
 
 # Endpoint para actualizar la informacion de un producto
 @router.put(
@@ -127,8 +137,9 @@ def create_product_entry(input_order: CreateInputOrder):
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
-def update_product(product_data: UpdateProduct = Body(...)):
+def update_product(product_data: UpdateProductSchema = Body(...)):
     return ProductsController.update_product(product_data)
+
 
 # Endpoint para actualizar el estado de un producto
 @router.put(
@@ -138,5 +149,5 @@ def update_product(product_data: UpdateProduct = Body(...)):
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
-def update_product_status(product_data: UpdateProductStatus):
+def update_product_status(product_data: UpdateProductStatusSchema):
     return ProductsController.update_product_status(product_data)

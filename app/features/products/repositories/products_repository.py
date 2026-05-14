@@ -1,15 +1,13 @@
-# Core
-from app.core.database import get_connection
-# Utils
+
+
 from datetime import datetime
+from app.utils.logger import get_logger
 from dateutil.relativedelta import relativedelta
 from app.utils.date_formatter import date_formatter
-from app.utils.periods import period_map, daily_periods
-from app.utils.logger import get_logger
-# Models
-from app.features.products.models.product_serial_model import UpdateProductSerial
-from app.features.products.models.product_details_model import UpdateProductDetails
-from app.features.products.models.product_model import Product, UpdateProduct, ProductsFilter, CreateProduct
+from app.utils.periods import daily_periods, period_map
+from app.features.products.models.schemas.products_schemas import CreateProductSchema, ProductsFilterSchema, UpdateProductSchema
+from app.features.products.models.responses.products_responses import ProductResponse, ProductStatusResponse, ProductsByBrandResponse, ProductsByStatus, ProductsGrowthResponse, RecentProductsResponse
+
 
 logger = get_logger("products.repository")
 
@@ -17,7 +15,7 @@ logger = get_logger("products.repository")
 class ProductsRepository:
 
     @staticmethod
-    def find_all_products(filters_data: ProductsFilter, connection):
+    def find_all_products(filters_data: ProductsFilterSchema, connection):
         data = filters_data.model_dump(exclude_none=True)
 
         cursor = connection.cursor()
@@ -111,7 +109,7 @@ class ProductsRepository:
 
             # Mapeamos cada item que devuelve la query y le agregamos una llave para identificarlos
             products = [
-                Product(
+                ProductResponse(
                     input_order_id=item[0],
                     input_date=date_formatter(item[1]),
                     input_order=item[2],
@@ -133,9 +131,11 @@ class ProductsRepository:
                 for item in result
             ]
             return None, products
+
         except Exception as e:
             logger.error("Error en find_all_products: %s", e, exc_info=True)
             return "Error al intentar obtener los productos", None
+
         finally:
             cursor.close()
 
@@ -150,9 +150,11 @@ class ProductsRepository:
             )
 
             return cursor.fetchone()
+
         except Exception as e:
             logger.error("Error en find_product_by_id: %s", e, exc_info=True)
             return "Error al intentar obtener el producto", None
+
         finally:
             cursor.close()
 
@@ -170,13 +172,14 @@ class ProductsRepository:
             result = cursor.fetchall()
 
             data = [
-                {
-                    "id": item[0]
-                }
+                ProductStatusResponse(
+                    id=item[0]
+                )
                 for item in result
             ]
 
             return None, data
+
         except Exception as e:
             logger.error(
                 "Error en find_all_products_status: %s",
@@ -184,11 +187,12 @@ class ProductsRepository:
                 exc_info=True
             )
             return "Error al intentar obtener los estados de los productos", None
+
         finally:
             cursor.close()
 
     @staticmethod
-    def create_product(product_data: CreateProduct, product_details_id: int, connection):
+    def create_product(product_data: CreateProductSchema, product_details_id: int, connection):
         cursor = connection.cursor()
 
         try:
@@ -204,14 +208,16 @@ class ProductsRepository:
             product_id = cursor.lastrowid
 
             return None, True, "Producto creado correctamente", product_id
+
         except Exception as e:
             logger.error("Error en create_product: %s", e, exc_info=True)
             return "Error al intentar crear el producto", False, None
+
         finally:
             cursor.close()
 
     @staticmethod
-    def update_product(product_data: UpdateProduct, connection):
+    def update_product(product_data: UpdateProductSchema, connection):
         cursor = connection.cursor()
 
         PRODUCT_FIELD_MAP = {
@@ -292,9 +298,8 @@ class ProductsRepository:
 #   ------------ REPORTES DE PRODUCTOS ------------
 
     @staticmethod
-    def find_recent_products():
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_recent_products(connection):
+        cursor = connection.cursor()
 
         query = """
         SELECT
@@ -319,36 +324,39 @@ class ProductsRepository:
         try:
             cursor.execute(query)
             results = cursor.fetchall()
+
             data = [
-                {
-                    "input_date": date_formatter(item["product_detail_date"]),
-                    "serial": item["product_serial"],
-                    "model": item["product_model_name"],
-                    "brand": item["product_brand_name"],
-                    "status": item["product_status"]
-                }
+                RecentProductsResponse(
+                    input_date=date_formatter(item[0]),
+                    serial=item[1],
+                    model=item[2],
+                    brand=item[3],
+                    status=item[4]
+                )
                 for item in results
             ]
+
             return None, data
+
         except Exception as e:
             logger.error("Error en find_recent_products: %s", e, exc_info=True)
-            return "Error al intentar obtener los productos recientes", None
+            return "Error al intentar obtener los productos agregados recientemente", None
+
         finally:
             cursor.close()
 
     @staticmethod
-    def find_products_by_status():
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_products_by_status(connection):
+        cursor = connection.cursor()
 
         query = """
         SELECT
-            (SELECT COUNT(*)
+            (SELECT COUNT(product_serial)
             FROM PRODUCT_SERIALS
             WHERE product_garanty_input >= DATE_SUB(NOW(), INTERVAL 30 DAY)
             ) AS recent_products,
 
-            (SELECT COUNT(*)
+            (SELECT COUNT(product_serial)
             FROM PRODUCT_SERIALS
             ) AS total_products,    
 
@@ -365,7 +373,19 @@ class ProductsRepository:
         try:
             cursor.execute(query)
             results = cursor.fetchall()
-            return None, results
+
+            data = [
+                ProductsByStatus(
+                    recent_products=item[0],
+                    total_products=item[1],
+                    warranties_products=item[2],
+                    sold_products=item[3]
+                )
+                for item in results
+            ]
+
+            return None, data
+
         except Exception as e:
             logger.error(
                 "Error en find_products_by_status: %s",
@@ -373,13 +393,13 @@ class ProductsRepository:
                 exc_info=True
             )
             return "Error al intentar obtener los productos por estado", None
+
         finally:
             cursor.close()
 
     @staticmethod
-    def find_products_growth(period: str):
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_products_growth(period: str, connection):
+        cursor = connection.cursor()
 
         if period not in period_map:
             period = "30d"
@@ -413,17 +433,27 @@ class ProductsRepository:
         try:
             cursor.execute(query)
             results = cursor.fetchall()
-            return None, results
+
+            data = [
+                ProductsGrowthResponse(
+                    date=item[0],
+                    products=item[1]
+                )
+                for item in results
+            ]
+
+            return None, data
+
         except Exception as e:
             logger.error("Error en find_products_growth: %s", e, exc_info=True)
             return "Error al intentar obtener el crecimento de los productos", None
+
         finally:
             cursor.close()
 
     @staticmethod
-    def find_products_by_brand(period: str):
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_products_by_brand(period: str, connection):
+        cursor = connection.cursor()
 
         if period not in period_map:
             period = "30d"
@@ -451,16 +481,21 @@ class ProductsRepository:
             results = cursor.fetchall()
 
             data = [
-                {
-                    "name": item["product_brand_name"],
-                    "value": item["products"]
-                }
+                ProductsByBrandResponse(
+                    brand=item[0],
+                    products=item[1]
+                )
                 for item in results
             ]
             return None, data
+
         except Exception as e:
-            logger.error("Error en find_products_by_brand: %s",
-                         e, exc_info=True)
-            return "Error al intentar obtener las marcas", None
+            logger.error(
+                "Error en find_products_by_brand: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar los productos agrupados por marcas", None
+
         finally:
             cursor.close()
