@@ -27,7 +27,6 @@ def get_users_growth(period: str = "30d"):
     return ReportsController.get_users_growth(period)
 
 
-
 # Endpoint para obtener los usuarios activos, deshabilitados y recien creados
 @router.get("/get_users_by_status")
 def get_users_by_status():
