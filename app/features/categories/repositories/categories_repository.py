@@ -1,8 +1,8 @@
 from app.utils.logger import get_logger
-from app.core.database import get_connection
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
-from app.features.categories.models.categories_model import CategoriesFilters, Category, CreateCategory, UpdateCategory
+from app.features.categories.models.categories_schemas import CategoriesFiltersSchema, CreateCategorySchema, UpdateCategorySchema
+from app.features.categories.models.categories_responses import CategoryByStatusResponse, CategoryResponse, GrowthCategoryResponse, RecentCategoryResponse
 
 logger = get_logger("categories.repository")
 
@@ -11,7 +11,7 @@ class CategoriesRepository:
 
     # Obtener todas las categorias
     @staticmethod
-    def find_all_categories(filters_data: CategoriesFilters, connection):
+    def find_all_categories(filters_data: CategoriesFiltersSchema, connection):
         data = filters_data.model_dump(exclude_none=True)
 
         cursor = connection.cursor(buffered=True)
@@ -53,7 +53,7 @@ class CategoriesRepository:
             result = cursor.fetchall()
 
             data = [
-                Category(
+                CategoryResponse(
                     id=item[0],
                     name=item[1],
                     description=item[2],
@@ -91,7 +91,7 @@ class CategoriesRepository:
             result = cursor.fetchall()
 
             data = [
-                Category(
+                CategoryResponse(
                     id=item[0],
                     name=item[1],
                     description=item[2],
@@ -104,7 +104,7 @@ class CategoriesRepository:
             return None, data
 
         except Exception as e:
-            logger.error("Error en find_by_id: %s", e, exc_info=True)
+            logger.error("Error en find_category_by_id: %s", e, exc_info=True)
             return "Error al intentar obtener la categoría", None
 
         finally:
@@ -130,7 +130,7 @@ class CategoriesRepository:
             result = cursor.fetchall()
 
             data = [
-                Category(
+                CategoryResponse(
                     id=item[0],
                     name=item[1],
                     description=item[2],
@@ -143,14 +143,15 @@ class CategoriesRepository:
             return None, data
 
         except Exception as e:
-            logger.error("Error en find_by_id: %s", e, exc_info=True)
-            return "Error al intentar obtener la categoría", None
+            logger.error("Error en find_category_by_name: %s",
+                         e, exc_info=True)
+            return "Error al intentar obtener la categoría mediante el nombre", None
 
         finally:
             cursor.close()
 
     @staticmethod
-    def create_category(category_data: CreateCategory, connection):
+    def create_category(category_data: CreateCategorySchema, connection):
         data = category_data.model_dump()
 
         cursor = connection.cursor(buffered=True)
@@ -186,7 +187,7 @@ class CategoriesRepository:
             cursor.close()
 
     @staticmethod
-    def update_category(category_id: int, category_data: UpdateCategory, connection):
+    def update_category(category_id: int, category_data: UpdateCategorySchema, connection):
         data = category_data.model_dump(exclude_none=True)
 
         CATEGORY_FIELDS = {
@@ -230,14 +231,6 @@ class CategoriesRepository:
     def disable_category(category_id: int, connection):
         cursor = connection.cursor()
 
-        cursor.execute(
-            "SELECT category_name FROM CATEGORIES WHERE category_id = %s", (category_id,))
-
-        category = cursor.fetchone()
-
-        if not category:
-            return "Categoría no encontrada", False, None
-
         query = """
         UPDATE CATEGORIES SET
             category_status = 1
@@ -259,17 +252,6 @@ class CategoriesRepository:
     def enable_category(category_id: int, connection):
         cursor = connection.cursor()
 
-        cursor.execute(
-            "SELECT category_name FROM CATEGORIES WHERE category_id = %s", (
-                category_id,
-            )
-        )
-
-        category = cursor.fetchone()
-
-        if not category:
-            return "Categoría no encontrada", False, None
-
         query = """
         UPDATE CATEGORIES SET
             category_status = 2
@@ -290,9 +272,8 @@ class CategoriesRepository:
 #   ------------ REPORTES DE CATEGORIAS ------------
 
     @staticmethod
-    def find_recent_categories():
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_recent_categories(connection):
+        cursor = connection.cursor()
 
         query = """
         SELECT
@@ -308,26 +289,33 @@ class CategoriesRepository:
         try:
             cursor.execute(query)
             results = cursor.fetchall()
+
             data = [
-                {
-                    "name": item["category_name"],
-                    "date": date_formatter(item["category_date"]),
-                    "description": item["category_description"],
-                    "status": item["category_status"],
-                }
+                RecentCategoryResponse(
+                    name=item[0],
+                    date=date_formatter(item[1]),
+                    description=item[2],
+                    status=item[3],
+                )
                 for item in results
             ]
+
             return None, data
+
         except Exception as e:
-            return f"Error al ejecutar la consulta: {e}", None
+            logger.error(
+                "Error en find_recent_categories: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener las categorias recientes", None
+
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def find_categories_by_status():
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_categories_by_status(connection):
+        cursor = connection.cursor()
 
         query = """
         SELECT
@@ -344,17 +332,33 @@ class CategoriesRepository:
         try:
             cursor.execute(query)
             results = cursor.fetchall()
-            return None, results
+
+            data = [
+                CategoryByStatusResponse(
+                    recent_categories=item[0],
+                    total_categories=item[1],
+                    inactive_categories=item[2],
+                    active_categories=item[3]
+                )
+                for item in results
+            ]
+
+            return None, data
+
         except Exception as e:
-            return f"Error al ejecutar la consulta: {e}", None
+            logger.error(
+                "Error en find_categories_by_status: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener las categorias agrupadas por estado", None
+
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def find_categories_growth(period: str):
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_categories_growth(period: str, connection):
+        cursor = connection.cursor()
 
         if period not in period_map:
             period = "30d"
@@ -382,9 +386,24 @@ class CategoriesRepository:
         try:
             cursor.execute(query)
             results = cursor.fetchall()
-            return None, results
+
+            data = [
+                GrowthCategoryResponse(
+                    date=item[0],
+                    categories=item[1]
+                )
+                for item in results
+            ]
+
+            return None, data
+
         except Exception as e:
-            return f"Error al ejecutar la consulta: {e}", None
+            logger.error(
+                "Error en find_categories_growth: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener el crecimiento de las categorias", None
+
         finally:
             cursor.close()
-            connection.close()
