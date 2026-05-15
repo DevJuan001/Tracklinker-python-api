@@ -1,9 +1,9 @@
-from app.features.warranties.models.warranties_responses import RecentWarrantyResponse, WarrantyByBrandResponse, WarrantyByStatusResponse, WarrrantyGrowthResponse
+from app.features.warranties.models.warranties_schemas import CreateWarrantySchema, UpdateWarrantySchema, WarrantiesFilterSchema
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
-from app.features.warranties.models.warranties_model import Warranty, WarrantyUpdate, WarrantiesFilter, CreateWarranty
+from app.features.warranties.models.warranties_responses import RecentWarrantyResponse, WarrantyByBrandResponse, WarrantyByStatusResponse, WarrantyResponse, WarrrantyGrowthResponse
 
 logger = get_logger("warranties.repository")
 
@@ -11,7 +11,7 @@ logger = get_logger("warranties.repository")
 class WarrantiesRepository:
 
     @staticmethod
-    def find_all_warranties(filters: WarrantiesFilter, connection):
+    def find_all_warranties(filters: WarrantiesFilterSchema, connection):
         data = filters.model_dump(exclude_none=True)
 
         cursor = connection.cursor()
@@ -69,7 +69,7 @@ class WarrantiesRepository:
             results = cursor.fetchall()
 
             data = [
-                Warranty(
+                WarrantyResponse(
                     id=item["warranty_incidents_id"],
                     product_serial=item["product_serial"],
                     customer=item["warranty_customer"],
@@ -88,9 +88,11 @@ class WarrantiesRepository:
             ]
 
             return None, data
+
         except Exception as e:
             logger.error("Error en find_all_warranties: %s", e, exc_info=True)
             return "Error al intentar obtener las garantías", None
+
         finally:
             cursor.close()
 
@@ -105,10 +107,13 @@ class WarrantiesRepository:
         """
         try:
             cursor.execute(query, (warranty_incidents_id,))
+
             return cursor.fetchone()
+
         except Exception as e:
             logger.error("Error en find_warranty_by_id: %s", e, exc_info=True)
             return None
+
         finally:
             cursor.close()
 
@@ -124,15 +129,20 @@ class WarrantiesRepository:
                     AND warranty_status IN (2, 3)
             """, (product_serial,))
             return cursor.fetchone()
+
         except Exception as e:
             logger.error(
-                "Error en find_active_warranty_by_serial: %s", e, exc_info=True)
+                "Error en find_active_warranty_by_serial: %s",
+                e,
+                exc_info=True
+            )
             return None
+
         finally:
             cursor.close()
 
     @staticmethod
-    def create_warranty(warranty_data: CreateWarranty, user_id: int, connection):
+    def create_warranty(warranty_data: CreateWarrantySchema, user_id: int, connection):
         cursor = connection.cursor()
 
         # Petición a la base de datos
@@ -163,14 +173,16 @@ class WarrantiesRepository:
             connection.commit()
 
             return None, True, "Garantía creada correctamente"
+
         except Exception as e:
             logger.error("Error en create_warranty: %s", e, exc_info=True)
             return "Error al intentar crear la garantía", None, None
+
         finally:
             cursor.close()
 
     @staticmethod
-    def update_warranty(warranty_incidents_id: int, warranty_data: WarrantyUpdate, connection):
+    def update_warranty(warranty_incidents_id: int, warranty_data: UpdateWarrantySchema, connection):
         WARRANTY_FIELDS = {
             "customer": "warranty_customer",
             "phone": "warranty_phone",
@@ -201,15 +213,16 @@ class WarrantiesRepository:
                 values
             )
             return None, True, "Garantía actualizada correctamente"
+
         except Exception as e:
             logger.error("Error en update_warranty: %s", e, exc_info=True)
             return "Error al intentar actualizar la garantía", False, None
+
         finally:
             cursor.close()
 
 
 #   ------------ REPORTES DE GARANTÍAS ------------
-
 
     @staticmethod
     def find_recent_warranties(connection):
