@@ -37,8 +37,6 @@ class CategoriesService:
     def get_category_by_id(category_id: int):
         connection = get_connection()
 
-        connection = get_connection()
-
         try:
             error, category = CategoriesRepository.find_category_by_id(
                 category_id, connection
@@ -66,6 +64,7 @@ class CategoriesService:
         connection = get_connection()
 
         try:
+            # Verificar si existe una categoría con ese nombre
             if "name" in data:
                 error, existing_category = CategoriesRepository.find_category_by_name(
                     data["name"], connection
@@ -106,6 +105,7 @@ class CategoriesService:
         connection = get_connection()
 
         try:
+            # Verificar si existe la categoría
             error, category = CategoriesRepository.find_category_by_id(
                 category_id, connection
             )
@@ -143,6 +143,7 @@ class CategoriesService:
         connection = get_connection()
 
         try:
+            # Verificar si existe la categoría
             error, category = CategoriesRepository.find_category_by_id(
                 category_id, connection
             )
@@ -180,6 +181,7 @@ class CategoriesService:
         connection = get_connection()
 
         try:
+            # Verificar si existe la categoría
             error, category = CategoriesRepository.find_category_by_id(
                 category_id, connection
             )
