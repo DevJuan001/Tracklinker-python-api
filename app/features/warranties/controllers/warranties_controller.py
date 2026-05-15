@@ -1,12 +1,12 @@
 from fastapi import HTTPException
 from app.features.warranties.services.warranties_service import WarrantiesService
-from app.features.warranties.models.warranties_model import WarrantyUpdate, WarrantiesFilter, CreateWarranty
+from app.features.warranties.models.warranties_schemas import CreateWarrantySchema, UpdateWarrantySchema, WarrantiesFilterSchema
 
 
 class WarrantiesController:
 
     @staticmethod
-    def get_all_warranties(filters: WarrantiesFilter):
+    def get_all_warranties(filters: WarrantiesFilterSchema):
         error, warranties = WarrantiesService.get_all_warranties(filters)
         if error:
             raise HTTPException(status_code=404, detail=error)
@@ -26,7 +26,7 @@ class WarrantiesController:
         }
 
     @staticmethod
-    def create_warranty(warranty_data: CreateWarranty, payload: dict):
+    def create_warranty(warranty_data: CreateWarrantySchema, payload: dict):
         error, success, message = WarrantiesService.create_warranty(
             warranty_data, payload["user_id"]
         )
@@ -38,7 +38,7 @@ class WarrantiesController:
         }
 
     @staticmethod
-    def update_warranty(warranty_incidents_id: int, payload: int, warranty_data: WarrantyUpdate):
+    def update_warranty(warranty_incidents_id: int, payload: int, warranty_data: UpdateWarrantySchema):
         error, success, message = WarrantiesService.update_warranty(
             warranty_incidents_id, payload["user_id"], warranty_data
         )
