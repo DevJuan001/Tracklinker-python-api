@@ -53,21 +53,32 @@ Antes de comenzar, asegúrate de tener instalado:
 ## Instalación
 
 ```bash
+# 0. Instalar uv (si no lo tienes instalado)
+# En macOS y Linux:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# En Windows:
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+> [!WARNING]
+> Una vez que se instale `uv`, debes **reiniciar tu terminal** (o cerrar y volver a abrir tu editor/IDE) para que el sistema reconozca el comando.
+
+```bash
 # 1. Clonar el repositorio
 git clone https://github.com/DevJuan001/Tracklinker-python-api.git
 cd Tracklinker-python-api
 
-# 2. Crear el entorno virtual
-python -m venv venv
+# 2. Crear el entorno virtual con uv
+uv venv
 
 # 3. Activar el entorno virtual
 # En Windows:
-venv\Scripts\activate
+.venv\Scripts\activate
 # En Mac / Linux:
-source venv/bin/activate
+source .venv/bin/activate
 
 # 4. Instalar todas las dependencias
-pip install -r requirements.txt
+uv sync
 
 # 5. Configurar las variables de entorno
 # Copiar el archivo de ejemplo y completar los valores
@@ -146,8 +157,8 @@ deactivate
 ### Actualizar dependencias
 
 ```bash
-# Si agregas nuevas dependencias utiliza el siguiente comando
-pip freeze > requirements.txt
+# Si agregas nuevas dependencias utiliza uv
+uv add <nombre-paquete>
 ```
 
 ---
@@ -217,10 +228,12 @@ Tracklinker-python-api/
 │   │   │
 │   │   ├── 📂 reports/          # Generación de reportes
 │   │   │   ├── 📂 controllers/
-│   │   │   └── 📂 routes/
+│   │   │   ├── 📂 routes/
+│   │   │   └── 📂 services/
 │   │   │
 │   │   ├── 📂 subcategories/    # Gestión de subcategorías
 │   │   │   ├── 📂 controllers/
+│   │   │   ├── 📂 models/
 │   │   │   ├── 📂 repositories/
 │   │   │   ├── 📂 routes/
 │   │   │   └── 📂 services/
@@ -232,6 +245,7 @@ Tracklinker-python-api/
 │   │   │
 │   │   ├── 📂 suppliers/       # Gestión de proveedores
 │   │   │   ├── 📂 controllers/
+│   │   │   ├── 📂 models/
 │   │   │   ├── 📂 repositories/
 │   │   │   ├── 📂 routes/
 │   │   │   └── 📂 services/
@@ -339,12 +353,14 @@ La seguridad es una prioridad en Tracklinker, implementando estándares modernos
 Los modelos se nombran con un sufijo según su propósito:
 
 
-| Sufijo         | Uso                                           | Ejemplo                  |
+| Sufijo (Clase) | Uso                                           | Ejemplo                  |
 | -------------- | --------------------------------------------- | ------------------------ |
 | `Response`     | Respuestas que devuelve la API al cliente     | `ProductsAmountResponse` |
-| *(sin sufijo)* | Modelos internos que no salen de la API       | `ProductsAmount`         |
+| *(sin sufijo)* | Modelos internos o de Base de Datos           | `ProductsAmount`         |
 | `Schema`       | Datos que se reciben en el body de la request | `ProductsAmountSchema`   |
 
+> [!NOTE]
+> Los archivos deben agruparse en subcarpetas (`schemas/`, `responses/`, `entities/`) y usar nombres en plural (ej: `users_schemas.py`, `categories_responses.py`).
 
 ```python
 # Respuesta de la API → sufijo Response

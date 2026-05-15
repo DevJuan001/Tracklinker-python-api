@@ -3,7 +3,7 @@ from typing import Union
 import secrets
 import string
 import bcrypt
-from jose import jwt
+import jwt
 from fastapi import HTTPException, Response
 from fastapi.security import OAuth2PasswordBearer
 from app.core.config import settings

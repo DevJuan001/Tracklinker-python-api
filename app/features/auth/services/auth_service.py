@@ -1,8 +1,9 @@
 from datetime import timedelta
 
-from fastapi import Request, Response
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWTError
 from pydantic import EmailStr
+from fastapi import Request, Response
 
 from app.core.config import settings
 from app.core.exception import ServiceError
@@ -66,7 +67,7 @@ class AuthService:
             if not user_id:
                 raise ServiceError("Refresh token inválido")
 
-        except JWTError:
+        except PyJWTError:
             raise ServiceError(
                 "Refresh token expirado o inválido"
             )
@@ -108,13 +109,13 @@ class AuthService:
     def logout(response: Response):
         try:
             response.delete_cookie(key="access_token", path="/api")
-            response.delete_cookie(key="refresh_token", path="/api/auth/refresh")
-        
+            response.delete_cookie(key="refresh_token",
+                                   path="/api/auth/refresh")
+
             return None, True, "Sesión cerrada exitosamente"
 
         except Exception as e:
             return "Error al intentar cerrar la sesión", False, None
-
 
     @staticmethod
     def recover_password(email: EmailStr):
