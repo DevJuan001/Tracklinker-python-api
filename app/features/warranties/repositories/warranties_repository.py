@@ -1,8 +1,7 @@
-from app.features.warranties.models.warranties_schemas import CreateWarrantySchema, UpdateWarrantySchema, WarrantiesFilterSchema
 from app.utils.logger import get_logger
-from app.core.database import get_connection
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
+from app.features.warranties.models.warranties_schemas import CreateWarrantySchema, UpdateWarrantySchema, WarrantiesFilterSchema
 from app.features.warranties.models.warranties_responses import RecentWarrantyResponse, WarrantyByBrandResponse, WarrantyByStatusResponse, WarrantyResponse, WarrrantyGrowthResponse
 
 logger = get_logger("warranties.repository")
@@ -263,7 +262,7 @@ class WarrantiesRepository:
                 e,
                 exc_info=True
             )
-            return "Error al intentar obtener la garantias agregadas recientemente", False, None
+            return "Error al intentar obtener la garantias agregadas recientemente", None
 
         finally:
             cursor.close()
@@ -287,8 +286,10 @@ class WarrantiesRepository:
             ON ps.product_id = p.product_id
         INNER JOIN PRODUCT_DETAILS AS pd
             ON p.product_details_id = pd.product_details_id
+        INNER JOIN PRODUCT_MODELS AS pm
+            ON pd.product_model_id = pm.product_model_id
         INNER JOIN PRODUCT_BRANDS AS pb
-            ON pd.product_brand_id = pb.product_brand_id
+            ON pm.product_brand_id = pb.product_brand_id
         WHERE wi.warranty_date >= DATE_SUB(NOW(), INTERVAL {interval})
         GROUP BY pb.product_brand_name
         ORDER BY pb.product_brand_name ASC
@@ -314,7 +315,7 @@ class WarrantiesRepository:
                 e,
                 exc_info=True
             )
-            return "Error al intentar obtener las garantias agrupadas por marcas", False, None
+            return "Error al intentar obtener las garantias agrupadas por marcas", None
 
         finally:
             cursor.close()
@@ -354,7 +355,7 @@ class WarrantiesRepository:
                 e,
                 exc_info=True
             )
-            return "Error al intentar obtener las garantias agrupadas por estado", False, None
+            return "Error al intentar obtener las garantias agrupadas por estado", None
 
         finally:
             cursor.close()
@@ -406,7 +407,7 @@ class WarrantiesRepository:
                 e,
                 exc_info=True
             )
-            return "Error al intentar obtener el crecimiento de las garantías", False, None
+            return "Error al intentar obtener el crecimiento de las garantías", None
 
         finally:
             cursor.close()
