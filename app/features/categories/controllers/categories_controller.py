@@ -1,12 +1,12 @@
 from fastapi import HTTPException
+from app.features.categories.models.categories_schemas import CategoriesFiltersSchema, CreateCategorySchema, UpdateCategorySchema
 from app.features.categories.services.categories_service import CategoriesService
-from app.features.categories.models.categories_model import CategoriesFilters, CreateCategory, UpdateCategory
 
 
 class CategoriesController:
 
     @staticmethod
-    def get_all_categories(filters: CategoriesFilters):
+    def get_all_categories(filters: CategoriesFiltersSchema):
         error, categories = CategoriesService.get_all_categories(filters)
 
         if error:
@@ -28,7 +28,7 @@ class CategoriesController:
         }
 
     @staticmethod
-    def create_category(category_data: CreateCategory):
+    def create_category(category_data: CreateCategorySchema):
         error, success, message = CategoriesService.create_category(
             category_data)
 
@@ -41,7 +41,7 @@ class CategoriesController:
         }
 
     @staticmethod
-    def update_category(category_id: int, category_data: UpdateCategory):
+    def update_category(category_id: int, category_data: UpdateCategorySchema):
         error, success, message = CategoriesService.update_category(
             category_id, category_data
         )
