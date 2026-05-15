@@ -1,8 +1,8 @@
 from app.core.exception import ServiceError
 from app.utils.logger import get_logger
 from app.core.database import get_connection
+from app.features.categories.models.categories_schemas import CategoriesFiltersSchema, CreateCategorySchema, UpdateCategorySchema
 from app.features.categories.repositories.categories_repository import CategoriesRepository
-from app.features.categories.models.categories_model import CategoriesFilters, CreateCategory, UpdateCategory
 
 
 logger = get_logger("categories.service")
@@ -10,7 +10,7 @@ logger = get_logger("categories.service")
 
 class CategoriesService:
     @staticmethod
-    def get_all_categories(filters: CategoriesFilters):
+    def get_all_categories(filters: CategoriesFiltersSchema):
         connection = get_connection()
 
         try:
@@ -27,7 +27,6 @@ class CategoriesService:
             return e.message, None
 
         except Exception as e:
-            connection.rollback()
             logger.error("Error en get_all_categories: %s", e, exc_info=True)
             return "Error al intentar obtener las categorias", None
 
@@ -54,7 +53,6 @@ class CategoriesService:
             return e.message, None
 
         except Exception as e:
-            connection.rollback()
             logger.error("Error en get_category_by_id %s", e, exc_info=True)
             return "Error al intentar obtener la categoría", None
 
@@ -62,7 +60,7 @@ class CategoriesService:
             connection.close()
 
     @staticmethod
-    def create_category(category_data: CreateCategory):
+    def create_category(category_data: CreateCategorySchema):
         data = category_data.model_dump()
 
         connection = get_connection()
@@ -104,7 +102,7 @@ class CategoriesService:
             connection.close()
 
     @staticmethod
-    def update_category(category_id: int, category_data: UpdateCategory):
+    def update_category(category_id: int, category_data: UpdateCategorySchema):
         connection = get_connection()
 
         try:
