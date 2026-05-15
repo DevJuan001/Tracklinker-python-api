@@ -1,9 +1,8 @@
 from app.utils.logger import get_logger
-from app.core.database import get_connection
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
-from app.features.categories.models.categories_responses import CategoryByStatusResponse, CategoryResponse, GrowthCategoryResponse, RecentCategoryResponse
 from app.features.categories.models.categories_schemas import CategoriesFiltersSchema, CreateCategorySchema, UpdateCategorySchema
+from app.features.categories.models.categories_responses import CategoryByStatusResponse, CategoryResponse, GrowthCategoryResponse, RecentCategoryResponse
 
 logger = get_logger("categories.repository")
 
