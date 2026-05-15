@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
+from app.features.categories.models.categories_schemas import CategoriesFiltersSchema, CreateCategorySchema, UpdateCategorySchema
 from app.middlewares.roles_middleware import require_roles
 from fastapi_limiter.depends import RateLimiter
 from app.features.categories.controllers.categories_controller import CategoriesController
-from app.features.categories.models.categories_model import CategoriesFilters, CreateCategory, UpdateCategory
 
 router = APIRouter(
     prefix="/api/categories",
@@ -17,7 +17,7 @@ router = APIRouter(
         Depends(require_roles(["Admin", "Almacén", "Técnico"]))
     ]
 )
-def get_all_categories(filters: CategoriesFilters = Depends()):
+def get_all_categories(filters: CategoriesFiltersSchema = Depends()):
     return CategoriesController.get_all_categories(filters)
 
 # Endpoint para obtener una categoria mediante el id
@@ -39,7 +39,7 @@ def get_category_by_id(category_id: int):
         Depends(require_roles(["Admin", "Almacén"]))
     ]
 )
-def create_category(category_data: CreateCategory):
+def create_category(category_data: CreateCategorySchema):
     return CategoriesController.create_category(category_data)
 
 # Endpoint para actualizar una categoría
@@ -50,7 +50,7 @@ def create_category(category_data: CreateCategory):
         Depends(require_roles(["Admin", "Almacén"]))
     ]
 )
-def update_category(category_id: int, category_data: UpdateCategory):
+def update_category(category_id: int, category_data: UpdateCategorySchema):
     return CategoriesController.update_category(category_id, category_data)
 
 # Endpoint para deshabilitar una categoría
