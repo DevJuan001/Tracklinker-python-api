@@ -1,29 +1,15 @@
-from pydantic import BaseModel
 from typing import Optional
+from pydantic import BaseModel
 
 
-class Warranty(BaseModel):
-    id: int
-    product_serial: str
-    customer: str
-    created_by: str
-    assigned_to: Optional[str] = None
-    phone: str
-    address: str
-    description: str
-    link_attachments: str
-    city: int
-    city_name: str
-    date: str
-    status: int
-
-class WarrantiesFilter(BaseModel):
+class WarrantiesFilterSchema(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     city: Optional[int] = None
     status: Optional[int] = None
 
-class CreateWarranty(BaseModel):
+
+class CreateWarrantySchema(BaseModel):
     product_serial: str
     customer: str
     phone: str
@@ -33,7 +19,7 @@ class CreateWarranty(BaseModel):
     city: int
 
 
-class WarrantyUpdate(BaseModel):
+class UpdateWarrantySchema(BaseModel):
     product_serial: str
     customer: Optional[str] = None
     phone: Optional[str] = None
