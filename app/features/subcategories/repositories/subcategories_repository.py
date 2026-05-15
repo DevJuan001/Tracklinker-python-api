@@ -1,10 +1,9 @@
-from tarfile import data_filter
 from app.core.database import get_connection
-from app.features.subcategories.models.subcategories_responses import ActiveCategoryResponse, SubcategoryResponse
-from app.features.subcategories.models.subcategories_schemas import CreateSubcategorySchema, SubcategoriesFiltersSchema, UpdateSubcategorySchema
 from app.utils.date_formatter import date_formatter
 from app.utils.logger import get_logger
 from app.utils.periods import daily_periods, period_map
+from app.features.subcategories.models.subcategories_schemas import CreateSubcategorySchema, SubcategoriesFiltersSchema, UpdateSubcategorySchema
+from app.features.subcategories.models.subcategories_responses import ActiveCategoryResponse, RecentSubcategoryResponse, SubcategoriesByCategoryResponse, SubcategoriesByStatusResponse, SubcategoriesGrowthResponse, SubcategoryResponse
 
 
 logger = get_logger("subcategories.repository")
@@ -265,7 +264,7 @@ class SubcategoriesRepository:
         try:
             cursor.execute(query, (subcategory_id,))
 
-            return None, True, "Categoria deshabiltiada correctamente"
+            return None, True, "Subcategoria deshabiltiada correctamente"
 
         except Exception as e:
             logger.error(
@@ -290,7 +289,7 @@ class SubcategoriesRepository:
         try:
             cursor.execute(query, (subcategory_id,))
 
-            return None, True, "Categoria habiltiada correctamente"
+            return None, True, "Subcategoria habiltiada correctamente"
 
         except Exception as e:
             logger.error(
@@ -298,7 +297,7 @@ class SubcategoriesRepository:
                 e,
                 exc_info=True
             )
-            return "Error al ejecutar la consulta", False, None
+            return "Error al ejecutar habilitar la subcategoria", False, None
 
         finally:
             cursor.close()
@@ -308,9 +307,8 @@ class SubcategoriesRepository:
 
 
     @staticmethod
-    def find_recent_subcategories():
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_recent_subcategories(connection):
+        cursor = connection.cursor()
 
         query = """
         SELECT
@@ -328,26 +326,34 @@ class SubcategoriesRepository:
         try:
             cursor.execute(query)
             results = cursor.fetchall()
+
             data = [
-                {
-                    "name": item["subcategory_name"],
-                    "category": item["category_name"],
-                    "date": date_formatter(item["subcategory_date"]),
-                    "status": item["subcategory_status"],
-                }
+                RecentSubcategoryResponse
+                (
+                    name=item[0],
+                    category=item[1],
+                    date=date_formatter(item[2]),
+                    status=item[3],
+                )
                 for item in results
             ]
+
             return None, data
-        except Exception:
-            return "Error al ejecutar la consulta", None
+
+        except Exception as e:
+            logger.error(
+                "Error en find_recent_subcategories: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al ejecutar habilitar la subcategoria", None
+
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def find_subcategories_by_category(period: str):
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_subcategories_by_category(period: str, connection):
+        cursor = connection.cursor()
 
         interval = period_map.get(period, "30 DAY")
 
@@ -368,23 +374,29 @@ class SubcategoriesRepository:
             results = cursor.fetchall()
 
             data = [
-                {
-                    "name": item["category_name"],
-                    "value": item["subcategories"]
-                }
+                SubcategoriesByCategoryResponse(
+                    category=item[0],
+                    subcategories=item[1]
+                )
                 for item in results
             ]
+
             return None, data
-        except Exception:
-            return "Error al ejecutar la consulta", None
+
+        except Exception as e:
+            logger.error(
+                "Error en find_subcategories_by_categor: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al ejecutar obtener las subcategorias agrupadas por categorias", None
+
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def find_subcategories_by_status():
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_subcategories_by_status(connection):
+        cursor = connection.cursor()
 
         query = """
         SELECT
@@ -401,17 +413,33 @@ class SubcategoriesRepository:
         try:
             cursor.execute(query)
             results = cursor.fetchall()
-            return None, results
-        except Exception:
-            return "Error al ejecutar la consulta", None
+
+            data = [
+                SubcategoriesByStatusResponse(
+                    recent_subcategories=item[0],
+                    total_subcategories=item[1],
+                    inactive_subcategories=item[2],
+                    active_subcategories=item[3]
+                )
+                for item in results
+            ]
+
+            return None, data
+
+        except Exception as e:
+            logger.error(
+                "Error en find_subcategories_by_status: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al ejecutar obtener las subcategorias agrupadas por estado", None
+
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def find_subcategories_growth(period: str):
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+    def find_subcategories_growth(period: str, connection):
+        cursor = connection.cursor()
 
         if period not in period_map:
             period = "30d"
@@ -439,9 +467,24 @@ class SubcategoriesRepository:
         try:
             cursor.execute(query)
             results = cursor.fetchall()
-            return None, results
-        except Exception:
-            return "Error al ejecutar la consulta", None
+
+            data = [
+                SubcategoriesGrowthResponse(
+                    date=item[0],
+                    subcategories=item[1]
+                )
+                for item in results
+            ]
+
+            return None, data
+
+        except Exception as e:
+            logger.error(
+                "Error en find_subcategories_growth: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al ejecutar obtener el crecimiento de las subcategorias", None
+
         finally:
             cursor.close()
-            connection.close()
