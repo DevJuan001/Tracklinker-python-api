@@ -1,3 +1,4 @@
+from app.features.warranties.models.warranties_schemas import CreateWarrantySchema, UpdateWarrantySchema, WarrantiesFilterSchema
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
@@ -7,7 +8,6 @@ from app.features.output_orders.models.output_orders_schema import CreateOutputO
 from app.features.warranties.repositories.warranties_repository import WarrantiesRepository
 from app.features.warranties.repositories.technicians_repository import TechniciansRepository
 from app.features.products.repositories.product_serials_repository import ProductSerialsRepository
-from app.features.warranties.models.warranties_model import WarrantyUpdate, WarrantiesFilter, CreateWarranty
 
 logger = get_logger("warranties.service")
 
@@ -15,19 +15,23 @@ logger = get_logger("warranties.service")
 class WarrantiesService:
 
     @staticmethod
-    def get_all_warranties(filters: WarrantiesFilter):
+    def get_all_warranties(filters: WarrantiesFilterSchema):
         connection = get_connection()
 
         try:
             error, warranties = WarrantiesRepository.find_all_warranties(
                 filters, connection
             )
+
             if error:
-                return "Error al intentar obtener las garantias", None
+                raise ServiceError(error)
 
             return None, warranties
+
+        except ServiceError as e:
+            return e.message, None
+
         except Exception as e:
-            connection.rollback()
             logger.error("Error en get_all_warranties: %s", e, exc_info=True)
             return "Error al intentar obtener la garantias", None
 
@@ -39,17 +43,21 @@ class WarrantiesService:
             error, warranty = WarrantiesRepository.find_warranty_by_id(
                 warranty_incidents_id, connection
             )
+
             if error:
-                return "Error al intentar obtener la garantía", None
+                raise ServiceError(error)
 
             return None, warranty
+
+        except ServiceError as e:
+            return e.message, None
+
         except Exception as e:
-            connection.rollback()
             logger.error("Error en get_warranty_by_id: %s", e, exc_info=True)
             return "Error al intentar obtener la garantía", None
 
     @staticmethod
-    def create_warranty(warranty_data: CreateWarranty, user_id: int):
+    def create_warranty(warranty_data: CreateWarrantySchema, user_id: int):
         data = warranty_data.model_dump()
 
         connection = get_connection()
@@ -114,11 +122,12 @@ class WarrantiesService:
             connection.rollback()
             logger.error("Error en create_warranty: %s", e, exc_info=True)
             return "Error al intentar crear la garantía", False, None
+
         finally:
             connection.close()
 
     @staticmethod
-    def update_warranty(warranty_incidents_id: int, user_id: int, warranty_data: WarrantyUpdate):
+    def update_warranty(warranty_incidents_id: int, user_id: int, warranty_data: UpdateWarrantySchema):
         data = warranty_data.model_dump(exclude_none=True)
         connection = get_connection()
 
@@ -196,6 +205,7 @@ class WarrantiesService:
                 raise ServiceError(error)
 
             connection.commit()
+
             return None, success, message
 
         except ServiceError as e:
@@ -205,5 +215,6 @@ class WarrantiesService:
             connection.rollback()
             logger.error("Error en update_warranty: %s", e, exc_info=True)
             return "Error al intentar actualizar la garantía", False, None
+
         finally:
             connection.close()
