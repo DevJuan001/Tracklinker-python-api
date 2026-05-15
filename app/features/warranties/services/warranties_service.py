@@ -1,4 +1,3 @@
-from app.features.warranties.models.warranties_schemas import CreateWarrantySchema, UpdateWarrantySchema, WarrantiesFilterSchema
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
@@ -8,6 +7,7 @@ from app.features.output_orders.models.output_orders_schema import CreateOutputO
 from app.features.warranties.repositories.warranties_repository import WarrantiesRepository
 from app.features.warranties.repositories.technicians_repository import TechniciansRepository
 from app.features.products.repositories.product_serials_repository import ProductSerialsRepository
+from app.features.warranties.models.warranties_schemas import CreateWarrantySchema, UpdateWarrantySchema, WarrantiesFilterSchema
 
 logger = get_logger("warranties.service")
 
