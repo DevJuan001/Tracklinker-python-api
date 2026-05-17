@@ -491,7 +491,7 @@ class SuppliersRepository:
                 e,
                 exc_info=True
             )
-            return "Error al intentar obtener los proveedores agrupados por estado", None
+            return "Error al intentar obtener el crecimiento de los proveedores", None
 
         finally:
             cursor.close()
