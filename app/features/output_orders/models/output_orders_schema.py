@@ -11,7 +11,7 @@ class OutputOrdersFiltersSchema(BaseModel):
 
 
 class CreateOutputOrderSchema(BaseModel):
-    product_serial: str
+    product_serial: list[str]
     output_product_garanty: datetime
 
 
