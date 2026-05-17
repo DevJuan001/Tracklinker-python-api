@@ -32,6 +32,9 @@ class SuppliersService():
             logger.error("Error en get_all_suppliers: %s", e, exc_info=True)
             return "Error al intentar obtener los proveedores", None
 
+        finally:
+            connection.close()
+
     @staticmethod
     def get_supplier_by_id(supplier_id: int):
         connection = get_connection()
@@ -51,7 +54,10 @@ class SuppliersService():
 
         except Exception as e:
             logger.error("Error en get_supplier_by_id: %s", e, exc_info=True)
-            return "Error al intentar obtener el proveedores mediante el id", None
+            return "Error al intentar obtener el proveedor mediante el id", None
+
+        finally:
+            connection.close()
 
     @staticmethod
     def create_supplier(supplier_data: CreateSupplierSchema):
@@ -89,3 +95,6 @@ class SuppliersService():
         except Exception as e:
             logger.error("Error en get_supplier_by_id: %s", e, exc_info=True)
             return "Error al intentar crear el proveedor", False, None
+
+        finally:
+            connection.close()
