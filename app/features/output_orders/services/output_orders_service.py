@@ -73,14 +73,32 @@ class OutputOrdersService:
         data = output_order_data.model_dump()
 
         connection = get_connection()
+
         try:
+            for serial in data["product_serials"]:
+                # Verificar que cada serial existe
+                error, product = ProductSerialsRepository.find_product_by_serial(
+                    serial, connection
+                )
+
+                if error:
+                    raise ServiceError(error)
+
+                if not product:
+                    raise ServiceError(
+                        "No existe un producto con este serial"
+                    )
+
+            # Crear la orden de salida
             error, success, output_order_id = OutputOrdersRepository.create_output_order(
                 connection
             )
+
             if error or not success:
                 raise ServiceError(error)
 
-            for serial in data["product_serial"]:
+            # Crear los detalles de la orden de salida por cada serial que viene
+            for serial in data["product_serials"]:
                 error, success, message = OutputDetailsRepository.create_output_details(
                     output_order_id,
                     CreateOutputDetails(
