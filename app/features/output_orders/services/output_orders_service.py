@@ -53,6 +53,7 @@ class OutputOrdersService:
                 raise ServiceError(error)
 
             return None, output_orders
+
         except ServiceError as e:
             return e.message, None
 
@@ -79,14 +80,15 @@ class OutputOrdersService:
             if error or not success:
                 raise ServiceError(error)
 
-            error, success, message = OutputDetailsRepository.create_output_details(
-                output_order_id,
-                CreateOutputDetails(
-                    product_serial=data["product_serial"],
-                    output_product_garanty=data["output_product_garanty"],
-                ),
-                connection
-            )
+            for serial in data["product_serial"]:
+                error, success, message = OutputDetailsRepository.create_output_details(
+                    output_order_id,
+                    CreateOutputDetails(
+                        product_serial=serial,
+                        output_product_garanty=data["output_product_garanty"],
+                    ),
+                    connection
+                )
 
             if error or not success:
                 raise ServiceError(error)
@@ -99,6 +101,7 @@ class OutputOrdersService:
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error("Error en create_output_order: %s", e, exc_info=True)
             return "Error al intentar crear la orden de salida", False, None
 
@@ -170,6 +173,7 @@ class OutputOrdersService:
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error("Error en update_output_order: %s", e, exc_info=True)
             return "Error al intentar actualizar la orden de salida", False, None
 
@@ -204,6 +208,7 @@ class OutputOrdersService:
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error("Error en disable_output_order: %s", e, exc_info=True)
             return "Error al intentar deshabilitar la orden de salida", False, None
 
@@ -238,6 +243,7 @@ class OutputOrdersService:
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error("Error en enable_output_order: %s", e, exc_info=True)
             return "Error al intentar habilitar la orden de salida", False, None
 
