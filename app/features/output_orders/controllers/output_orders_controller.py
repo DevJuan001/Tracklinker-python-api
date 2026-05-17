@@ -8,9 +8,12 @@ class OutputOrdersController:
     @staticmethod
     def get_all_output_orders(filters: OutputOrdersFiltersSchema):
         error, output_orders = OutputOrdersService.get_all_output_orders(
-            filters)
+            filters
+        )
+
         if error:
             raise HTTPException(status_code=404, detail=error)
+
         return {
             "data": output_orders
         }
@@ -20,8 +23,10 @@ class OutputOrdersController:
         error, output_order = OutputOrdersService.get_output_order_by_id(
             out_order_id
         )
+
         if error:
             raise HTTPException(status_code=404, detail=error)
+
         return {
             "data": output_order
         }
@@ -31,8 +36,10 @@ class OutputOrdersController:
         error, success, message = OutputOrdersService.create_output_order(
             output_order_data
         )
+
         if error:
             raise HTTPException(status_code=400, detail=error)
+
         return {
             "success": success,
             "message": message
@@ -43,8 +50,10 @@ class OutputOrdersController:
         error, success, message = OutputOrdersService.update_output_order(
             output_order_id, output_order_data
         )
+
         if error:
             raise HTTPException(status_code=400, detail=error)
+
         return {
             "success": success,
             "message": message
@@ -55,8 +64,10 @@ class OutputOrdersController:
         error, success, message = OutputOrdersService.disable_output_order(
             output_order_id
         )
+
         if error:
             raise HTTPException(status_code=400, detail=error)
+
         return {
             "success": success,
             "message": message
@@ -67,8 +78,10 @@ class OutputOrdersController:
         error, success, message = OutputOrdersService.enable_output_order(
             output_order_id
         )
+
         if error:
             raise HTTPException(status_code=400, detail=error)
+
         return {
             "success": success,
             "message": message
