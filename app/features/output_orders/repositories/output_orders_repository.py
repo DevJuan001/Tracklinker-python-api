@@ -1,10 +1,9 @@
-from app.features.output_orders.models.output_orders_model import UpdateOutputOrderModel
 from app.utils import logger
-from app.core.database import get_connection
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
-from app.features.output_orders.models.output_orders_responses import OutputOrderResponse
+from app.features.output_orders.models.output_orders_model import UpdateOutputOrderModel
 from app.features.output_orders.models.output_orders_schema import OutputOrdersFiltersSchema
+from app.features.output_orders.models.output_orders_responses import OutputOrderByBrandResponse, OutputOrderByStatusResponse, OutputOrderGrowthResponse, OutputOrderResponse, RecentOutputOrderResponse
 
 logger = logger.get_logger("output_orders.repository")
 
@@ -251,21 +250,39 @@ class OutputOrdersRepository:
 
 #   ------------ REPORTES DE ORDENES DE SALIDA ------------
 
-
     @staticmethod
-    def find_recent_outputs():
-        connection = get_connection()
+    def find_recent_outputs(connection):
         cursor = connection.cursor()
 
         query = """
         SELECT
-            od.product_serial,
+            oo.out_order_id,
+            GROUP_CONCAT(od.product_serial, ', ') AS serials,
+            pb.product_brand_name,
+            pm.product_model_name,
             od.out_product_garanty,
             oo.out_order_date,
             oo.out_order_status
         FROM OUTPUT_ORDERS as oo
         INNER JOIN OUTPUT_DETAILS AS od
             ON oo.out_order_id = od.out_order_id
+        INNER JOIN PRODUCT_SERIALS AS ps
+            ON od.product_serial = ps.product_serial
+        INNER JOIN PRODUCTS AS p
+            ON ps.product_id = p.product_id
+        INNER JOIN PRODUCT_DETAILS AS pd
+            ON p.product_details_id = pd.product_details_id
+        INNER JOIN PRODUCT_MODELS AS pm
+            ON pd.product_model_id = pm.product_model_id
+        INNER JOIN PRODUCT_BRANDS AS pb
+            ON pm.product_brand_id = pb.product_brand_id
+        GROUP BY
+            oo.out_order_id,
+            pb.product_brand_name,
+            pm.product_model_name,
+            od.out_product_garanty,
+            oo.out_order_date,
+            oo.out_order_status
         ORDER BY oo.out_order_date DESC
         LIMIT 6
         """
@@ -273,27 +290,35 @@ class OutputOrdersRepository:
         try:
             cursor.execute(query)
             results = cursor.fetchall()
+
             data = [
-                {
-                    "serial": item["product_serial"],
-                    "warranty_time": item["out_product_garanty"],
-                    "date": date_formatter(item["out_order_date"]),
-                    "status": item["out_order_status"],
-                }
+                RecentOutputOrderResponse(
+                    id=item[0],
+                    serial=item[1],
+                    brand=item[2],
+                    model=item[3],
+                    warranty_time=item[4],
+                    date=date_formatter(item[5]),
+                    status=item[6],
+                )
                 for item in results
             ]
+
             return None, data
+
         except Exception as e:
-            logger.error("Error en find_all_output_orders: %s",
-                         e, exc_info=True)
-            return f"Error al ejecutar la consulta", None
+            logger.error(
+                "Error en find_recent_outputs: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener las ordenes de salida recientes", None
+
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def find_outputs_by_brand(period: str):
-        connection = get_connection()
+    def find_outputs_by_brand(period: str, connection):
         cursor = connection.cursor()
 
         interval = period_map.get(period, "30 DAY")
@@ -311,8 +336,10 @@ class OutputOrdersRepository:
             ON ps.product_id = p.product_id
         INNER JOIN PRODUCT_DETAILS AS pd
             ON p.product_details_id = pd.product_details_id
+        INNER JOIN PRODUCT_MODELS AS pm
+            ON pd.product_model_id = pm.product_model_id
         INNER JOIN PRODUCT_BRANDS AS pb
-            ON pd.product_brand_id = pb.product_brand_id
+            ON pm.product_brand_id = pb.product_brand_id
         WHERE oo.out_order_date >= DATE_SUB(NOW(), INTERVAL {interval})
         GROUP BY pb.product_brand_name
         ORDER BY pb.product_brand_name ASC
@@ -323,24 +350,27 @@ class OutputOrdersRepository:
             results = cursor.fetchall()
 
             data = [
-                {
-                    "name": item["product_brand_name"],
-                    "value": item["outputs"]
-                }
+                OutputOrderByBrandResponse(
+                    brand=item[0],
+                    outputs=item[1],
+                )
                 for item in results
             ]
             return None, data
+
         except Exception as e:
-            logger.error("Error en find_all_output_orders: %s",
-                         e, exc_info=True)
-            return f"Error al ejecutar la consulta: {e}", None
+            logger.error(
+                "Error en find_outputs_by_brand: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener las ordenes de salida agrupadas por marca", None
+
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def find_outputs_by_status():
-        connection = get_connection()
+    def find_outputs_by_status(connection):
         cursor = connection.cursor()
 
         query = """
@@ -355,18 +385,32 @@ class OutputOrdersRepository:
         try:
             cursor.execute(query)
             results = cursor.fetchall()
-            return None, results
+
+            data = [
+                OutputOrderByStatusResponse(
+                    total_outputs=item[0],
+                    recent_outputs=item[1],
+                    inactive_outputs=item[2],
+                    active_outputs=item[3],
+                )
+                for item in results
+            ]
+
+            return None, data
+
         except Exception as e:
-            logger.error("Error en find_all_output_orders: %s",
-                         e, exc_info=True)
-            return f"Error al ejecutar la consulta: {e}", None
+            logger.error(
+                "Error en find_outputs_by_status: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener las ordenes de salida agrupadas por estado", None
+
         finally:
             cursor.close()
-            connection.close()
 
     @staticmethod
-    def find_outputs_growth(period: str):
-        connection = get_connection()
+    def find_outputs_growth(period: str, connection):
         cursor = connection.cursor()
 
         if period not in period_map:
@@ -395,11 +439,24 @@ class OutputOrdersRepository:
         try:
             cursor.execute(query)
             results = cursor.fetchall()
-            return None, results
+
+            data = [
+                OutputOrderGrowthResponse(
+                    date=item[0],
+                    output_orders=item[1],
+                )
+                for item in results
+            ]
+
+            return None, data
+
         except Exception as e:
-            logger.error("Error en find_all_output_orders: %s",
-                         e, exc_info=True)
-            return f"Error al ejecutar la consulta: {e}", None
+            logger.error(
+                "Error en find_outputs_growth: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener el crecimiento de las ordenes de salida", None
+
         finally:
             cursor.close()
-            connection.close()

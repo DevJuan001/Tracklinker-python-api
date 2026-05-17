@@ -53,6 +53,7 @@ class OutputOrdersService:
                 raise ServiceError(error)
 
             return None, output_orders
+
         except ServiceError as e:
             return e.message, None
 
@@ -62,7 +63,7 @@ class OutputOrdersService:
                 e,
                 exc_info=True
             )
-            return "Error al intentar obtener la orden de salida", None
+            return "Error al intentar obtener la orden de salida mediante el id", None
 
         finally:
             connection.close()
@@ -72,21 +73,41 @@ class OutputOrdersService:
         data = output_order_data.model_dump()
 
         connection = get_connection()
+
         try:
+            for serial in data["product_serials"]:
+                # Verificar que cada serial existe
+                error, product = ProductSerialsRepository.find_product_by_serial(
+                    serial, connection
+                )
+
+                if error:
+                    raise ServiceError(error)
+
+                if not product:
+                    raise ServiceError(
+                        "No existe un producto con este serial"
+                    )
+
+            # Crear la orden de salida
             error, success, output_order_id = OutputOrdersRepository.create_output_order(
                 connection
             )
+
             if error or not success:
                 raise ServiceError(error)
 
-            error, success, message = OutputDetailsRepository.create_output_details(
-                output_order_id,
-                CreateOutputDetails(
-                    product_serial=data["product_serial"],
-                    output_product_garanty=data["output_product_garanty"],
-                ),
-                connection
-            )
+            # Crear los detalles de la orden de salida por cada serial que viene
+            for serial in data["product_serials"]:
+                error, success, message = OutputDetailsRepository.create_output_details(
+                    output_order_id,
+                    CreateOutputDetails(
+                        product_serial=serial,
+                        output_product_garanty=data["output_product_garanty"],
+                    ),
+                    connection
+                )
+
             if error or not success:
                 raise ServiceError(error)
 
@@ -98,6 +119,7 @@ class OutputOrdersService:
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error("Error en create_output_order: %s", e, exc_info=True)
             return "Error al intentar crear la orden de salida", False, None
 
@@ -116,6 +138,7 @@ class OutputOrdersService:
                     serial=data["product_serial"],
                     connection=connection
                 )
+
                 if error or not serial:
                     raise ServiceError(error)
 
@@ -126,6 +149,7 @@ class OutputOrdersService:
             if error:
                 raise ServiceError(error)
 
+            # Actualizar los detalles de la orden de salida si vienen los campos product_serial o output_product_garanty
             if details_fields := {
                 key: data[key]
                 for key in ["product_serial", "output_product_garanty"]
@@ -138,9 +162,11 @@ class OutputOrdersService:
                     ),
                     connection=connection
                 )
+
                 if error or not success:
                     raise ServiceError(error)
 
+            # Actualizar la orden de salida si viene el campo output_order_status
             if order_fields := {
                 key: data[key]
                 for key in ["output_order_status"]
@@ -149,7 +175,7 @@ class OutputOrdersService:
                 error, success, message = OutputOrdersRepository.update_output_order(
                     output_order_id=output_order_id,
                     output_order_data=UpdateOutputOrderModel(
-                        output_order_status=data["output_order_status"]
+                        **order_fields
                     ),
                     connection=connection
                 )
@@ -160,10 +186,12 @@ class OutputOrdersService:
             connection.commit()
 
             return None, True, "Orden de salida actualizada exitosamente"
+
         except ServiceError as e:
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error("Error en update_output_order: %s", e, exc_info=True)
             return "Error al intentar actualizar la orden de salida", False, None
 
@@ -198,6 +226,7 @@ class OutputOrdersService:
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error("Error en disable_output_order: %s", e, exc_info=True)
             return "Error al intentar deshabilitar la orden de salida", False, None
 
@@ -232,6 +261,7 @@ class OutputOrdersService:
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error("Error en enable_output_order: %s", e, exc_info=True)
             return "Error al intentar habilitar la orden de salida", False, None
 

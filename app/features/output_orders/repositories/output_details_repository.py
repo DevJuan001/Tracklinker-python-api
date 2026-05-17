@@ -60,10 +60,7 @@ class OutputDetailsRepository:
 
             output_order = cursor.fetchone()
 
-            if not output_order:
-                return None, None, None
-
-            return None, output_order["out_order_id"], output_order["out_order_date"]
+            return None, output_order
 
         except Exception as e:
             logger.error(
@@ -71,7 +68,7 @@ class OutputDetailsRepository:
                 e,
                 exc_info=True
             )
-            return "Error al intentar obtener los de detalles de la orden de salida mediante el serial del producto", None, None
+            return "Error al intentar obtener los de detalles de la orden de salida mediante el serial del producto", None
 
         finally:
             cursor.close()
