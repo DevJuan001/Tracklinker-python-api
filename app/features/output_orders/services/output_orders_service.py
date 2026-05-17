@@ -62,7 +62,7 @@ class OutputOrdersService:
                 e,
                 exc_info=True
             )
-            return "Error al intentar obtener la orden de salida", None
+            return "Error al intentar obtener la orden de salida mediante el id", None
 
         finally:
             connection.close()
@@ -87,6 +87,7 @@ class OutputOrdersService:
                 ),
                 connection
             )
+
             if error or not success:
                 raise ServiceError(error)
 
@@ -116,6 +117,7 @@ class OutputOrdersService:
                     serial=data["product_serial"],
                     connection=connection
                 )
+
                 if error or not serial:
                     raise ServiceError(error)
 
@@ -126,6 +128,7 @@ class OutputOrdersService:
             if error:
                 raise ServiceError(error)
 
+            # Actualizar los detalles de la orden de salida si vienen los campos product_serial o output_product_garanty
             if details_fields := {
                 key: data[key]
                 for key in ["product_serial", "output_product_garanty"]
@@ -138,9 +141,11 @@ class OutputOrdersService:
                     ),
                     connection=connection
                 )
+
                 if error or not success:
                     raise ServiceError(error)
 
+            # Actualizar la orden de salida si viene el campo output_order_status
             if order_fields := {
                 key: data[key]
                 for key in ["output_order_status"]
@@ -149,7 +154,7 @@ class OutputOrdersService:
                 error, success, message = OutputOrdersRepository.update_output_order(
                     output_order_id=output_order_id,
                     output_order_data=UpdateOutputOrderModel(
-                        output_order_status=data["output_order_status"]
+                        **order_fields
                     ),
                     connection=connection
                 )
@@ -160,6 +165,7 @@ class OutputOrdersService:
             connection.commit()
 
             return None, True, "Orden de salida actualizada exitosamente"
+
         except ServiceError as e:
             return e.message, False, None
 
