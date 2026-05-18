@@ -1,6 +1,5 @@
 from app.utils.logger import get_logger
 from app.features.products.models.responses.product_brands_responses import ProductBrandResponse
-from app.features.products.models.schemas.product_brands_schemas import CreateProductBrandSchema
 
 logger = get_logger("product_brands.repository")
 
@@ -16,11 +15,11 @@ class ProductBrandsRepository:
             pb.product_brand_id,
             pb.product_brand_name
         FROM PRODUCT_BRANDS as pb
-        INNER JOIN PRODUCT_MODELS as pm
+        LEFT JOIN PRODUCT_MODELS as pm
             ON pb.product_brand_id = pm.product_brand_id  
-        INNER JOIN PRODUCT_DETAILS as pd 
+        LEFT JOIN PRODUCT_DETAILS as pd 
             ON pm.product_model_id = pd.product_model_id
-        INNER JOIN PRODUCTS as p
+        LEFT JOIN PRODUCTS as p
             ON pd.product_details_id = p.product_details_id
         GROUP BY pb.product_brand_id, pb.product_brand_name
         ORDER BY pb.product_brand_name ASC
@@ -53,24 +52,42 @@ class ProductBrandsRepository:
             cursor.close()
 
     @staticmethod
-    def create_product_brand(data: CreateProductBrandSchema, connection):
+    def find_product_brand_by_name(name: str, connection):
         cursor = connection.cursor()
 
         try:
             cursor.execute(
-                "SELECT product_brand_id FROM PRODUCT_BRANDS WHERE product_brand_name = %s",
-                (data["name"],)
+                """SELECT 
+                    product_brand_id
+                FROM PRODUCT_BRANDS
+                WHERE LOWER(product_brand_name) = LOWER(%s)""",
+                (name,)
             )
 
-            exist_brand = cursor.fetchone()
+            brand = cursor.fetchone()
 
-            if exist_brand:
-                return "Esta marca ya esta registrada", False, None
+            return None, brand
 
+        except Exception as e:
+            logger.error(
+                "Error en find_product_brand_by_name: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener la marca mediante el nombre", None
+
+        finally:
+            cursor.close()
+
+    @staticmethod
+    def create_product_brand(name: str, connection):
+        cursor = connection.cursor()
+
+        try:
             cursor.execute(
-                "INSERT INTO PRODUCT_BRANDS (product_brand_name) VALUES (%s)", (data["name"],))
-
-            connection.commit()
+                "INSERT INTO PRODUCT_BRANDS (product_brand_name) VALUES (%s)",
+                (name,)
+            )
 
             return None, True, "Marca creada correctamente"
 
