@@ -73,35 +73,36 @@ class ProductsService:
         connection = get_connection()
 
         try:
-            error, success, message, product_details_id = ProductDetailsRepository.create_product_details(
-                CreateProductDetailsEntity(
-                    model_id=data["model_id"],
-                ), connection)
+            for serial in data["product_serials"]: 
+                error, success, message, product_details_id = ProductDetailsRepository.create_product_details(
+                    CreateProductDetailsEntity(
+                        model_id=data["model_id"],
+                    ), connection)
 
-            if error is not None or not success:
-                raise ServiceError(error)
+                if error is not None or not success:
+                    raise ServiceError(error)
 
-            error, success, message, product_id = ProductsRepository.create_product(
-                data, product_details_id, connection
-            )
+                error, success, message, product_id = ProductsRepository.create_product(
+                    data, product_details_id, connection
+                )
 
-            if error is not None or not success:
-                raise ServiceError(error)
+                if error is not None or not success:
+                    raise ServiceError(error)
 
-            error, success, message = ProductSerialsRepository.create_product_serial(
-                CreateProductSerialSchema(
-                    product_serial=data["product_serial"],
-                    product_id=product_id,
-                    input_order_id=data["input_order_id"],
-                    warranty_time=data["warranty_time"]
-                ),
-                connection
-            )
+                error, success, message = ProductSerialsRepository.create_product_serial(
+                    CreateProductSerialSchema(
+                        product_serial=serial,
+                        product_id=product_id,
+                        input_order_id=data["input_order_id"],
+                        warranty_time=data["warranty_time"]
+                    ),
+                    connection
+                )
 
-            if error is not None or not success:
-                raise ServiceError(error)
+                if error is not None or not success:
+                    raise ServiceError(error)
 
-            connection.commit()
+                connection.commit()
 
             return None, True, "Producto creado correctamente"
 
