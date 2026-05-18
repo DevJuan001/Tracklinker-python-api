@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Union
 from pydantic import BaseModel
 
 from app.utils.base_schema import BaseSchema
@@ -8,7 +9,6 @@ class OutputOrderResponse(BaseModel):
     output_order_id: int
     output_order_date: str
     output_order_status: int
-    output_details_id: int
     product_serial: str
     output_product_garanty: date
     product_brand_name: str
