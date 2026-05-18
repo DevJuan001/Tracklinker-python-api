@@ -1,8 +1,8 @@
-from typing import Union
+from typing import Optional, Union
 from pydantic import BaseModel
 
 
 class ProductBrandResponse(BaseModel):
-    subcategories: Union[dict, int, str]
+    subcategories: Optional[Union[dict, int, str]]
     id: int
     name: str

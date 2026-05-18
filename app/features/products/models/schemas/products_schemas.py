@@ -32,7 +32,7 @@ class CreateProductSchema(BaseModel):
     brand_id: int
     input_order_id: int
     subcategory_id: int
-    product_serial: str
+    product_serials: list[str]
     model_id: int
     warranty_time: int
 

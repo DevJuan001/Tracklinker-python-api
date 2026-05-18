@@ -34,7 +34,7 @@ class ProductBrandsService:
                 e,
                 exc_info=True
             )
-            return "Error al intentar obtener las marcas", False, None
+            return "Error al intentar obtener las marcas", None
 
         finally:
             connection.close()
@@ -46,8 +46,20 @@ class ProductBrandsService:
         connection = get_connection()
 
         try:
+            error, brand = ProductBrandsRepository.find_product_brand_by_name(
+                data["name"], connection
+            )
+
+            if error:
+                raise ServiceError(error)
+
+            if brand:
+                raise ServiceError(
+                    "Ya existe una marca con este nombre, cambia el valor de ese campo e intentalo nuevamente"
+                )
+
             error, success, message = ProductBrandsRepository.create_product_brand(
-                data, connection
+                data["name"], connection
             )
 
             if error or not success:
@@ -58,6 +70,7 @@ class ProductBrandsService:
             return None, True, "Marca creada correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
