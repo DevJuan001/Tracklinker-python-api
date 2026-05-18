@@ -116,6 +116,7 @@ class OutputOrdersService:
             return None, True, "Orden de salida creada correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
@@ -133,14 +134,16 @@ class OutputOrdersService:
         connection = get_connection()
 
         try:
-            if "product_serial" in data:
-                error, serial = ProductSerialsRepository.find_product_by_serial(
-                    serial=data["product_serial"],
-                    connection=connection
-                )
+            # Validar que cada serial existe
+            if "product_serials" in data:
+                for serial in data["product_serials"]:
+                    error, serial = ProductSerialsRepository.find_product_by_serial(
+                        serial=serial,
+                        connection=connection
+                    )
 
-                if error or not serial:
-                    raise ServiceError(error)
+                    if error or not serial:
+                        raise ServiceError(error)
 
             error, output_details = OutputDetailsRepository.find_output_details_by_output_order_id(
                 output_order_id, connection
@@ -150,21 +153,37 @@ class OutputOrdersService:
                 raise ServiceError(error)
 
             # Actualizar los detalles de la orden de salida si vienen los campos product_serial o output_product_garanty
-            if details_fields := {
-                key: data[key]
-                for key in ["product_serial", "output_product_garanty"]
-                if key in data
-            }:
+            if "output_product_garanty" in data:
                 error, success, message = OutputDetailsRepository.update_output_details(
                     output_details_id=output_details[0],
                     output_details_data=UpdateOutputDetails(
-                        **details_fields
+                        output_product_garanty=data["output_product_garanty"]
                     ),
                     connection=connection
                 )
 
                 if error or not success:
                     raise ServiceError(error)
+
+            if "product_serials" in data:
+                error, success = OutputDetailsRepository.delete_output_details_by_output_order_id(
+                    output_order_id, connection
+                )
+                
+                if error or not success:
+                    raise ServiceError(error)
+
+                for serial in data["product_serials"]:
+                    error, success, message = OutputDetailsRepository.create_output_details(
+                        output_order_id,
+                        CreateOutputDetails(
+                            product_serial=serial,
+                            output_product_garanty=data["output_product_garanty"],
+                        ),
+                        connection
+                    )
+                    if error or not success:
+                        raise ServiceError(error)
 
             # Actualizar la orden de salida si viene el campo output_order_status
             if order_fields := {
@@ -180,14 +199,15 @@ class OutputOrdersService:
                     connection=connection
                 )
 
-            if error or not success:
-                raise ServiceError(error)
+                if error or not success:
+                    raise ServiceError(error)
 
             connection.commit()
 
             return None, True, "Orden de salida actualizada exitosamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
@@ -223,6 +243,7 @@ class OutputOrdersService:
             return None, True, "Orden de salida deshabilitada exitosamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
@@ -258,6 +279,7 @@ class OutputOrdersService:
             return None, True, "Orden de salida habilitada exitosamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
