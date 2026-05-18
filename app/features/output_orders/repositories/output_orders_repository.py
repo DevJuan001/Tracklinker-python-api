@@ -11,8 +11,8 @@ logger = logger.get_logger("output_orders.repository")
 class OutputOrdersRepository:
 
     @staticmethod
-    def find_all_output_orders(filters: OutputOrdersFiltersSchema, connection):
-        data = filters.model_dump(exclude_none=True)
+    def find_all_output_orders(filters_data: OutputOrdersFiltersSchema, connection):
+        data = filters_data.model_dump(exclude_none=True)
 
         cursor = connection.cursor()
 
@@ -21,7 +21,6 @@ class OutputOrdersRepository:
             oo.out_order_id,
             oo.out_order_date,
             oo.out_order_status,
-            od.output_details_id,
             od.product_serial,
             od.out_product_garanty,
             pb.product_brand_name,
@@ -70,17 +69,17 @@ class OutputOrdersRepository:
                     output_order_id=item[0],
                     output_order_date=date_formatter(item[1]),
                     output_order_status=item[2],
-                    output_details_id=item[3],
-                    product_serial=item[4],
-                    output_product_garanty=item[5],
-                    product_brand_name=item[6],
-                    product_model_name=item[7],
-                    product_model_description=item[8],
+                    product_serial=item[3],
+                    output_product_garanty=item[4],
+                    product_brand_name=item[5],
+                    product_model_name=item[6],
+                    product_model_description=item[7],
                 )
                 for item in results
             ]
 
             return None, orders
+        
         except Exception as e:
             logger.error(
                 "Error en find_all_output_orders: %s",
@@ -88,6 +87,7 @@ class OutputOrdersRepository:
                 exc_info=True
             )
             return "Error al intentar obtener las ordenes de salida", None
+        
         finally:
             cursor.close()
 
@@ -102,7 +102,6 @@ class OutputOrdersRepository:
             oo.out_order_id,
             oo.out_order_date,
             oo.out_order_status,
-            od.output_details_id,
             od.product_serial,
             od.out_product_garanty,
             pb.product_brand_name,
@@ -133,17 +132,17 @@ class OutputOrdersRepository:
                     output_order_id=item[0],
                     output_order_date=date_formatter(item[1]),
                     output_order_status=item[2],
-                    output_details_id=item[3],
-                    product_serial=item[4],
-                    output_product_garanty=item[5],
-                    product_brand_name=item[6],
-                    product_model_name=item[7],
-                    product_model_description=item[8],
+                    product_serial=item[3],
+                    output_product_garanty=item[4],
+                    product_brand_name=item[5],
+                    product_model_name=item[6],
+                    product_model_description=item[7],
                 )
                 for item in result
             ]
 
             return None, data
+
         except Exception as e:
             logger.error(
                 "Error en find_output_order_by_id: %s",
@@ -151,6 +150,7 @@ class OutputOrdersRepository:
                 exc_info=True
             )
             return "Error al intentar obtener la orden de salida", None
+        
         finally:
             cursor.close()
 
@@ -167,6 +167,7 @@ class OutputOrdersRepository:
             output_order_id = cursor.lastrowid
 
             return None, True, output_order_id
+        
         except Exception as e:
             logger.error(
                 "Error en create_output_order: %s",
@@ -174,6 +175,7 @@ class OutputOrdersRepository:
                 exc_info=True
             )
             return "Error al intentar crear la orden de salida", False, None
+        
         finally:
             cursor.close()
 
@@ -195,6 +197,7 @@ class OutputOrdersRepository:
             ))
 
             return None, True, "Orden de salida actualizada exitosamente"
+        
         except Exception as e:
             logger.error(
                 "Error en update_output_order: %s",
@@ -202,6 +205,7 @@ class OutputOrdersRepository:
                 exc_info=True
             )
             return "Error al intentar actualizar la orden de salida", False, None
+        
         finally:
             cursor.close()
 
@@ -216,6 +220,7 @@ class OutputOrdersRepository:
             )
 
             return None, True, "Orden de salida deshabilitada correctamente"
+        
         except Exception as e:
             logger.error(
                 "Error en disable_output_order: %s",
@@ -223,6 +228,7 @@ class OutputOrdersRepository:
                 exc_info=True
             )
             return "Error al intentar deshabilitar la orden de salida", False, None
+        
         finally:
             cursor.close()
 
@@ -237,6 +243,7 @@ class OutputOrdersRepository:
             )
 
             return None, True, "Orden de salida habilitada correctamente"
+        
         except Exception as e:
             logger.error(
                 "Error en enable_output_order: %s",
@@ -244,6 +251,7 @@ class OutputOrdersRepository:
                 exc_info=True
             )
             return "Error al intentar habilitar la orden de salida", False, None
+        
         finally:
             cursor.close()
 
