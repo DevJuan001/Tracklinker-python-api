@@ -107,6 +107,7 @@ class ProductsService:
             return None, True, "Producto creado correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
@@ -172,6 +173,7 @@ class ProductsService:
             return None, True, "Producto actualizado correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
@@ -220,6 +222,7 @@ class ProductsService:
             return error, success, message
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
