@@ -28,6 +28,7 @@ class ProductDetailsService:
             return None, True, "Detalles del producto creados correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
@@ -57,6 +58,7 @@ class ProductDetailsService:
             return None, True, "Detalles del producto actualizados correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
