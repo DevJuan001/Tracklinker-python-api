@@ -134,6 +134,7 @@ class OutputDetailsRepository:
             )
 
             return None, True, "Detalle de salida actualizados correctamente"
+
         except Exception as e:
             logger.error(
                 "Error en update_output_details: %s",
@@ -141,6 +142,30 @@ class OutputDetailsRepository:
                 exc_info=True
             )
             return "Error al intentar actualizar los detalles de la orden de salida", False, None
-        
+
+        finally:
+            cursor.close()
+
+    @staticmethod
+    def delete_output_details_by_output_order_id(output_order_id: int, connection):
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute("""
+            DELETE FROM OUTPUT_DETAILS WHERE out_order_id = %s
+            """, (
+                output_order_id,
+            ))
+
+            return None, True, "Detalles de la orden de salida creados correctamente"
+
+        except Exception as e:
+            logger.error(
+                "Error en create_output_details: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar crear los detalles de la orden de salida", False, None
+
         finally:
             cursor.close()

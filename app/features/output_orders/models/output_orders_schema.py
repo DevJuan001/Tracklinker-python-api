@@ -17,5 +17,5 @@ class CreateOutputOrderSchema(BaseModel):
 
 class UpdateOutputOrderSchema(BaseModel):
     output_order_status: Optional[int] = None
-    product_serial: Optional[str] = None
+    product_serials: Optional[list[str]] = None
     output_product_garanty: Optional[datetime] = None
