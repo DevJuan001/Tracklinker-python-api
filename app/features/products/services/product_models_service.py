@@ -58,6 +58,7 @@ class ProductModelsService:
             return None, success, message
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
