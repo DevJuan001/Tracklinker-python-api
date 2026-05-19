@@ -86,9 +86,23 @@ class SubcategoriesService:
 
     @staticmethod
     def create_subcategory(subcategory_data: CreateSubcategorySchema):
+        data = subcategory_data.model_dump()
+
         connection = get_connection()
 
         try:
+            error, existing_subcategory = SubcategoriesRepository.find_subcategory_by_name(
+                data["subcategory_name"], connection
+            )
+
+            if error:
+                raise ServiceError(error)
+
+            if existing_subcategory:
+                raise ServiceError(
+                    "Ya existe una subcategoría con este nombre, usa otro nombre e intenta crearla nuevamente"
+                )
+
             error, success, message = SubcategoriesRepository.create_subcategory(
                 subcategory_data, connection
             )
@@ -113,9 +127,24 @@ class SubcategoriesService:
 
     @staticmethod
     def update_subcategory(subcategory_id: int, subcategory_data: UpdateSubcategorySchema):
+        data = subcategory_data.model_dump()
+
         connection = get_connection()
 
         try:
+            if "subcategory_name" in data:
+                error, existing_subcategory = SubcategoriesRepository.find_subcategory_by_name(
+                    data["subcategory_name"], connection
+                )
+
+                if error:
+                    raise ServiceError(error)
+
+                if existing_subcategory:
+                    raise ServiceError(
+                        "Ya existe una subcategoría con este nombre, usa otro nombre e intenta editarla nuevamente"
+                    )
+
             error, success, message = SubcategoriesRepository.update_subcategory(
                 subcategory_id, subcategory_data, connection
             )

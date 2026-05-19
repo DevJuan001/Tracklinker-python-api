@@ -3,7 +3,7 @@ from app.utils.date_formatter import date_formatter
 from app.utils.logger import get_logger
 from app.utils.periods import daily_periods, period_map
 from app.features.subcategories.models.subcategories_schemas import CreateSubcategorySchema, SubcategoriesFiltersSchema, UpdateSubcategorySchema
-from app.features.subcategories.models.subcategories_responses import ActiveCategoryResponse, RecentSubcategoryResponse, SubcategoriesByCategoryResponse, SubcategoriesByStatusResponse, SubcategoriesGrowthResponse, SubcategoryResponse
+from app.features.subcategories.models.subcategories_responses import ActiveCategoryResponse, RecentSubcategoryResponse, SubcategoriesByCategoryResponse, SubcategoriesByStatusResponse, SubcategoriesGrowthResponse, SubcategoryByName, SubcategoryResponse
 
 
 logger = get_logger("subcategories.repository")
@@ -168,6 +168,40 @@ class SubcategoriesRepository:
                 exc_info=True
             )
             return "Error al intentar obtener la subcategoría mediante el id", None
+
+        finally:
+            cursor.close()
+
+    @staticmethod
+    def find_subcategory_by_name(subcategory_name: str, connection):
+        cursor = connection.cursor(buffered=True)
+
+        query = """
+        SELECT
+            subcategory_id
+        FROM SUBCATEGORIES
+        WHERE LOWER(subcategory_name) = LOWER(%s)"""
+
+        try:
+            cursor.execute(query, (subcategory_name,))
+            result = cursor.fetchall()
+
+            data = [
+                SubcategoryByName(
+                    id=item[0]
+                )
+                for item in result
+            ]
+
+            return None, data
+
+        except Exception as e:
+            logger.error(
+                "Error en find_subcategory_by_name: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener la subcategoría mediante el nombre", None
 
         finally:
             cursor.close()

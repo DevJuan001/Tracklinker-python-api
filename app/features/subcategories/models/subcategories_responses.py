@@ -39,3 +39,7 @@ class SubcategoriesByStatusResponse(BaseModel):
 class SubcategoriesGrowthResponse(BaseSchema):
     date: str
     subcategories: int
+
+
+class SubcategoryByName(BaseModel):
+    id: int
