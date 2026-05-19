@@ -102,6 +102,8 @@ class CategoriesService:
 
     @staticmethod
     def update_category(category_id: int, category_data: UpdateCategorySchema):
+        data = category_data.model_dump(exclude_none=True)
+
         connection = get_connection()
 
         try:
@@ -109,6 +111,19 @@ class CategoriesService:
             error, category = CategoriesRepository.find_category_by_id(
                 category_id, connection
             )
+
+            if "name" in data:
+                error, existing_category = CategoriesRepository.find_category_by_name(
+                    data["name"], connection
+                )
+
+                if error:
+                    raise ServiceError(error)
+
+                if existing_category:
+                    raise ServiceError(
+                        "Ya existe una categoría con este nombre, usa otro nombre e intenta editarla nuevamente"
+                    )
 
             if error:
                 raise ServiceError(error)
