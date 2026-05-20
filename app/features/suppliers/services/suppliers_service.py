@@ -90,9 +90,11 @@ class SuppliersService():
             return None, True, "Proveedor creado correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error("Error en get_supplier_by_id: %s", e, exc_info=True)
             return "Error al intentar crear el proveedor", False, None
 
@@ -130,9 +132,11 @@ class SuppliersService():
             return None, True, "Proveedor actualizado correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error("Error en update_supplier: %s", e, exc_info=True)
             return "Error al intentar actualizar el proveedor", False, None
 
@@ -167,9 +171,11 @@ class SuppliersService():
             return None, True, "Proveedor deshabilitado correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error("Error en disable_supplier: %s", e, exc_info=True)
             return "Error al intentar deshabilitar el proveedor", False, None
 
@@ -204,9 +210,11 @@ class SuppliersService():
             return None, True, "Proveedor habilitado correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error("Error en enable_supplier: %s", e, exc_info=True)
             return "Error al intentar habilitar el proveedor", False, None
 
