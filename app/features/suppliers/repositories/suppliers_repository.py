@@ -153,8 +153,11 @@ class SuppliersRepository:
             return None, supplier
 
         except Exception as e:
-            logger.error("Error en find_supplier_by_name: %s",
-                         e, exc_info=True)
+            logger.error(
+                "Error en find_supplier_by_name: %s",
+                e,
+                exc_info=True
+            )
             return "Error al intentar obtener el proveedor mediante el nombre", None, None
 
         finally:
