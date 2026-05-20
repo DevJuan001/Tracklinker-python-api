@@ -63,7 +63,7 @@ class WarrantiesService:
         connection = get_connection()
 
         try:
-            # Verificar que el serial existe
+            # Verificamos que el serial esta registrado
             error, product = ProductSerialsRepository.find_product_by_serial(
                 serial=data["product_serial"], connection=connection
             )
@@ -78,7 +78,7 @@ class WarrantiesService:
                     "No puedes crear una garantía con un producto deshabilitado"
                 )
 
-            # Verificar que el producto no tenga una garantía activa
+            # Verificamos que el producto no tenga una garantía activa
             existing = WarrantiesRepository.find_active_warranty_by_serial(
                 data["product_serial"], connection
             )
@@ -88,17 +88,16 @@ class WarrantiesService:
                     "El producto ya cuenta con una garantía activa, debes completar o deshabilitar esa garantía  e intentarlo nuevamente"
                 )
 
-            # Crear la orden de salida del producto
+            # Creamos la orden de salida del producto
             error, success, message = OutputOrdersService.create_output_order(
                 CreateOutputOrderSchema(
-                    product_serial=data["product_serial"],
-                    output_product_garanty="2040-01-01",
+                    product_serials=list[data["product_serial"]]
                 )
             )
             if error:
                 raise ServiceError(error)
 
-            # Actualizar estado del producto y lo ponemos en garantía
+            # Actualizamos el estado del producto y lo ponemos en garantía
             error, success, message = ProductsRepository.update_product_status(
                 product[0], 4, connection
             )
@@ -116,6 +115,7 @@ class WarrantiesService:
             return None, success, message
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
@@ -129,6 +129,7 @@ class WarrantiesService:
     @staticmethod
     def update_warranty(warranty_incidents_id: int, user_id: int, warranty_data: UpdateWarrantySchema):
         data = warranty_data.model_dump(exclude_none=True)
+
         connection = get_connection()
 
         WARRANTY_STATUS_PRODUCT_MAP = {
@@ -148,30 +149,43 @@ class WarrantiesService:
                 if error or not product:
                     raise ServiceError(error)
 
-            # Buscamos si existe la garantía
+            # Validamos que exista esa garantía
             warranty = WarrantiesRepository.find_warranty_by_id(
                 warranty_incidents_id, connection
             )
+
             if not warranty:
-                return "Garantía no encontrada", False, None
+                raise ServiceError("Garantía no encontrada")
 
             if not data:
-                return "No hay campos para actualizar", False, None
+                raise ServiceError("No hay campos para actualizar")
 
+            # Obtenemos el nuevo estado que se le va a asignar a la garantía
             new_status = data.get("status")
-            current_status = warranty["warranty_status"]
 
-            if new_status == 3 and current_status == 2:
+            # Obtenemos el estado actual de la garantía
+            current_status = warranty[1]
+
+            # Aqui Verificamos si el estado actual es 2 = "Pendiente o sin empezar" y el nuevo estado es igual a 3 = "En proceso"
+            if current_status == 2 and new_status == 3:
+
+                # Asignamos esa garantía al técnico que le dio empezar
                 error, success, message = TechniciansRepository.assign_technician(
                     warranty_incidents_id, user_id, connection
                 )
+
                 if error:
                     raise ServiceError(error)
 
+            # Aqui validamos que si el nuevo estado es 1 = "Deshabilitada" y el estado actual está entre
+            # 2 = "Pendiente o sin comenzar", 3 = "En proceso" o 4 = "Completada"
             elif new_status == 1 and current_status in (2, 3, 4):
+                # Desasignamos esa garantía al tecnico que la empezo
                 error, success, message = TechniciansRepository.unassign_technician(
-                    warranty_incidents_id, connection
+                    warranty_incidents_id,
+                    connection
                 )
+
                 if error:
                     raise ServiceError(error)
 
@@ -183,25 +197,36 @@ class WarrantiesService:
                         "Serial requerido para cambiarle el estado"
                     )
 
+                # Verificamos que el serial este registrado
                 product = ProductSerialsRepository.find_product_by_serial(
-                    product_serial, connection
+                    product_serial,
+                    connection
                 )
 
                 if not product:
                     raise ServiceError("Serial no encontrado")
 
+                # Aqui usamos el objeto con el cual mapeamos cual sera el nuevo estado del producto
                 new_product_status = WARRANTY_STATUS_PRODUCT_MAP[new_status]
+
+                # Actualizamos el estado del producto
                 error, success, message = ProductsRepository.update_product_status(
-                    product[0], new_product_status, connection
+                    product[0],
+                    new_product_status,
+                    connection
                 )
 
-                if error:
+                if error or not success:
                     raise ServiceError(error)
 
+            # Actualizamos la información de la garantía
             error, success, message = WarrantiesRepository.update_warranty(
-                warranty_incidents_id=warranty_incidents_id, warranty_data=data, connection=connection
+                warranty_incidents_id=warranty_incidents_id,
+                warranty_data=data,
+                connection=connection
             )
-            if error:
+
+            if error or not success:
                 raise ServiceError(error)
 
             connection.commit()
@@ -209,6 +234,7 @@ class WarrantiesService:
             return None, success, message
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
