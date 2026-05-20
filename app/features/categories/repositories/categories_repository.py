@@ -143,8 +143,11 @@ class CategoriesRepository:
             return None, data
 
         except Exception as e:
-            logger.error("Error en find_category_by_name: %s",
-                         e, exc_info=True)
+            logger.error(
+                "Error en find_category_by_name: %s",
+                e,
+                exc_info=True
+            )
             return "Error al intentar obtener la categoría mediante el nombre", None
 
         finally:
