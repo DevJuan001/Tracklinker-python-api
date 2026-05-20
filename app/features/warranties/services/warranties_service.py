@@ -91,7 +91,8 @@ class WarrantiesService:
             # Creamos la orden de salida del producto
             error, success, message = OutputOrdersService.create_output_order(
                 CreateOutputOrderSchema(
-                    product_serials=list[data["product_serial"]]
+                    product_serials=[data["product_serial"]],
+                    output_product_garanty="2026-01-01"
                 )
             )
             if error:
