@@ -95,15 +95,18 @@ class SuppliersRepository:
 
         query = """
         SELECT
-            supplier_id,
-            supplier_name,
-            supplier_city,
-            supplier_address,
-            supplier_email,
-            supplier_phone,
-            supplier_status,
-            supplier_date
-        FROM SUPPLIERS
+            s.supplier_id,
+            s.supplier_name,
+            s.supplier_city,
+            c.city_name,
+            s.supplier_address,
+            s.supplier_email,
+            s.supplier_phone,
+            s.supplier_status,
+            s.supplier_date
+        FROM SUPPLIERS AS s
+        INNER JOIN CITIES AS c
+            ON s.supplier_city = c.city_id
         WHERE supplier_id = %s"""
 
         try:
@@ -150,8 +153,11 @@ class SuppliersRepository:
             return None, supplier
 
         except Exception as e:
-            logger.error("Error en find_supplier_by_name: %s",
-                         e, exc_info=True)
+            logger.error(
+                "Error en find_supplier_by_name: %s",
+                e,
+                exc_info=True
+            )
             return "Error al intentar obtener el proveedor mediante el nombre", None, None
 
         finally:
