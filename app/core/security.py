@@ -54,7 +54,7 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
     cookie_base = {
         "httponly": True,
         "secure": IS_PRODUCTION,
-        "samesite": "strict",
+        "samesite": "none" if IS_PRODUCTION else "lax",
     }
 
     response.set_cookie(
