@@ -27,6 +27,7 @@ class UsersService:
                 raise ServiceError(error)
 
             return None, users
+        
         except ServiceError as e:
             return e.message, None
 
