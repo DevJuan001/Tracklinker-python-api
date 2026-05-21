@@ -159,6 +159,8 @@ class UsersService:
 
             temporal_password = generate_temporal_password()
 
+            print(f"temporal_password")
+
             # Hashear la contraseña
             password = temporal_password.encode("utf-8")
             hash_password = bcrypt.hashpw(
