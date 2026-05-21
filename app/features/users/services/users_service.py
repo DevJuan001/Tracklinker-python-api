@@ -159,7 +159,6 @@ class UsersService:
 
             temporal_password = generate_temporal_password()
 
-            print(temporal_password)
 
             # Hashear la contraseña
             password = temporal_password.encode("utf-8")
@@ -189,9 +188,11 @@ class UsersService:
             return None, True, "Usuario Creado Correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error(
                 "Error en create_user: %s",
                 e,
@@ -236,9 +237,11 @@ class UsersService:
             return None, True, "Usuario Actualizado Correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error(
                 "Error en update_user: %s",
                 e,
