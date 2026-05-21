@@ -95,7 +95,7 @@ class SuppliersService():
 
         except Exception as e:
             connection.rollback()
-            logger.error("Error en get_supplier_by_id: %s", e, exc_info=True)
+            logger.error("Error en create_supplier: %s", e, exc_info=True)
             return "Error al intentar crear el proveedor", False, None
 
         finally:
