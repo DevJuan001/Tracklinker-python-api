@@ -8,8 +8,6 @@ class WarrantyResponse(BaseModel):
     id: int
     product_serial: str
     customer: str
-    created_by: str
-    assigned_to: Optional[str] = None
     phone: str
     address: str
     description: str
@@ -18,6 +16,8 @@ class WarrantyResponse(BaseModel):
     city_name: str
     date: str
     status: int
+    created_by: str
+    assigned_to: Optional[str] = None
 
 
 class RecentWarrantyResponse(BaseSchema):

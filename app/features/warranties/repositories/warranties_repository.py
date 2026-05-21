@@ -69,19 +69,19 @@ class WarrantiesRepository:
 
             data = [
                 WarrantyResponse(
-                    id=item["warranty_incidents_id"],
-                    product_serial=item["product_serial"],
-                    customer=item["warranty_customer"],
-                    created_by=item["created_by"],
-                    assigned_to=item["assigned_to"],
-                    phone=item["warranty_phone"],
-                    address=item["warranty_address"],
-                    description=item["warranty_description"],
-                    link_attachments=item["warranty_link_attachments"],
-                    city=item["warranty_city"],
-                    city_name=item["city_name"],
-                    date=date_formatter(item["warranty_date"]),
-                    status=item["warranty_status"]
+                    id=item[0],
+                    product_serial=item[1],
+                    customer=item[2],
+                    phone=item[3],
+                    address=item[4],
+                    description=item[5],
+                    link_attachments=item[6],
+                    city=item[7],
+                    city_name=item[8],
+                    date=date_formatter(item[9]),
+                    status=item[10],
+                    created_by=item[11],
+                    assigned_to=item[12]
                 )
                 for item in results
             ]
@@ -127,6 +127,7 @@ class WarrantiesRepository:
                     WHERE product_serial = %s 
                     AND warranty_status IN (2, 3)
             """, (product_serial,))
+
             return cursor.fetchone()
 
         except Exception as e:
