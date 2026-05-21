@@ -3,9 +3,9 @@
 from fastapi import APIRouter, Depends
 from fastapi_limiter.depends import RateLimiter
 
+from app.middlewares.roles_middleware import require_roles
 from app.features.suppliers.controllers.suppliers_controller import SuppliersController
 from app.features.suppliers.models.suppliers_schema import CreateSupplierSchema, FilterSuppliersSchema, UpdateSupplierSchema
-from app.middlewares.roles_middleware import require_roles
 
 
 router = APIRouter(
