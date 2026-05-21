@@ -1,11 +1,11 @@
 from pydantic import BaseModel, EmailStr
 
-class LoginModel(BaseModel):
+class LoginModelSchema(BaseModel):
     email: EmailStr
     password: str
 
-class RecoverPassword(BaseModel):
+class RecoverPasswordSchema(BaseModel):
     email: EmailStr
 
-class VerifyRoleModel(BaseModel):
+class VerifyRoleModelSchema(BaseModel):
     roles: list[str]
