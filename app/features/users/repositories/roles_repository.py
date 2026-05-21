@@ -16,18 +16,17 @@ class RolesRepository:
             result = cursor.fetchall()
 
             data = [
-                RolResponse
-                (
+                RolResponse(
                     id=item[0],
                     name=item[1]
                 )
                 for item in result
             ]
             return None, data
-        
+
         except Exception as e:
             logger.error("Error en find_all_roles: %s", e, exc_info=True)
             return "Error al intentar obtener los roles"
-        
+
         finally:
             cursor.close()
