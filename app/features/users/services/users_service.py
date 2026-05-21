@@ -287,9 +287,11 @@ class UsersService:
             return None, True, "Contraseña actualizada correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error(
                 "Error en update_user_password: %s",
                 e,
@@ -325,9 +327,11 @@ class UsersService:
             return None, True, "Usuario deshabilitado correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error(
                 "Error en update_user_password: %s",
                 e,
@@ -360,9 +364,11 @@ class UsersService:
             return None, True, "Usuario habilitado correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error(
                 "Error en update_user_password: %s",
                 e,
