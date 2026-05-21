@@ -1,5 +1,5 @@
-from app.features.users.models.cities_reponses import CityResponse
 from app.utils.logger import get_logger
+from app.features.users.models.cities_reponses import CityResponse
 
 logger = get_logger("cities.repository")
 

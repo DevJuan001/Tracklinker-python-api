@@ -2,8 +2,6 @@ import bcrypt
 from app.utils.logger import get_logger
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
-from app.features.users.models.roles_responses import RolResponse
-from app.features.users.models.cities_reponses import CityResponse
 from app.features.users.models.users_schemas import CreateUserSchema, UpdateUserSchema, UsersFiltersSchema
 from app.features.users.models.users_responses import CurrentUserResponse, RecentUserResponse, UserResponse, UsersByRolResponse, UsersByStatusResponse, UsersGrowthResponse
 
@@ -153,7 +151,7 @@ class UsersRepository:
             return None, data
         except Exception as e:
             logger.error("Error en find_user_by_id: %s", e, exc_info=True)
-            return "Error al intentar obtener el usuario", None
+            return "Error al intentar obtener el usuario mediante el id", None
         finally:
             cursor.close()
 
@@ -184,7 +182,7 @@ class UsersRepository:
                 e,
                 exc_info=True
             )
-            return "Error al intentar obtener el usuario", None
+            return "Error al intentar obtener la contraseña del usuario", None
 
         finally:
             cursor.close()
@@ -330,7 +328,7 @@ class UsersRepository:
             return None, True, "Contraseña actualizada correctamente"
 
         except Exception:
-            return "Error al intentar actualizar la contraseña", False, None
+            return "Error al intentar actualizar la contraseña del usuario", False, None
 
         finally:
             cursor.close()
