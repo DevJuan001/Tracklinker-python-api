@@ -75,7 +75,6 @@ def get_user_by_id(user_id: int):
     "/create",
     dependencies=[
         Depends(RateLimiter(times=30, seconds=60)),
-        Depends(require_roles(["Admin"]))
     ]
 )
 async def create_user(
