@@ -131,7 +131,7 @@ class SuppliersRepository:
 
         except Exception as e:
             logger.error("Error en find_supplier_by_id: %s", e, exc_info=True)
-            return "Error al intentar obtener el proveedor", None
+            return "Error al intentar obtener el proveedor mediante el id", None
 
         finally:
             cursor.close()
@@ -247,7 +247,7 @@ class SuppliersRepository:
         except Exception as e:
             connection.rollback()
             logger.error("Error en update_supplier: %s", e, exc_info=True)
-            return "Error al ejecutar la consulta", False, None
+            return "Error al intentar actualizar el proveedor", False, None
 
         finally:
             cursor.close()
