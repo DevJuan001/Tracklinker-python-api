@@ -2,8 +2,8 @@
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
-from app.features.suppliers.models.suppliers_schema import CreateSupplierSchema, FilterSuppliersSchema, UpdateSupplierSchema
 from app.features.suppliers.repositories.suppliers_repository import SuppliersRepository
+from app.features.suppliers.models.suppliers_schema import CreateSupplierSchema, FilterSuppliersSchema, UpdateSupplierSchema
 
 
 logger = get_logger("suppliers.service")
