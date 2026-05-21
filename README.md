@@ -1,6 +1,6 @@
 # Tracklinker API
 
-API REST para el sistema de gestión de inventario **Tracklinker**, construida con **FastAPI**, **MySQL**, **Celery** y **Redis**.
+API REST para el sistema de gestión de inventario **Tracklinker**, construida con **FastAPI**, **MySQL**, **Celery** y **Redis**. Gestiona productos, proveedores, órdenes de entrada/salida, garantías, usuarios, reportes y un panel de control administrativo.
 
 ---
 
@@ -9,8 +9,10 @@ API REST para el sistema de gestión de inventario **Tracklinker**, construida c
 - [Tech Stack](#tech-stack)
 - [Prerrequisitos](#prerrequisitos)
 - [Instalación](#instalación)
+- [Base de Datos](#base-de-datos)
 - [Variables de Entorno](#variables-de-entorno)
 - [Ejecución](#ejecución)
+- [Módulos de la API](#módulos-de-la-api)
 - [Estructura del Proyecto](#estructura-del-proyecto)
 - [Arquitectura](#arquitectura)
 - [Seguridad](#seguridad)
@@ -22,17 +24,24 @@ API REST para el sistema de gestión de inventario **Tracklinker**, construida c
 
 ## Tech Stack
 
+| Tecnología | Versión | Descripción |
+| --- | --- | --- |
+| [Python](https://www.python.org/) | `3.13` | Lenguaje principal del backend |
+| [uv](https://docs.astral.sh/uv/) | — | Gestor de entorno virtual y dependencias |
+| [FastAPI](https://fastapi.tiangolo.com/) | `0.136.1` | Framework web asíncrono |
+| [Uvicorn](https://www.uvicorn.org/) | `0.47.0` | Servidor ASGI |
+| [Pydantic](https://docs.pydantic.dev/) | `2.13.4` | Validación de datos y configuración |
+| [MySQL](https://www.mysql.com/) | `>= 8.0` | Base de datos relacional |
+| [mysql-connector-python](https://dev.mysql.com/doc/connector-python/en/) | `9.7.0` | Driver de conexión a MySQL |
+| [Redis](https://redis.io/) | `7.4.0` | Rate limiting, caché y broker de Celery |
+| [Celery](https://docs.celeryq.dev/) | `5.6.3` | Tareas en segundo plano (correos) |
+| [FastAPI-Mail](https://sabuhish.github.io/fastapi-mail/) | `1.6.4` | Envío de correos HTML |
+| [FastAPI-Limiter](https://github.com/long2ice/fastapi-limiter) | `0.1.6` | Rate limiting por IP |
+| [PyJWT](https://pyjwt.readthedocs.io/) | `2.12.1` | Tokens JWT (access y refresh) |
+| [bcrypt](https://github.com/pyca/bcrypt/) | `5.0.0` | Hashing de contraseñas |
+| [Docker](https://www.docker.com/) | — | Contenedorización (imagen Python 3.13 + uv) |
 
-| Tecnología                               | Versión   | Descripción                                  |
-| ---------------------------------------- | --------- | -------------------------------------------- |
-| [Python](https://www.python.org/)        | `>= 3.13` | Lenguaje principal del backend               |
-| [FastAPI](https://fastapi.tiangolo.com/) | `latest`  | Framework web asíncrono de alto rendimiento  |
-| [Uvicorn](https://www.uvicorn.org/)      | `latest`  | Servidor ASGI para ejecutar la aplicación    |
-| [MySQL](https://www.mysql.com/)          | `>= 8.0`  | Base de datos relacional                     |
-| [Redis](https://redis.io/)               | `7.4.8`   | Broker de mensajes y caché en memoria        |
-| [Celery](https://docs.celeryq.dev/)      | `5.6.3`   | Cola de tareas distribuidas en segundo plano |
-| [Docker](https://www.docker.com/)        | `latest`  | Contenedorización de la aplicación           |
-
+Las versiones exactas están fijadas en `uv.lock`.
 
 ---
 
@@ -40,13 +49,14 @@ API REST para el sistema de gestión de inventario **Tracklinker**, construida c
 
 Antes de comenzar, asegúrate de tener instalado:
 
-- **Python** `>= 3.13` → [Descargar](https://www.python.org/downloads/)
+- **Python** `3.13` → [Descargar](https://www.python.org/downloads/)
+- **uv** → [Instalación](https://docs.astral.sh/uv/getting-started/installation/)
 - **MySQL** `>= 8.0` → [Descargar](https://dev.mysql.com/downloads/)
-- **Redis** `7.4.8` → [Descargar](https://redis.io/downloads/)
+- **Redis** → [Descargar](https://redis.io/downloads/)
 - **Git** → [Descargar](https://git-scm.com/)
 
 > [!NOTE]
-> Redis es necesario tanto para el **rate limiting** (FastAPI Limiter) como para el **broker de Celery** que gestiona las tareas asíncronas como el envío de correos.
+> Redis se usa para **rate limiting** (FastAPI Limiter), **caché** de consultas y como **broker/backend de Celery** para el envío asíncrono de correos.
 
 ---
 
@@ -61,65 +71,95 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 ```
 
 > [!WARNING]
-> Una vez que se instale `uv`, debes **reiniciar tu terminal** (o cerrar y volver a abrir tu editor/IDE) para que el sistema reconozca el comando.
+> Tras instalar `uv`, reinicia la terminal (o el IDE) para que el comando quede disponible en el PATH.
 
 ```bash
 # 1. Clonar el repositorio
 git clone https://github.com/DevJuan001/Tracklinker-python-api.git
 cd Tracklinker-python-api
 
-# 2. Crear el entorno virtual con uv
+# 2. Crear el entorno virtual
 uv venv
 
 # 3. Activar el entorno virtual
-# En Windows:
+# Windows:
 .venv\Scripts\activate
-# En Mac / Linux:
+# macOS / Linux:
 source .venv/bin/activate
 
-# 4. Instalar todas las dependencias
+# 4. Instalar dependencias (según pyproject.toml y uv.lock)
 uv sync
 
-# 5. Configurar las variables de entorno
-# Copiar el archivo de ejemplo y completar los valores
+# 5. Configurar variables de entorno
+# Windows:
+copy .env.example .env
+# macOS / Linux:
 cp .env.example .env
 ```
 
 > [!IMPORTANT]
-> Antes de iniciar la API debes configurar **todas** las variables del archivo `.env`. Pydantic validará que no falte ninguna al arrancar.
+> Completa **todas** las variables en `.env` antes de arrancar la API. `pydantic-settings` validará que no falte ninguna al iniciar.
+
+---
+
+## Base de Datos
+
+Los scripts SQL viven en `database/` y deben ejecutarse en este orden:
+
+| Archivo | Contenido |
+| --- | --- |
+| `01_database.sql` | DDL: creación del esquema `DB_TRACKLINKER` y tablas |
+| `02_dml.sql` | DML: datos iniciales (roles, ciudades, usuarios de prueba, etc.) |
+| `03_views.sql` | Vistas SQL para consultas agregadas |
+
+```bash
+# Ejemplo con el cliente de MySQL (ajusta usuario y host)
+mysql -u root -p < database/01_database.sql
+mysql -u root -p < database/02_dml.sql
+mysql -u root -p < database/03_views.sql
+```
+
+### Roles del sistema
+
+Definidos en los seeds (`02_dml.sql`):
+
+| Rol | Descripción |
+| --- | --- |
+| `Admin` | Acceso completo al panel y gestión |
+| `Almacen` | Gestión de inventario, productos y órdenes |
+| `Tecnico` | Operaciones de garantías y salidas |
+| `Cliente` | Rol de cliente final |
 
 ---
 
 ## Variables de Entorno
 
-Crea un archivo `.env` en la raíz del proyecto basándote en `.env.example`:
+Crea un archivo `.env` en la raíz basándote en `.env.example`:
 
-
-| Variable                   | Tipo    | Descripción                                            |
-| -------------------------- | ------- | ------------------------------------------------------ |
-| `DB_HOST`                  | `str`   | Host de la base de datos MySQL                         |
-| `DB_PORT`                  | `int`   | Puerto de conexión a MySQL                             |
-| `DB_USER`                  | `str`   | Usuario de la base de datos                            |
-| `DB_PASSWORD`              | `str`   | Contraseña de la base de datos                         |
-| `DB_NAME`                  | `str`   | Nombre de la base de datos                             |
-| `REDIS_URL`                | `str`   | URL de conexión a Redis (ej: `redis://localhost:6379`) |
-| `ENVIRONMENT`              | `str`   | Entorno actual (`development` o `production`)          |
-| `ACCESS_TOKEN_SECRET_KEY`  | `str`   | Clave secreta para firmar el Access Token JWT          |
-| `REFRESH_TOKEN_SECRET_KEY` | `str`   | Clave secreta para firmar el Refresh Token JWT         |
-| `ALGORITHM`                | `str`   | Algoritmo de cifrado JWT (ej: `HS256`)                 |
-| `ACCESS_TOKEN_EXPIRE`      | `int`   | Tiempo de expiración del Access Token en **minutos**   |
-| `REFRESH_TOKEN_EXPIRE`     | `int`   | Tiempo de expiración del Refresh Token en **días**     |
-| `MAIL_USERNAME`            | `email` | Correo electrónico para enviar emails                  |
-| `MAIL_PASSWORD`            | `str`   | Contraseña del correo electrónico                      |
-| `MAIL_FROM`                | `email` | Dirección de correo del remitente                      |
-
+| Variable | Tipo | Descripción |
+| --- | --- | --- |
+| `DB_HOST` | `str` | Host de MySQL |
+| `DB_PORT` | `int` | Puerto de MySQL |
+| `DB_USER` | `str` | Usuario de la base de datos |
+| `DB_PASSWORD` | `str` | Contraseña de la base de datos |
+| `DB_NAME` | `str` | Nombre de la base de datos |
+| `REDIS_URL` | `str` | URL de Redis (ej: `redis://localhost:6379`) |
+| `ENVIRONMENT` | `str` | Entorno (`development` o `production`) |
+| `ACCESS_TOKEN_SECRET_KEY` | `str` | Clave para firmar el Access Token JWT |
+| `REFRESH_TOKEN_SECRET_KEY` | `str` | Clave para firmar el Refresh Token JWT |
+| `ALGORITHM` | `str` | Algoritmo JWT (ej: `HS256`) |
+| `ACCESS_TOKEN_EXPIRE` | `int` | Expiración del access token en **minutos** |
+| `REFRESH_TOKEN_EXPIRE` | `int` | Expiración del refresh token en **días** |
+| `MAIL_USERNAME` | `email` | Cuenta SMTP para envío de correos |
+| `MAIL_PASSWORD` | `str` | Contraseña de la cuenta SMTP |
+| `MAIL_FROM` | `email` | Dirección remitente |
 
 > [!TIP]
-> Puedes generar claves secretas seguras con herramientas como [Random Key Generator](https://www.vondy.com/random-key-generator--ZzGGMYgS?lc=5).
+> Puedes generar claves secretas con [Random Key Generator](https://www.vondy.com/random-key-generator--ZzGGMYgS?lc=5).
 
 ---
 
-## ▶ Ejecución
+## Ejecución
 
 ### Servidor de la API
 
@@ -128,7 +168,13 @@ Crea un archivo `.env` en la raíz del proyecto basándote en `.env.example`:
 uvicorn app.main:app --reload
 ```
 
-La API estará disponible en `http://localhost:8000` y la documentación interactiva en `http://localhost:8000/docs`.
+| Recurso | URL |
+| --- | --- |
+| API | `http://localhost:8000` |
+| Swagger UI | `http://localhost:8000/docs` |
+| ReDoc | `http://localhost:8000/redoc` |
+| Health check | `GET /` |
+| Ping base de datos | `GET /ping-db` |
 
 ### Worker de Celery
 
@@ -139,13 +185,30 @@ celery -A app.core.celery_app.celery worker --loglevel=info --pool=solo
 ```
 
 > [!WARNING]
-> El flag `--pool=solo` es necesario en **Windows**. En Linux o Mac puedes omitirlo.
+> En **Windows** usa `--pool=solo`. En Linux o macOS puedes omitirlo.
+
+Tareas registradas en `app/tasks/email_tasks.py`:
+
+- `send_welcome_email` — correo de bienvenida al crear usuario
+- `recovery_password_email` — correo de recuperación de contraseña
 
 ### Con Docker
 
 ```bash
 docker build -t tracklinker-api .
-docker run -p 8000:8000 tracklinker-api
+docker run -p 8000:8000 --env-file .env tracklinker-api
+```
+
+El `Dockerfile` usa **Python 3.13-slim**, instala dependencias con **uv** (`uv sync --frozen`) y expone el puerto `8000`.
+
+### Gestión de dependencias
+
+```bash
+# Agregar una dependencia
+uv add <nombre-paquete>
+
+# Auditar vulnerabilidades (incluido en el proyecto)
+pip-audit
 ```
 
 ### Desactivar el entorno virtual
@@ -154,12 +217,30 @@ docker run -p 8000:8000 tracklinker-api
 deactivate
 ```
 
-### Actualizar dependencias
+---
 
-```bash
-# Si agregas nuevas dependencias utiliza uv
-uv add <nombre-paquete>
-```
+## Módulos de la API
+
+Todos los endpoints de negocio están bajo el prefijo `/api`. La autenticación usa cookies **HTTP-Only** para los tokens JWT.
+
+| Módulo | Prefijo | Descripción |
+| --- | --- | --- |
+| **Auth** | `/api/auth` | Login, refresh, logout, verificación de roles, recuperación de contraseña |
+| **Users** | `/api/users` | CRUD de usuarios, perfil (`/me`), roles, ciudades, contraseña |
+| **Products** | `/api/products` | Productos, marcas, modelos, órdenes de entrada, estados |
+| **Categories** | `/api/categories` | Categorías de productos |
+| **Subcategories** | `/api/subcategories` | Subcategorías vinculadas a categorías |
+| **Suppliers** | `/api/suppliers` | Proveedores y entradas asociadas |
+| **Output Orders** | `/api/output_orders` | Órdenes de salida de inventario |
+| **Warranties** | `/api/warranty_incidents` | Incidentes de garantía |
+| **Dashboard** | `/api/dashboard` | Métricas y estadísticas del panel administrativo |
+| **Reports** | `/api/reports` | Reportes analíticos por período (usuarios, productos, categorías, etc.) |
+| **Suggestions** | `/api/suggestions` | Envío de sugerencias por correo |
+
+El frontend autorizado en CORS está configurado en `app/main.py`:
+
+- `http://localhost:5173` (desarrollo local)
+- `https://tracklinker-frontend-web.vercel.app` (producción)
 
 ---
 
@@ -168,127 +249,77 @@ uv add <nombre-paquete>
 ```
 Tracklinker-python-api/
 │
-├── 📄 .env.example              # Plantilla de variables de entorno
-├── 📄 .gitignore                 # Archivos y carpetas ignorados por Git
-├── 📄 Dockerfile                # Configuración para contenedor Docker
-├── 📄 README.md                  # Documentación del proyecto
-├── 📄 requirements.txt           # Dependencias de Python
+├── .env.example              # Plantilla de variables de entorno
+├── .gitignore
+├── .python-version           # Python 3.13
+├── Dockerfile                # Imagen Docker (uv + uvicorn)
+├── pyproject.toml            # Dependencias y metadatos del proyecto
+├── uv.lock                   # Lockfile de dependencias
+├── README.md
 │
-├── 📂 app/                       # ← Código fuente principal
-│   ├── 📄 main.py                # Punto de entrada de la API (FastAPI app)
+├── app/
+│   ├── main.py               # Punto de entrada FastAPI, CORS, routers
 │   │
-│   ├── 📂 core/                  # ← Configuración central de la aplicación
-│   │   ├── 📄 cache.py           # Utilidad para invalidar caché en Redis
-│   │   ├── 📄 celery_app.py      # Instancia y configuración de Celery
-│   │   ├── 📄 config.py          # Carga y validación de variables de entorno (Pydantic)
-│   │   ├── 📄 database.py        # Conexión a la base de datos MySQL
-│   │   ├── 📄 exception.py       # Excepciones personalizadas (ServiceError)
-│   │   ├── 📄 mail.py            # Configuración de FastMail para envío de correos
-│   │   ├── 📄 redis.py           # Inicialización y gestión del cliente Redis
-│   │   └── 📄 security.py        # JWT (access/refresh tokens), hashing, cookies
+│   ├── core/                 # Configuración central
+│   │   ├── cache.py          # Invalidación de caché en Redis
+│   │   ├── celery_app.py     # Instancia y configuración de Celery
+│   │   ├── config.py         # Settings (Pydantic) desde .env
+│   │   ├── database.py       # Conexión MySQL
+│   │   ├── exception.py      # Excepciones personalizadas (ServiceError)
+│   │   ├── mail.py           # FastMail (SMTP)
+│   │   ├── redis.py          # Cliente Redis (lifespan)
+│   │   └── security.py       # JWT, bcrypt, cookies
 │   │
-│   ├── 📂 middlewares/           # ← Middlewares de la API
-│   │   ├── 📄 jwt_middleware.py      # Verificación de JWT en rutas protegidas
-│   │   ├── 📄 roles_middleware.py    # Control de acceso basado en roles
-│   │   └── 📄 validate_request.py   # Validación de peticiones (cancelación)
+│   ├── middlewares/
+│   │   ├── jwt_middleware.py     # Verificación de JWT
+│   │   ├── roles_middleware.py   # RBAC (require_roles)
+│   │   └── validate_request.py   # Validación de peticiones
 │   │
-│   ├── 📂 features/             # ← Módulos de negocio (arquitectura por feature)
-│   │   ├── 📂 auth/             # Autenticación (login, registro, refresh token)
-│   │   │   ├── 📂 controllers/
-│   │   │   ├── 📂 models/
-│   │   │   ├── 📂 routes/
-│   │   │   └── 📂 services/
-│   │   │
-│   │   ├── 📂 categories/       # Gestión de categorías de productos
-│   │   │   ├── 📂 controllers/
-│   │   │   ├── 📂 models/
-│   │   │   ├── 📂 repositories/
-│   │   │   ├── 📂 routes/
-│   │   │   └── 📂 services/
-│   │   │
-│   │   ├── 📂 dashboard/        # Panel de control y estadísticas
-│   │   │   ├── 📂 controllers/
-│   │   │   ├── 📂 repositories/
-│   │   │   ├── 📂 routes/
-│   │   │   └── 📂 services/
-│   │   │
-│   │   ├── 📂 output_orders/    # Órdenes de salida de inventario
-│   │   │   ├── 📂 controllers/
-│   │   │   ├── 📂 models/
-│   │   │   ├── 📂 repositories/
-│   │   │   ├── 📂 routes/
-│   │   │   └── 📂 services/
-│   │   │
-│   │   ├── 📂 products/         # Gestión de productos del inventario
-│   │   │   ├── 📂 controllers/
-│   │   │   ├── 📂 models/
-│   │   │   ├── 📂 repositories/
-│   │   │   ├── 📂 routes/
-│   │   │   └── 📂 services/
-│   │   │
-│   │   ├── 📂 reports/          # Generación de reportes
-│   │   │   ├── 📂 controllers/
-│   │   │   ├── 📂 routes/
-│   │   │   └── 📂 services/
-│   │   │
-│   │   ├── 📂 subcategories/    # Gestión de subcategorías
-│   │   │   ├── 📂 controllers/
-│   │   │   ├── 📂 models/
-│   │   │   ├── 📂 repositories/
-│   │   │   ├── 📂 routes/
-│   │   │   └── 📂 services/
-│   │   │
-│   │   ├── 📂 suggestions/     # Módulo de ayuda y sugerencias
-│   │   │   ├── 📂 controllers/
-│   │   │   ├── 📂 models/
-│   │   │   └── 📂 routes/
-│   │   │
-│   │   ├── 📂 suppliers/       # Gestión de proveedores
-│   │   │   ├── 📂 controllers/
-│   │   │   ├── 📂 models/
-│   │   │   ├── 📂 repositories/
-│   │   │   ├── 📂 routes/
-│   │   │   └── 📂 services/
-│   │   │
-│   │   ├── 📂 users/           # Gestión de usuarios del sistema
-│   │   │   ├── 📂 controllers/
-│   │   │   ├── 📂 models/
-│   │   │   ├── 📂 repositories/
-│   │   │   ├── 📂 routes/
-│   │   │   └── 📂 services/
-│   │   │
-│   │   └── 📂 warranties/      # Gestión de garantías
-│   │       ├── 📂 controllers/
-│   │       ├── 📂 models/
-│   │       ├── 📂 repositories/
-│   │       ├── 📂 routes/
-│   │       └── 📂 services/
+│   ├── features/             # Módulos de negocio (feature-based)
+│   │   ├── auth/
+│   │   ├── categories/
+│   │   ├── dashboard/
+│   │   ├── output_orders/
+│   │   ├── products/         # Incluye marcas, modelos, input orders, serials
+│   │   │   ├── controllers/
+│   │   │   ├── models/
+│   │   │   │   ├── entities/
+│   │   │   │   ├── responses/
+│   │   │   │   └── schemas/
+│   │   │   ├── repositories/
+│   │   │   ├── routes/
+│   │   │   └── services/
+│   │   ├── reports/
+│   │   ├── subcategories/
+│   │   ├── suggestions/
+│   │   ├── suppliers/
+│   │   ├── users/            # Incluye roles y ciudades
+│   │   └── warranties/
 │   │
+│   ├── tasks/
+│   │   └── email_tasks.py    # Tareas Celery (correos)
 │   │
-│   ├── 📂 tasks/                # ← Tareas asíncronas de Celery
-│   │   └── 📄 email_tasks.py    # Envío de correos (bienvenida, recuperación)
+│   ├── templates/            # Plantillas HTML para emails
+│   │   ├── recover_password.html
+│   │   ├── suggestion_mail.html
+│   │   └── welcome_mail.html
 │   │
-│   ├── 📂 templates/            # ← Plantillas HTML para correos electrónicos
-│   │   ├── 📄 recover_password.html   # Email de recuperación de contraseña
-│   │   ├── 📄 suggestion_mail.html    # Email de sugerencias
-│   │   └── 📄 welcome_mail.html       # Email de bienvenida al sistema
-│   │
-│   └── 📂 utils/                # ← Utilidades y funciones auxiliares
-│       ├── 📄 date_formatter.py  # Formateo de fechas en español
-│       ├── 📄 logger.py          # Logger personalizado con formato estándar
-│       └── 📄 periods.py         # Mapeo de períodos para consultas temporales
+│   └── utils/
+│       ├── base_schema.py
+│       ├── date_formatter.py
+│       ├── logger.py
+│       └── periods.py
 │
-├── 📂 database/                  # ← Scripts SQL para la base de datos
-│   ├── 📄 01_database.sql        # DDL: Creación de tablas y estructura
-│   ├── 📄 02_dml.sql             # DML: Datos iniciales (seeds)
-│   └── 📄 03_views.sql           # Vistas SQL para consultas complejas
-│
-└── 📂 test/                      # ← Pruebas automatizadas
-    ├── 📄 conftest.py            # Configuración compartida de pytest
-    ├── 📂 bdd/                   # Pruebas de comportamiento (BDD)
-    │   └── 📄 test_flujo_auth.py # Test del flujo completo de autenticación
-    └── 📂 unit/                  # Pruebas unitarias
-        └── 📄 test_user_models.py # Tests de modelos de usuario
+└── database/
+    ├── 01_database.sql       # DDL
+    ├── 02_dml.sql            # Seeds
+    └── 03_views.sql          # Vistas SQL
+```
+
+Cada feature sigue la misma organización por capas cuando aplica:
+
+```
+routes/ → controllers/ → services/ → repositories/ → models/
 ```
 
 ---
@@ -298,87 +329,72 @@ Tracklinker-python-api/
 El proyecto utiliza una **arquitectura por features** (modular) con una capa de servicios centralizada:
 
 ```
-Ruta (Route) → Controlador (Controller) → Servicio (Service) → Repositorio (Repository) → Base de Datos
+Ruta (Route) → Controlador (Controller) → Servicio (Service) → Repositorio (Repository) → MySQL
 ```
 
+| Capa | Responsabilidad |
+| --- | --- |
+| **Routes** | Endpoints HTTP, middlewares (`require_roles`, `RateLimiter`) |
+| **Controllers** | Entrada/salida HTTP; delega al servicio |
+| **Services** | Lógica de negocio y orquestación |
+| **Repositories** | Consultas SQL y acceso a datos |
+| **Models** | Esquemas Pydantic (`Schema`, `Response`, entidades internas) |
 
-| Capa             | Responsabilidad                                        |
-| ---------------- | ------------------------------------------------------ |
-| **Routes**       | Definición de endpoints y middlewares aplicados        |
-| **Controllers**  | Recepción de la petición HTTP y delegación al servicio |
-| **Services**     | Lógica de negocio y orquestación de operaciones        |
-| **Repositories** | Acceso a datos y consultas SQL                         |
-| **Models**       | Esquemas de validación con Pydantic                    |
+### Flujo de arranque (`lifespan`)
 
-
-Cada módulo dentro de `features/` es autocontenido y sigue esta estructura de capas.
-
-### Responsabilidades de las Capas
-
-1.  **Routes**: Define los endpoints, métodos HTTP y aplica middlewares (seguridad, rate limiting).
-2.  **Controllers**: Orquestan la entrada de datos, validan esquemas básicos y delegan la ejecución al servicio.
-3.  **Services**: Capa de **Lógica de Negocio**. Aquí se toman las decisiones, se procesan datos y se gestionan transacciones atómicas. No conocen detalles de la persistencia.
-4.  **Repositories**: Única capa que interactúa con la base de datos (SQL). Encapsula las consultas y devuelve datos crudos o modelos internos.
-5.  **Models/Schemas**: Pydantic se encarga de la validación de entrada (`Schema`) y el modelado de salida (`Response`).
+1. Inicializa Redis (`init_redis`)
+2. Configura FastAPI Limiter
+3. Al cerrar la app, libera la conexión Redis (`close_redis`)
 
 ---
 
 ## Seguridad
 
-La seguridad es una prioridad en Tracklinker, implementando estándares modernos:
-
-- **JWT con Cookies Seguras**: No enviamos el token en el cuerpo de la respuesta. Utilizamos cookies **HTTP-Only** y **Secure** para mitigar ataques XSS.
-- **Hashing**: Las contraseñas nunca se almacenan en texto plano, utilizamos `bcrypt` para un hashing robusto.
-- **RBAC (Role Based Access Control)**: Middleware dedicado para restringir endpoints según el rol del usuario (`Admin`, `Técnico`, etc.).
-- **Rate Limiting**: Protección contra ataques de fuerza bruta utilizando Redis para limitar las peticiones por IP en endpoints críticos.
-- **CORS**: Configuración estricta de orígenes permitidos para proteger la integridad de la API.
+- **JWT en cookies HTTP-Only**: access y refresh tokens no se devuelven en el body; mitiga XSS.
+- **bcrypt**: hashing de contraseñas en registro y actualización.
+- **RBAC**: middleware `require_roles` restringe endpoints por rol (`Admin`, `Almacen`, `Tecnico`, etc.).
+- **Rate limiting**: Redis + FastAPI Limiter (ej. login: 3 req/min, listados: 30–50 req/min).
+- **CORS**: orígenes explícitos para el frontend de Tracklinker.
 
 ---
 
 ## Convenciones de Código
 
+| Tipo de elemento | Estilo | Ejemplo correcto | Ejemplo incorrecto |
+| --- | --- | --- | --- |
+| **Clases** | `PascalCase` | `class UserModel:` | `class user_model:` |
+| **Funciones / métodos** | `snake_case` | `def get_all_users():` | `def GetAllUsers():` |
+| **Variables** | `snake_case` | `user_name = "Juan"` | `UserName = "Juan"` |
+| **Constantes** | `UPPER_CASE` | `DB_HOST = "localhost"` | `dbHost = "localhost"` |
+| **Módulos (.py)** | `snake_case` | `user_model.py` | `UserModel.py` |
+| **Paquetes** | `snake_case` | `core`, `models` | `Core`, `Models` |
 
-| Tipo de elemento           | Estilo       | Ejemplo correcto        | Ejemplo incorrecto     |
-| -------------------------- | ------------ | ----------------------- | ---------------------- |
-| **Clases**                 | `PascalCase` | `class UserModel:`      | `class user_model:`    |
-| **Funciones / métodos**    | `snake_case` | `def get_all_users():`  | `def GetAllUsers():`   |
-| **Variables**              | `snake_case` | `user_name = "Juan"`    | `UserName = "Juan"`    |
-| **Constantes**             | `UPPER_CASE` | `DB_HOST = "localhost"` | `dbHost = "localhost"` |
-| **Módulos (archivos .py)** | `snake_case` | `user_model.py`         | `UserModel.py`         |
-| **Paquetes (carpetas)**    | `snake_case` | `core`, `models`        | `Core`, `Models`       |
+### Nomenclatura de modelos (Pydantic)
 
+| Sufijo | Uso | Ejemplo |
+| --- | --- | --- |
+| `Schema` | Body de entrada (request) | `CreateProductSchema` |
+| `Response` | Respuesta al cliente | `ProductsAmountResponse` |
+| *(sin sufijo)* | Modelos internos o de dominio | `ProductsAmount` |
 
-### Nomenclatura de Modelos (Pydantic)
-
-Los modelos se nombran con un sufijo según su propósito:
-
-
-| Sufijo (Clase) | Uso                                           | Ejemplo                  |
-| -------------- | --------------------------------------------- | ------------------------ |
-| `Response`     | Respuestas que devuelve la API al cliente     | `ProductsAmountResponse` |
-| *(sin sufijo)* | Modelos internos o de Base de Datos           | `ProductsAmount`         |
-| `Schema`       | Datos que se reciben en el body de la request | `ProductsAmountSchema`   |
-
-> [!NOTE]
-> Los archivos deben agruparse en subcarpetas (`schemas/`, `responses/`, `entities/`) y usar nombres en plural (ej: `users_schemas.py`, `categories_responses.py`).
+Los modelos se agrupan en subcarpetas (`schemas/`, `responses/`, `entities/`) dentro de cada feature.
 
 ```python
-# Respuesta de la API → sufijo Response
-class SupplierInputResponse(BaseModel):
-    ...
+# Respuesta de la API
+class SupplierInputResponse(BaseModel): ...
 
-# Modelo interno → sin sufijo
-class SupplierInput(BaseModel):
-    ...
+# Modelo interno
+class SupplierInput(BaseModel): ...
 
-# Datos de entrada (request body) → sufijo Schema
-class SupplierInputSchema(BaseModel):
-    ...
+# Datos de entrada
+class SupplierInputSchema(BaseModel): ...
 ```
 
 ---
 
 ## Testing
+
+El proyecto declara **pytest** y **pytest-asyncio** en `pyproject.toml`. Para ejecutar pruebas cuando existan bajo una carpeta `test/`:
 
 ```bash
 # Ejecutar todas las pruebas
@@ -391,6 +407,9 @@ pytest test/unit/
 pytest test/bdd/
 ```
 
+> [!NOTE]
+> Aún no hay suite de tests en el repositorio; las dependencias están listas para cuando se agreguen.
+
 ---
 
 ## Contribuciones
@@ -398,13 +417,13 @@ pytest test/bdd/
 Cualquier contribución es bienvenida. Si deseas colaborar con el proyecto, sigue estos pasos:
 
 1. Haz un **fork** del repositorio
-2. Crea una rama para tu feature o fix:
-  ```bash
+2. Crea una rama:
+   ```bash
    git checkout -b feat/mi-nueva-feature
-  ```
-3. Realiza tus cambios siguiendo las [convenciones de código](#convenciones-de-código)
-4. Haz commit de tus cambios:
-  ```bash
+   ```
+3. Sigue las [convenciones de código](#convenciones-de-código)
+4. Commit:
+   ```bash
    git commit -m "feat: descripción breve del cambio"
   ```
 5. Sube tu rama:
