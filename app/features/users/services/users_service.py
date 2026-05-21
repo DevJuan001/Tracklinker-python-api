@@ -1,13 +1,13 @@
 import bcrypt
 from pydantic import EmailStr
-from app.features.users.repositories.cities_repository import CitiesRepository
-from app.features.users.repositories.roles_repository import RolesRepository
 from app.utils.logger import get_logger
 from app.core.exception import ServiceError
 from app.core.database import get_connection
 from app.tasks.email_tasks import send_welcome_email
 from app.core.security import generate_temporal_password, verify_password
+from app.features.users.repositories.roles_repository import RolesRepository
 from app.features.users.repositories.users_repository import UsersRepository
+from app.features.users.repositories.cities_repository import CitiesRepository
 from app.features.users.models.users_schemas import UpdatePasswordSchema, UsersFiltersSchema, CreateUserSchema, UpdateUserSchema
 
 logger = get_logger("users.service")
@@ -27,12 +27,16 @@ class UsersService:
                 raise ServiceError(error)
 
             return None, users
-        
+
         except ServiceError as e:
             return e.message, None
 
         except Exception as e:
-            logger.error("Error en get_all_users: %s", e, exc_info=True)
+            logger.error(
+                "Error en get_all_users: %s",
+                e,
+                exc_info=True
+            )
             return "Error al intentar obtener los usuarios", None
 
         finally:
@@ -57,7 +61,7 @@ class UsersService:
 
         except Exception as e:
             logger.error(
-                "Error en create_user: %s",
+                "Error en get_user_by_id: %s",
                 e,
                 exc_info=True
             )
@@ -103,15 +107,15 @@ class UsersService:
             return None, roles
 
         except ServiceError as e:
-            return e.message, False, None
+            return e.message, None
 
         except Exception as e:
             logger.error(
-                "Error en create_user: %s",
+                "Error en get_all_roles: %s",
                 e,
                 exc_info=True
             )
-            return "Error al intentar obtener los roles", False, None
+            return "Error al intentar obtener los roles", None
 
     @staticmethod
     def get_all_cities():
@@ -132,7 +136,7 @@ class UsersService:
 
         except Exception as e:
             logger.error(
-                "Error en create_user: %s",
+                "Error en get_all_cities: %s",
                 e,
                 exc_info=True
             )
@@ -145,6 +149,7 @@ class UsersService:
         connection = get_connection()
 
         try:
+            # Verificar que no este registrado ya un usuario con el correo que viene
             error, user = UsersRepository.find_user_by_email(
                 email=data["email"],
                 connection=connection
@@ -159,7 +164,6 @@ class UsersService:
                 )
 
             temporal_password = generate_temporal_password()
-
 
             # Hashear la contraseña
             password = temporal_password.encode("utf-8")
@@ -263,15 +267,15 @@ class UsersService:
             raise ServiceError("Las contraseñas no coiniciden")
 
         try:
+            # Buscamos la contraseña del usuario con ese id
             error, user = UsersRepository.find_user_password_by_id(
                 user_id, connection
             )
 
-            # Validación de lo que retorna la función find_user_password_by_id
             if error or not user:
                 raise ServiceError(error)
 
-            # Validación de que la contraseña antigua sea igual a la que esta registrada
+            # Validamos que la contraseña antigua sea igual a la que esta registrada
             verify_password(
                 str(user[0]), data["old_password"]
             )
@@ -334,7 +338,7 @@ class UsersService:
         except Exception as e:
             connection.rollback()
             logger.error(
-                "Error en update_user_password: %s",
+                "Error en disable_user: %s",
                 e,
                 exc_info=True
             )
@@ -371,7 +375,7 @@ class UsersService:
         except Exception as e:
             connection.rollback()
             logger.error(
-                "Error en update_user_password: %s",
+                "Error en enable_user: %s",
                 e,
                 exc_info=True
             )
