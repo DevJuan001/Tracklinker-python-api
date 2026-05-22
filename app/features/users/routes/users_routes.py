@@ -27,7 +27,7 @@ def get_all_users(filters: UsersFiltersSchema = Depends()):
 @router.get(
     "/me",
     dependencies=[
-        Depends(require_roles(["Admin", "Almacen", "Tecnico"]))
+        Depends(require_roles(["Admin", "Almacén", "Técnico"]))
     ]
 )
 def get_me(payload: dict = Depends(verify_jwt)):
@@ -51,7 +51,7 @@ def get_all_roles():
     "/cities",
     dependencies=[
         Depends(RateLimiter(times=30, seconds=60)),
-        Depends(require_roles(["Admin"]))
+        Depends(require_roles(["Admin", "Almacén", "Técnico"]))
     ]
 )
 def get_all_cities():
@@ -89,7 +89,7 @@ async def create_user(
     "/update/me",
     dependencies=[
         Depends(RateLimiter(times=10, seconds=60)),
-        Depends(require_roles(["Admin", "Almacen", "Tecnico"]))
+        Depends(require_roles(["Admin", "Almacén", "Técnico"]))
     ]
 )
 def update_me(user_data: UpdateCurrentUserSchema, payload: dict = Depends(verify_jwt)):
@@ -97,7 +97,13 @@ def update_me(user_data: UpdateCurrentUserSchema, payload: dict = Depends(verify
 
 
 # Endpoint para actualizar la contraseña del usuario
-@router.put("/update-password")
+@router.put(
+    "/update-password",
+    dependencies=[
+        Depends(RateLimiter(times=10, seconds=60)),
+        Depends(require_roles(["Admin", "Almacén", "Técnico"]))
+    ]
+)
 def update_user_password(password_data: UpdatePasswordSchema, payload: dict = Depends(verify_jwt)):
     return UsersController.update_user_password(password_data, payload)
 
