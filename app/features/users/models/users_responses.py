@@ -19,7 +19,8 @@ class UserResponse(BaseModel):
     status: int
 
 
-class CurrentUserResponse(BaseModel):
+class UserByIdResponse(BaseModel):
+    rol: str
     id: int
     name: str
     first_surname: str
