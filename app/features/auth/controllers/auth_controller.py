@@ -1,8 +1,8 @@
 from fastapi import HTTPException, Request, Response
 from pydantic import EmailStr
 
-from app.features.auth.models.auth_model import VerifyRoleModel
 from app.features.auth.services.auth_service import AuthService
+from app.features.auth.models.auth_schema import VerifyRoleModelSchema
 
 
 class AuthController:
@@ -39,7 +39,7 @@ class AuthController:
         }
 
     @staticmethod
-    def verify_roles(body: VerifyRoleModel, payload: dict):
+    def verify_roles(body: VerifyRoleModelSchema, payload: dict):
         error, success = AuthService.verify_roles(
             body, payload
         )

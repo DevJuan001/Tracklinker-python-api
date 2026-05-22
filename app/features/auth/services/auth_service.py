@@ -1,4 +1,5 @@
 from datetime import timedelta
+import re
 
 import jwt
 from jwt import PyJWTError
@@ -6,11 +7,14 @@ from pydantic import EmailStr
 from fastapi import Request, Response
 
 from app.core.config import settings
+from app.utils.logger import get_logger
 from app.core.exception import ServiceError
-from app.core.security import create_access_token, create_refresh_token, set_auth_cookies, verify_password
-from app.features.auth.models.auth_model import VerifyRoleModel
-from app.features.users.services.users_service import UsersService
 from app.tasks.email_tasks import recovery_password_email
+from app.features.users.services.users_service import UsersService
+from app.features.auth.models.auth_schema import VerifyRoleModelSchema
+from app.core.security import create_access_token, create_refresh_token, set_auth_cookies, verify_password
+
+logger = get_logger("auth.service")
 
 
 class AuthService:
@@ -49,6 +53,10 @@ class AuthService:
         except ServiceError as e:
             return e.message, False, "No autorizado"
 
+        except Exception as e:
+            logger.error("Error en login: %s", e, exc_info=True)
+            return "No autorizado", False, None
+
     @staticmethod
     def refresh_tokens(request: Request, response: Response):
         refresh_token = request.cookies.get("refresh_token")
@@ -67,29 +75,36 @@ class AuthService:
             if not user_id:
                 raise ServiceError("Refresh token inválido")
 
+            new_access_token = create_access_token({
+                "sub": str(user_id),
+                "role": payload.get("role")
+            },
+                expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE)
+            )
+
+            new_refresh_token = create_refresh_token({
+                "sub": user_id,
+                "role": payload.get("role")
+            })
+
+            set_auth_cookies(response, new_access_token, new_refresh_token)
+
+            return None, True, "Tokens actualizados correctamente"
+
         except PyJWTError:
             raise ServiceError(
                 "Refresh token expirado o inválido"
             )
 
-        new_access_token = create_access_token({
-            "sub": str(user_id),
-            "role": payload.get("role")
-        },
-            expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE)
-        )
+        except ServiceError as e:
+            return e.message, False, None
 
-        new_refresh_token = create_refresh_token({
-            "sub": user_id,
-            "role": payload.get("role")
-        })
-
-        set_auth_cookies(response, new_access_token, new_refresh_token)
-
-        return None, True, "Tokens actualizados correctamente"
+        except Exception as e:
+            logger.error("Error en refresh_tokens: %s", e, exc_info=True)
+            return "Error al intentar refrezcar los tokens", False, None
 
     @staticmethod
-    def verify_roles(body: VerifyRoleModel, payload: dict):
+    def verify_roles(body: VerifyRoleModelSchema, payload: dict):
         try:
             user_role = payload.get("role")
             roles = body.roles
@@ -103,18 +118,26 @@ class AuthService:
             return e.message, None
 
         except Exception as e:
+            logger.error("Error en verify_roles: %s", e, exc_info=True)
             return "Error al intentar verificar los roles", None
 
     @staticmethod
     def logout(response: Response):
         try:
-            response.delete_cookie(key="access_token", path="/api")
-            response.delete_cookie(key="refresh_token",
-                                   path="/api/auth/refresh")
+            response.delete_cookie(
+                key="access_token",
+                path="/api"
+            )
+
+            response.delete_cookie(
+                key="refresh_token",
+                path="/api/auth/refresh"
+            )
 
             return None, True, "Sesión cerrada exitosamente"
 
         except Exception as e:
+            logger.error("Error en logout: %s", e, exc_info=True)
             return "Error al intentar cerrar la sesión", False, None
 
     @staticmethod
