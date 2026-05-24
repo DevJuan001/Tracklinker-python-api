@@ -19,7 +19,7 @@ router = APIRouter(
     "/",
     dependencies=[
         Depends(RateLimiter(times=30, seconds=60)),
-        Depends(require_roles(["Admin"]))
+        Depends(require_roles(["Admin", "Almacén"]))
     ]
 )
 def get_all_suppliers(filters: FilterSuppliersSchema = Depends()):
@@ -31,7 +31,7 @@ def get_all_suppliers(filters: FilterSuppliersSchema = Depends()):
     "/{supplier_id}",
     dependencies=[
         Depends(RateLimiter(times=30, seconds=60)),
-        Depends(require_roles(["Admin"]))
+        Depends(require_roles(["Admin", "Almacén"]))
     ]
 )
 def get_supplier_by_id(supplier_id: int):
@@ -43,7 +43,7 @@ def get_supplier_by_id(supplier_id: int):
     "/create",
     dependencies=[
         Depends(RateLimiter(times=30, seconds=60)),
-        Depends(require_roles(["Admin"]))
+        Depends(require_roles(["Admin", "Almacén"]))
     ]
 )
 def create_supplier(supplier_data: CreateSupplierSchema):
@@ -55,7 +55,7 @@ def create_supplier(supplier_data: CreateSupplierSchema):
     "/update/{supplier_id}",
     dependencies=[
         Depends(RateLimiter(times=30, seconds=60)),
-        Depends(require_roles(["Admin"]))
+        Depends(require_roles(["Admin", "Almacén"]))
     ]
 )
 def update_supplier(supplier_id: int, supplier_data: UpdateSupplierSchema):
@@ -67,7 +67,7 @@ def update_supplier(supplier_id: int, supplier_data: UpdateSupplierSchema):
     "/disable/{supplier_id}",
     dependencies=[
         Depends(RateLimiter(times=30, seconds=60)),
-        Depends(require_roles(["Admin"]))
+        Depends(require_roles(["Admin", "Almacén"]))
     ]
 )
 def disable_supplier(supplier_id: int):
@@ -79,7 +79,7 @@ def disable_supplier(supplier_id: int):
     "/enable/{supplier_id}",
     dependencies=[
         Depends(RateLimiter(times=30, seconds=60)),
-        Depends(require_roles(["Admin"]))
+        Depends(require_roles(["Admin", "Almacén"]))
     ]
 )
 def enable_supplier(supplier_id: int):
