@@ -16,7 +16,7 @@ router = APIRouter(
     "/",
     dependencies=[
         Depends(RateLimiter(times=30, seconds=60)),
-        Depends(require_roles(["Admin"]))
+        Depends(require_roles(["Admin", "Técnico"]))
     ]
 )
 def get_all_warranties(filters: WarrantiesFilterSchema = Depends()):
@@ -28,7 +28,7 @@ def get_all_warranties(filters: WarrantiesFilterSchema = Depends()):
     "/{warranty_incidents_id}",
     dependencies=[
         Depends(RateLimiter(times=30, seconds=60)),
-        Depends(require_roles(["Admin"]))
+        Depends(require_roles(["Admin", "Técnico"]))
     ]
 )
 def get_warranty_by_id(warranty_incidents_id: int):
@@ -40,7 +40,7 @@ def get_warranty_by_id(warranty_incidents_id: int):
     "/create",
     dependencies=[
         Depends(RateLimiter(times=30, seconds=60)),
-        Depends(require_roles(["Admin"]))
+        Depends(require_roles(["Admin", "Técnico"]))
     ]
 )
 def create_warranty(
@@ -55,7 +55,7 @@ def create_warranty(
     "/update/{warranty_incidents_id}",
     dependencies=[
         Depends(RateLimiter(times=30, seconds=60)),
-        Depends(require_roles(["Admin"]))
+        Depends(require_roles(["Admin", "Técnico"]))
     ]
 )
 def update_warranty(
