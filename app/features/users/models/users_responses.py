@@ -4,8 +4,8 @@ from app.utils.base_schema import BaseSchema
 
 
 class UserResponse(BaseModel):
-    rol_id: int
-    rol_name: str
+    role_id: int
+    role_name: str
     id: int
     name: str
     first_surname: str
@@ -20,7 +20,7 @@ class UserResponse(BaseModel):
 
 
 class UserByIdResponse(BaseModel):
-    rol: str
+    role: str
     id: int
     name: str
     first_surname: str
@@ -45,8 +45,8 @@ class UsersGrowthResponse(BaseSchema):
     users: int
 
 
-class UsersByRolResponse(BaseModel):
-    rol: str
+class UsersByRoleResponse(BaseModel):
+    role: str
     users: int
 
 
