@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from fastapi_limiter.depends import RateLimiter
-from app.features.warranties.models.warranties_schemas import CreateWarrantySchema, UpdateWarrantySchema, WarrantiesFilterSchema
 from app.middlewares.jwt_middleware import verify_jwt
 from app.middlewares.roles_middleware import require_roles
 from app.features.warranties.controllers.warranties_controller import WarrantiesController
+from app.features.warranties.models.warranties_schemas import CreateWarrantySchema, UpdateWarrantySchema, WarrantiesFilterSchema
 
 router = APIRouter(
     prefix="/api/warranty_incidents",
