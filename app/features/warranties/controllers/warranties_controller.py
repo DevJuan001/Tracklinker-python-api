@@ -8,8 +8,10 @@ class WarrantiesController:
     @staticmethod
     def get_all_warranties(filters: WarrantiesFilterSchema):
         error, warranties = WarrantiesService.get_all_warranties(filters)
+
         if error:
             raise HTTPException(status_code=404, detail=error)
+
         return {
             "data": warranties
         }
@@ -19,8 +21,10 @@ class WarrantiesController:
         error, warranty = WarrantiesService.get_warranty_by_id(
             warranty_incidents_id
         )
+
         if error:
             raise HTTPException(status_code=404, detail=error)
+
         return {
             "data": warranty
         }
@@ -30,8 +34,10 @@ class WarrantiesController:
         error, success, message = WarrantiesService.create_warranty(
             warranty_data, payload["user_id"]
         )
+
         if error:
             raise HTTPException(status_code=400, detail=error)
+
         return {
             "success": success,
             "message": message
@@ -42,8 +48,10 @@ class WarrantiesController:
         error, success, message = WarrantiesService.update_warranty(
             warranty_incidents_id, payload["user_id"], warranty_data
         )
+
         if error:
             raise HTTPException(status_code=400, detail=error)
+
         return {
             "success": success,
             "message": message
