@@ -248,7 +248,7 @@ class UsersRepository:
 
         try:
             cursor.execute(query, (
-                data["rol_id"],
+                data["role_id"],
                 data["name"],
                 data["first_surname"],
                 data["second_surname"],
