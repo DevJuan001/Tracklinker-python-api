@@ -27,13 +27,13 @@ class DashboardRepository:
         SELECT
             (SELECT COUNT(*) FROM PRODUCTS) AS total,
             (SELECT COUNT(*)
-            FROM PRODUCTS AS p
-            INNER JOIN PRODUCT_SERIALS AS ps
-                ON p.product_id = ps.product_id
-            INNER JOIN INPUT_ORDERS AS io
-                ON ps.input_order_id = io.input_order_id
-            WHERE MONTH(io.input_order_date) = MONTH(CURDATE())
-            AND YEAR(io.input_order_date) = YEAR(CURDATE())
+            FROM PRODUCT_SERIALS AS ps
+            INNER JOIN PRODUCTS AS p
+                ON ps.product_id = p.product_id
+            INNER JOIN PRODUCT_DETAILS AS pd
+                ON p.product_details_id = pd.product_details_id
+            WHERE MONTH(pd.product_detail_date) = MONTH(CURDATE())
+            AND YEAR(pd.product_detail_date) = YEAR(CURDATE())
             ) AS new_products"""
 
         try:
