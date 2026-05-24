@@ -19,9 +19,11 @@ class TechniciansRepository:
             )
 
             return None, True, "Técnico asignado correctamente"
+
         except Exception as e:
             logger.error("Error en assign_technician: %s", e, exc_info=True)
             return "Error al intentar asignar el técnico", False, None
+
         finally:
             cursor.close()
 
@@ -36,8 +38,10 @@ class TechniciansRepository:
             )
 
             return None, True, "Técnico desasignado correctamente"
+
         except Exception as e:
             logger.error("Error en unassign_technician: %s", e, exc_info=True)
             return "Error al intentar desasignar el técnico", False, None
+
         finally:
             cursor.close()
