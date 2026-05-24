@@ -20,7 +20,7 @@ router = APIRouter(
     "/",
     dependencies=[
         Depends(RateLimiter(times=30, seconds=60)),
-        Depends(require_roles(["Admin"]))
+        Depends(require_roles(["Admin", "Almacén", "Técnico"]))
     ]
 )
 async def get_all_products(
@@ -35,7 +35,7 @@ async def get_all_products(
 @router.get(
     "/brands",
     dependencies=[
-        Depends(require_roles(["Admin", "Almacen"])),
+        Depends(require_roles(["Admin", "Almacén", "Técnico"])),
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
@@ -47,7 +47,7 @@ def get_all_brands():
 @router.get(
     "/models",
     dependencies=[
-        Depends(require_roles(["Admin", "Almacen"])),
+        Depends(require_roles(["Admin", "Almacén", "Técnico"])),
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
@@ -59,7 +59,7 @@ def get_all_models():
 @router.get(
     "/input-orders",
     dependencies=[
-        Depends(require_roles(["Admin", "Almacen"])),
+        Depends(require_roles(["Admin", "Almacén", "Técnico"])),
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
@@ -71,7 +71,7 @@ def get_all_input_orders():
 @router.get(
     "/status",
     dependencies=[
-        Depends(require_roles(["Admin", "Almacen"])),
+        Depends(require_roles(["Admin", "Almacén", "Técnico"])),
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
@@ -83,7 +83,7 @@ def get_all_product_status():
 @router.post(
     "/create",
     dependencies=[
-        Depends(require_roles(["Admin", "Almacen"])),
+        Depends(require_roles(["Admin", "Almacén"])),
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
@@ -97,7 +97,7 @@ async def create_product(product_data: CreateProductSchema, redis=Depends(get_re
 @router.post(
     "/create-model",
     dependencies=[
-        Depends(require_roles(["Admin", "Almacen"])),
+        Depends(require_roles(["Admin", "Almacén"])),
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
@@ -109,7 +109,7 @@ def create_product_model(product_model: CreateProductModelSchema):
 @router.post(
     "/create-brand",
     dependencies=[
-        Depends(require_roles(["Admin", "Almacen"])),
+        Depends(require_roles(["Admin", "Almacén"])),
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
@@ -121,7 +121,7 @@ def create_product_brand(product_brand: CreateProductBrandSchema):
 @router.post(
     "/create-input-order",
     dependencies=[
-        Depends(require_roles(["Admin", "Almacen"])),
+        Depends(require_roles(["Admin", "Almacén"])),
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
@@ -133,7 +133,7 @@ def create_product_entry(input_order: CreateInputOrderSchema):
 @router.put(
     "/update",
     dependencies=[
-        Depends(require_roles(["Admin", "Almacen"])),
+        Depends(require_roles(["Admin", "Almacén"])),
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
@@ -145,7 +145,7 @@ def update_product(product_data: UpdateProductSchema = Body(...)):
 @router.put(
     "/update-status",
     dependencies=[
-        Depends(require_roles(["Admin", "Almacen"])),
+        Depends(require_roles(["Admin", "Almacén"])),
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
