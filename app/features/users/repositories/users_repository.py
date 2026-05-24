@@ -3,7 +3,7 @@ from app.utils.logger import get_logger
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
 from app.features.users.models.users_schemas import CreateUserSchema, UpdateUserSchema, UsersFiltersSchema
-from app.features.users.models.users_responses import RecentUserResponse, UserByIdResponse, UserResponse, UsersByRolResponse, UsersByStatusResponse, UsersGrowthResponse
+from app.features.users.models.users_responses import RecentUserResponse, UserByIdResponse, UserResponse, UsersByRoleResponse, UsersByStatusResponse, UsersGrowthResponse
 
 logger = get_logger("users.repository")
 
@@ -78,8 +78,8 @@ class UsersRepository:
 
             users = [
                 UserResponse(
-                    rol_id=item[0],
-                    rol_name=item[1],
+                    role_id=item[0],
+                    role_name=item[1],
                     id=item[2],
                     name=item[3],
                     first_surname=item[4],
@@ -138,7 +138,7 @@ class UsersRepository:
 
             data = [
                 UserByIdResponse(
-                    rol=item[0],
+                    role=item[0],
                     id=item[1],
                     name=item[2],
                     first_surname=item[3],
@@ -248,7 +248,7 @@ class UsersRepository:
 
         try:
             cursor.execute(query, (
-                data["rol_id"],
+                data["role_id"],
                 data["name"],
                 data["first_surname"],
                 data["second_surname"],
@@ -273,6 +273,7 @@ class UsersRepository:
         data = user_data.model_dump(exclude_none=True)
 
         USER_FIELDS = {
+            "role_id": "rol_id",
             "name": "user_name",
             "first_surname": "user_first_surname",
             "second_surname": "user_second_surname",
@@ -444,7 +445,7 @@ class UsersRepository:
             result = cursor.fetchall()
 
             data = [
-                UsersByRolResponse(
+                UsersByRoleResponse(
                     rol=item[0],
                     users=item[1]
                 )

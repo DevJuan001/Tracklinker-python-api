@@ -12,7 +12,7 @@ class UsersFiltersSchema(BaseModel):
 
 
 class CreateUserSchema(BaseModel):
-    rol_id: int
+    role_id: int
     name: str
     first_surname: str
     second_surname: str
@@ -23,6 +23,7 @@ class CreateUserSchema(BaseModel):
 
 
 class UpdateUserSchema(BaseModel):
+    role_id: Optional[int] = None
     name: Optional[str] = None
     first_surname: Optional[str] = None
     second_surname: Optional[str] = None
