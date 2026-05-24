@@ -57,7 +57,7 @@ class SubcategoriesService:
                 e,
                 exc_info=True
             )
-            return "Error al intentar obtener las subcategorias", None
+            return "Error al intentar obtener la subcategorias mediante el id", None
 
     @staticmethod
     def get_active_categories():
@@ -82,7 +82,7 @@ class SubcategoriesService:
                 e,
                 exc_info=True
             )
-            return "Error al intentar obtener las subcategorias", None
+            return "Error al intentar obtener las subcategorias activas", None
 
     @staticmethod
     def create_subcategory(subcategory_data: CreateSubcategorySchema):
@@ -115,9 +115,11 @@ class SubcategoriesService:
             return None, True, "Subcategoria creada correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error(
                 "Error en create_subcategory: %s",
                 e,
@@ -157,9 +159,11 @@ class SubcategoriesService:
             return None, True, "Subcategoria actualizada correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error(
                 "Error en update_subcategory: %s",
                 e,
@@ -184,9 +188,11 @@ class SubcategoriesService:
             return None, True, "Subcategoria deshabilitada correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error(
                 "Error en disable_subcategory: %s",
                 e,
@@ -211,9 +217,11 @@ class SubcategoriesService:
             return None, True, "Subcategoria habilitada correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error(
                 "Error en  enable_subcategory: %s",
                 e,
