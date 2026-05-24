@@ -54,7 +54,7 @@ class WarrantiesService:
 
         except Exception as e:
             logger.error("Error en get_warranty_by_id: %s", e, exc_info=True)
-            return "Error al intentar obtener la garantía", None
+            return "Error al intentar obtener la garantía mediante el id", None
 
     @staticmethod
     def create_warranty(warranty_data: CreateWarrantySchema, user_id: int):
