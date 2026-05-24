@@ -1,4 +1,4 @@
-from app.features.users.models.roles_responses import RolResponse
+from app.features.users.models.roles_responses import RoleResponse
 from app.utils.logger import get_logger
 
 logger = get_logger("roles.repository")
@@ -16,7 +16,7 @@ class RolesRepository:
             result = cursor.fetchall()
 
             data = [
-                RolResponse(
+                RoleResponse(
                     id=item[0],
                     name=item[1]
                 )
