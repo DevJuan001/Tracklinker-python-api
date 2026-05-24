@@ -4,8 +4,8 @@ SET collation_connection = utf8mb4_unicode_ci;
 
 INSERT INTO ROLES VALUES 
 (null, 'Admin'),
-(null, 'Almacen'),
-(null, 'Tecnico'),
+(null, 'Almacén'),
+(null, 'Técnico'),
 (null, 'Cliente');
 
 INSERT INTO CITIES VALUES

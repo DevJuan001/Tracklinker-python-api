@@ -126,7 +126,7 @@ class AuthService:
         try:
             response.delete_cookie(
                 key="access_token",
-                path="/api"
+                path="/"
             )
 
             response.delete_cookie(

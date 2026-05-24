@@ -3,7 +3,7 @@ from app.utils.logger import get_logger
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
 from app.features.users.models.users_schemas import CreateUserSchema, UpdateUserSchema, UsersFiltersSchema
-from app.features.users.models.users_responses import CurrentUserResponse, RecentUserResponse, UserResponse, UsersByRolResponse, UsersByStatusResponse, UsersGrowthResponse
+from app.features.users.models.users_responses import RecentUserResponse, UserByIdResponse, UserResponse, UsersByRolResponse, UsersByStatusResponse, UsersGrowthResponse
 
 logger = get_logger("users.repository")
 
@@ -111,6 +111,7 @@ class UsersRepository:
         # Petición a la base de datos
         query = """
         SELECT
+            r.rol_name,
             u.user_id,
             u.user_name,
             u.user_first_surname,
@@ -136,22 +137,25 @@ class UsersRepository:
                 return "Usuario no encontrado", None
 
             data = [
-                CurrentUserResponse(
-                    id=item[0],
-                    name=item[1],
-                    first_surname=item[2],
-                    second_surname=item[3],
-                    phone=item[4],
-                    email=item[5],
-                    address=item[6],
-                    city=item[7],
+                UserByIdResponse(
+                    rol=item[0],
+                    id=item[1],
+                    name=item[2],
+                    first_surname=item[3],
+                    second_surname=item[4],
+                    phone=item[5],
+                    email=item[6],
+                    address=item[7],
+                    city=item[8],
                 )
                 for item in result
             ]
             return None, data
+        
         except Exception as e:
             logger.error("Error en find_user_by_id: %s", e, exc_info=True)
             return "Error al intentar obtener el usuario mediante el id", None
+        
         finally:
             cursor.close()
 
