@@ -75,7 +75,7 @@ class WarrantiesService:
             # Validamos que el producto no este deshabilitado
             if product[1] == 1:
                 raise ServiceError(
-                    "No puedes crear una garantía con un producto deshabilitado"
+                    "No puedes crear una garantía con un producto deshabilitado, activa o habilita este producto e intentalo nuevamente"
                 )
 
             # Verificamos que el producto no tenga una garantía activa
@@ -199,7 +199,7 @@ class WarrantiesService:
                     )
 
                 # Verificamos que el serial este registrado
-                product = ProductSerialsRepository.find_product_by_serial(
+                error, product = ProductSerialsRepository.find_product_by_serial(
                     product_serial,
                     connection
                 )

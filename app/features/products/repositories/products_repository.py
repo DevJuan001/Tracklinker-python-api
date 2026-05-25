@@ -97,7 +97,7 @@ class ProductsRepository:
             values.append(data["brand"])
 
         if "product_model" in data:
-            filters.append("pd.product_details_id = %s")
+            filters.append("pm.product_model_id = %s")
             values.append(data["product_model"])
 
         if filters:
@@ -269,6 +269,7 @@ class ProductsRepository:
         except Exception as e:
             logger.error("Error en update_product: %s", e, exc_info=True)
             return "Error al intentar actualizar el producto", False, None
+        
         finally:
             cursor.close()
 
@@ -285,6 +286,7 @@ class ProductsRepository:
             )
 
             return None, True, "Estado del producto actualizado correctamente"
+        
         except Exception as e:
             logger.error(
                 "Error en update_product_status: %s",
@@ -292,6 +294,7 @@ class ProductsRepository:
                 exc_info=True
             )
             return "Error al intentar actualizar el estado del producto", False, None
+        
         finally:
             cursor.close()
 

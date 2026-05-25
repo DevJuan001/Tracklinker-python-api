@@ -31,6 +31,9 @@ class InputOrdersService:
         except Exception as e:
             logger.error("Error en get_all_input_orders: %s", e, exc_info=True)
             return "Error al intentar obtener las ordenes de entrada", None
+        
+        finally:
+            connection.close()
 
     @staticmethod
     def create_input_order(input_order_data: CreateInputOrderSchema):
@@ -51,9 +54,13 @@ class InputOrdersService:
             return None, True, "Orden de entrada creada correctamente"
 
         except ServiceError as e:
+            connection.rollback()
             return e.message, False, None
 
         except Exception as e:
             connection.rollback()
             logger.error("Error en create_input_order: %s", e, exc_info=True)
             return "Error al intentar crear la orden de entrada", None
+        
+        finally:
+            connection.close()

@@ -60,7 +60,7 @@ class ProductDetailsRepository:
                 e,
                 exc_info=True
             )
-            return "Error al actualizar los detalles", False, None
+            return "Error al actualizar los detalles del producto", False, None
         
         finally:
             cursor.close()

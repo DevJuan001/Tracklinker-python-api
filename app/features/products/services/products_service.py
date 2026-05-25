@@ -73,7 +73,7 @@ class ProductsService:
         connection = get_connection()
 
         try:
-            for serial in data["product_serials"]: 
+            for serial in data["product_serials"]:
                 error, success, message, product_details_id = ProductDetailsRepository.create_product_details(
                     CreateProductDetailsEntity(
                         model_id=data["model_id"],
@@ -148,14 +148,14 @@ class ProductsService:
                 if error or not success:
                     raise ServiceError(error)
 
-             # Actualizar serial si vino alguno de estos campos
+            # Actualizar serial si vino alguno de estos campos
             if serial_fields := {
                 key: data[key]
                 for key in ["product_serial", "input_order_id", "warranty_time"]
                 if key in data
             }:
                 error, success, message = ProductSerialsRepository.update_product_serial(
-                    UpdateProductSerialSchema(id=data["id"], **serial_fields),
+                    UpdateProductSerialSchema(product_id=data["id"], **serial_fields),
                     connection
                 )
                 if error or not success:
@@ -177,6 +177,7 @@ class ProductsService:
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error("Error en update_product: %s", e, exc_info=True)
             return "Error al intentar actualizar el producto", False, None
 
@@ -226,6 +227,7 @@ class ProductsService:
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error(
                 "Error en update_product_status: %s",
                 e,
