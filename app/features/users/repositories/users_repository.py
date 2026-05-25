@@ -446,7 +446,7 @@ class UsersRepository:
 
             data = [
                 UsersByRoleResponse(
-                    rol=item[0],
+                    role=item[0],
                     users=item[1]
                 )
                 for item in result
