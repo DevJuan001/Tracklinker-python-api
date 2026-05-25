@@ -180,7 +180,7 @@ class UsersService:
             if error or not success:
                 raise ServiceError(error)
 
-            if success == True:
+            if success:
                 send_welcome_email.delay(
                     user_name=data["name"],
                     user_first_surname=data["first_surname"],
