@@ -10,7 +10,7 @@ class CreateProductSerialSchema(BaseModel):
     warranty_time: int
 
 class UpdateProductSerialSchema(BaseModel):
-    id: int
+    product_id: int
     product_serial: Optional[str] = None
     input_order: Optional[int] = None
     warranty_time: Optional[datetime] = None
