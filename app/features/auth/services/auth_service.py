@@ -1,5 +1,4 @@
 from datetime import timedelta
-import re
 
 import jwt
 from jwt import PyJWTError
