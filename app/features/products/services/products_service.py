@@ -155,7 +155,7 @@ class ProductsService:
                 if key in data
             }:
                 error, success, message = ProductSerialsRepository.update_product_serial(
-                    UpdateProductSerialSchema(id=data["id"], **serial_fields),
+                    UpdateProductSerialSchema(product_id=data["id"], **serial_fields),
                     connection
                 )
                 if error or not success:
