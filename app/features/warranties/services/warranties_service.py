@@ -199,7 +199,7 @@ class WarrantiesService:
                     )
 
                 # Verificamos que el serial este registrado
-                product = ProductSerialsRepository.find_product_by_serial(
+                error, product = ProductSerialsRepository.find_product_by_serial(
                     product_serial,
                     connection
                 )
