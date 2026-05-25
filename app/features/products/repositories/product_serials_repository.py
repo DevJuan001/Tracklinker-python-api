@@ -24,10 +24,8 @@ class ProductSerialsRepository:
 
             product = cursor.fetchone()
 
-            if not product:
-                return "Serial no encontrado", None
-
             return None, product
+
         except Exception as e:
             logger.error(
                 "Error en find_product_id_by_serial: %s",
@@ -36,11 +34,15 @@ class ProductSerialsRepository:
             )
             return "Error al buscar el serial", None
 
+        finally:
+            cursor.close()
+
     @staticmethod
     def create_product_serial(serial_data: CreateProductSerialSchema, connection):
         data = serial_data.model_dump()
 
         cursor = connection.cursor()
+
         try:
             warranty_time = None
 
@@ -69,22 +71,23 @@ class ProductSerialsRepository:
                 warranty_time
             ))
 
-            connection.commit()
-
             return None, True, "Serial del producto creado correctamente"
+
         except Exception as e:
             logger.error(
                 "Error en create_product_serial: %s",
                 e,
                 exc_info=True
             )
-            return "Error al crear el serial del producto", False, None
+            return "Error al intentar crear el serial del producto", False, None
+
         finally:
             cursor.close()
 
     @staticmethod
     def update_product_serial(serial_data: UpdateProductSerialSchema, connection):
         SERIAL_FIELD_MAP = {
+            "product_id": "product_id",
             "product_serial": "product_serial",
             "input_order_id": "input_order_id",
             "warranty_time": "product_garanty_input",
@@ -93,19 +96,13 @@ class ProductSerialsRepository:
         cursor = connection.cursor()
 
         data = serial_data.model_dump(exclude_none=True)
-        data.pop("id", None)
-
-        if not data:
-            return None, True, None
+        data.pop("product_id", None)
 
         # Mapea los nombres del request a los nombres reales de la tabla
         mapped = {SERIAL_FIELD_MAP[k]: v for k, v in data.items()}
 
         columns = ", ".join(f"{col} = %s" for col in mapped.keys())
-        values = list(mapped.values()) + [serial_data.id]
-
-        if not data:
-            return None, True, None
+        values = list(mapped.values()) + [serial_data.product_id]
 
         try:
             cursor.execute(
@@ -114,7 +111,14 @@ class ProductSerialsRepository:
             )
 
             return None, True, "Serial del producto actualizado correctamente"
+
         except Exception as e:
-            logger.error("Error en update_product_serial: %s",
-                         e, exc_info=True)
+            logger.error(
+                "Error en update_product_serial: %s",
+                e,
+                exc_info=True
+            )
             return "Error al actualizar el serial del producto", False, None
+
+        finally:
+            cursor.close()
