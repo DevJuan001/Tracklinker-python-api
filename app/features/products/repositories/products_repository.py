@@ -97,7 +97,7 @@ class ProductsRepository:
             values.append(data["brand"])
 
         if "product_model" in data:
-            filters.append("pd.product_details_id = %s")
+            filters.append("pm.product_model_id = %s")
             values.append(data["product_model"])
 
         if filters:
