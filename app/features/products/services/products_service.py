@@ -227,6 +227,7 @@ class ProductsService:
             return e.message, False, None
 
         except Exception as e:
+            connection.rollback()
             logger.error(
                 "Error en update_product_status: %s",
                 e,
