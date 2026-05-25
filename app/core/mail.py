@@ -1,6 +1,5 @@
 from fastapi_mail import ConnectionConfig, FastMail
 from app.core.config import settings
-from pathlib import Path
 
 config = ConnectionConfig(
     MAIL_USERNAME=settings.MAIL_USERNAME,
