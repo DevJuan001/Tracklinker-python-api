@@ -1,6 +1,5 @@
-from app.core.database import get_connection
-from app.utils.date_formatter import date_formatter
 from app.utils.logger import get_logger
+from app.utils.date_formatter import date_formatter
 from app.utils.periods import daily_periods, period_map
 from app.features.subcategories.models.subcategories_schemas import CreateSubcategorySchema, SubcategoriesFiltersSchema, UpdateSubcategorySchema
 from app.features.subcategories.models.subcategories_responses import ActiveCategoryResponse, RecentSubcategoryResponse, SubcategoriesByCategoryResponse, SubcategoriesByStatusResponse, SubcategoriesGrowthResponse, SubcategoryByName, SubcategoryResponse
