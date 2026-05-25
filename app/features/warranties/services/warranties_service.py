@@ -75,7 +75,7 @@ class WarrantiesService:
             # Validamos que el producto no este deshabilitado
             if product[1] == 1:
                 raise ServiceError(
-                    "No puedes crear una garantía con un producto deshabilitado"
+                    "No puedes crear una garantía con un producto deshabilitado, activa o habilita este producto e intentalo nuevamente"
                 )
 
             # Verificamos que el producto no tenga una garantía activa
