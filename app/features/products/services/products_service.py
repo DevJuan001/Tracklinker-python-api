@@ -74,6 +74,19 @@ class ProductsService:
 
         try:
             for serial in data["product_serials"]:
+                # Verificar que el serial no esta registrado
+                error, product = ProductSerialsRepository.find_product_by_serial(
+                    serial, connection
+                )
+
+                if error:
+                    raise ServiceError(error)
+
+                if product:
+                    raise ServiceError(
+                        f"El serial {serial} ya esta registrado, cambia el valor de ese campo e intentalo nuevamente"
+                    )
+
                 error, success, message, product_details_id = ProductDetailsRepository.create_product_details(
                     CreateProductDetailsEntity(
                         model_id=data["model_id"],
@@ -133,6 +146,20 @@ class ProductsService:
             if not product:
                 raise ServiceError("Producto no encontrado")
 
+            # Verificar que el serial no esta registrado
+            if "product_serial" in data:
+                error, product = ProductSerialsRepository.find_product_by_serial(
+                    data["product_serial"], connection
+                )
+
+                if error:
+                    raise ServiceError(error)
+
+                if product:
+                    raise ServiceError(
+                        "Este serial ya esta registrado, cambia el valor de ese campo e intentalo nuevamente"
+                    )
+
             # Actualizar details si vino brand o model
             if details_fields := {
                 key: data[key]
@@ -155,7 +182,8 @@ class ProductsService:
                 if key in data
             }:
                 error, success, message = ProductSerialsRepository.update_product_serial(
-                    UpdateProductSerialSchema(product_id=data["id"], **serial_fields),
+                    UpdateProductSerialSchema(
+                        product_id=data["id"], **serial_fields),
                     connection
                 )
                 if error or not success:
