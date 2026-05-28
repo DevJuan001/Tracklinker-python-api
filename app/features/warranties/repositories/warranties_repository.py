@@ -170,7 +170,6 @@ class WarrantiesRepository:
                 warranty_data["city"],
                 user_id
             ))
-            connection.commit()
 
             return None, True, "Garantía creada correctamente"
 
