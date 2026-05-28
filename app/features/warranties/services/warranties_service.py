@@ -167,6 +167,18 @@ class WarrantiesService:
             # Obtenemos el estado actual de la garantía
             current_status = warranty[1]
 
+            # Aqui verificamos si el estado actual es 1 = "Deshabilitada" y el nuevo está entre
+            # 3 = "En proceso" o 4 = "Completada"
+            if current_status == 1 and new_status in (3, 4):
+                # Asignamos esa garantía al técnico que le dio empezar
+                error, success, message = TechniciansRepository.assign_technician(
+                    warranty_incidents_id, user_id, connection
+                )
+
+                if error:
+                    raise ServiceError(error)
+             
+
             # Aqui Verificamos si el estado actual es 2 = "Pendiente o sin empezar" y el nuevo estado es igual a 3 = "En proceso"
             if current_status == 2 and new_status == 3:
 
@@ -180,7 +192,7 @@ class WarrantiesService:
 
             # Aqui validamos que si el nuevo estado es 1 = "Deshabilitada" y el estado actual está entre
             # 2 = "Pendiente o sin comenzar", 3 = "En proceso" o 4 = "Completada"
-            elif new_status == 1 and current_status in (2, 3, 4):
+            if new_status == 1 and current_status in (2, 3, 4):
                 # Desasignamos esa garantía al tecnico que la empezo
                 error, success, message = TechniciansRepository.unassign_technician(
                     warranty_incidents_id,
