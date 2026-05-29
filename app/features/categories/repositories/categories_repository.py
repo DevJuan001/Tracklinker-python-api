@@ -157,24 +157,10 @@ class CategoriesRepository:
     def create_category(category_data: CreateCategorySchema, connection):
         data = category_data.model_dump()
 
-        cursor = connection.cursor(buffered=True)
+        cursor = connection.cursor()
 
         try:
-            # Validar nombre duplicado
-            cursor.execute(
-                """
-            SELECT
-                category_name
-            FROM CATEGORIES
-            WHERE category_name = %s
-            """, (data["name"],))
-
-            category_exist = cursor.fetchone()
-
-            if category_exist:
-                return "Ya existe un categoria con este nombre, usa uno diferente e intentalo nuevamente", False, None
-
-            query = "INSERT INTO categories (category_name, category_description) VALUES (%s, %s)"
+            query = "INSERT INTO CATEGORIES (category_name, category_description) VALUES (%s, %s)"
 
             cursor.execute(
                 query, (data["name"], data["description"])
