@@ -1,5 +1,5 @@
 from app.core.redis import get_redis
-from app.core.cache import invalidate_cache
+from app.core.cache import get_cache, invalidate_cache, set_cache
 from fastapi import APIRouter, Depends, Body
 from fastapi_limiter.depends import RateLimiter
 from app.middlewares.roles_middleware import require_roles
@@ -23,12 +23,10 @@ router = APIRouter(
         Depends(require_roles(["Admin", "Almacén", "Técnico"]))
     ]
 )
-async def get_all_products(
+def get_all_products(
     filters: ProductsFilterSchema = Depends(),
-    redis=Depends(get_redis)
 ):
-    result = ProductsController.get_all_products(filters)
-    return result
+    return ProductsController.get_all_products(filters)
 
 
 # Endpoint para obtener todas las marcas de productos
@@ -39,8 +37,18 @@ async def get_all_products(
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
-def get_all_brands():
-    return ProductsController.get_all_product_brands()
+async def get_all_brands(redis=Depends(get_redis)):
+    cache_key = "brands:all"
+
+    cached = await get_cache(redis, cache_key)
+    if cached:
+        return cached
+
+    result = ProductsController.get_all_product_brands()
+
+    await set_cache(redis, cache_key, result, 300)
+
+    return result
 
 
 # Endpoint para obtener todos los modelos de productos
@@ -51,8 +59,18 @@ def get_all_brands():
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
-def get_all_models():
-    return ProductsController.get_all_product_models()
+async def get_all_models(redis=Depends(get_redis)):
+    cache_key = "models:all"
+
+    cached = await get_cache(redis, cache_key)
+    if cached:
+        return cached
+
+    result = ProductsController.get_all_product_models()
+
+    await set_cache(redis, cache_key, result, 300)
+
+    return result
 
 
 # Endpoint para obtener las ordenes de entrada de productos
@@ -63,8 +81,18 @@ def get_all_models():
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
-def get_all_input_orders():
-    return ProductsController.get_all_input_orders()
+async def get_all_input_orders(redis=Depends(get_redis)):
+    cache_key = "input_orders:all"
+
+    cached = await get_cache(redis, cache_key)
+    if cached:
+        return cached
+
+    result = ProductsController.get_all_input_orders()
+
+    await set_cache(redis, cache_key, result, 150)
+
+    return result
 
 
 # Endpoint para obtener las estados de los productos
@@ -75,8 +103,18 @@ def get_all_input_orders():
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
-def get_all_product_status():
-    return ProductsController.get_all_product_status()
+async def get_all_product_status(redis=Depends(get_redis)):
+    cache_key = "product_status:all"
+
+    cached = await get_cache(redis, cache_key)
+    if cached:
+        return cached
+
+    result = ProductsController.get_all_product_status()
+
+    await set_cache(redis, cache_key, result, 300)
+
+    return result
 
 
 # Endpoint para crear o agregar productos
@@ -87,10 +125,8 @@ def get_all_product_status():
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
-async def create_product(product_data: CreateProductSchema, redis=Depends(get_redis)):
-    result = ProductsController.create_product(product_data)
-    await invalidate_cache(redis, "products:*")
-    return result
+def create_product(product_data: CreateProductSchema):
+    return ProductsController.create_product(product_data)
 
 
 # Endpoint para crear o agregar modelos de productos
@@ -101,7 +137,9 @@ async def create_product(product_data: CreateProductSchema, redis=Depends(get_re
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
-def create_product_model(product_model: CreateProductModelSchema):
+async def create_product_model(product_model: CreateProductModelSchema, redis=Depends(get_redis)):
+    await invalidate_cache(redis, "models:all")
+
     return ProductsController.create_product_model(product_model)
 
 
@@ -113,7 +151,9 @@ def create_product_model(product_model: CreateProductModelSchema):
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
-def create_product_brand(product_brand: CreateProductBrandSchema):
+async def create_product_brand(product_brand: CreateProductBrandSchema, redis=Depends(get_redis)):
+    await invalidate_cache(redis, "brands:all")
+
     return ProductsController.create_product_brand(product_brand)
 
 
@@ -125,7 +165,9 @@ def create_product_brand(product_brand: CreateProductBrandSchema):
         Depends(RateLimiter(times=50, seconds=60))
     ]
 )
-def create_product_entry(input_order: CreateInputOrderSchema):
+async def create_product_entry(input_order: CreateInputOrderSchema, redis=Depends(get_redis)):
+    await invalidate_cache(redis, "input_orders:all")
+
     return ProductsController.create_input_order(input_order)
 
 
