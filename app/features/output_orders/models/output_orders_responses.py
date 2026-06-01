@@ -1,4 +1,3 @@
-from datetime import date
 from pydantic import BaseModel
 
 from app.utils.base_schema import BaseSchema
