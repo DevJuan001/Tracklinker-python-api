@@ -10,7 +10,6 @@ class OutputOrderProductResponse(BaseModel):
     output_product_garanty: str
     product_brand_name: str
     product_model_name: str
-    product_model_description: str
 
 
 class OutputOrderResponse(BaseModel):
