@@ -25,7 +25,8 @@ class OutputOrdersRepository:
             od.product_serial,
             od.out_product_garanty,
             pb.product_brand_name,
-            pm.product_model_name
+            pm.product_model_name,
+            p.product_status
         FROM OUTPUT_DETAILS AS od 
         INNER JOIN OUTPUT_ORDERS AS oo
             ON oo.out_order_id = od.out_order_id
@@ -82,6 +83,7 @@ class OutputOrdersRepository:
                     "output_product_garanty": date_formatter(item[5]),
                     "product_brand_name": item[6],
                     "product_model_name": item[7],
+                    "product_status": item[8],
                 })
 
             orders = [
