@@ -45,11 +45,6 @@ class SuppliersRepository:
             filters.append("DATE(s.supplier_date) <= %s")
             values.append(data["end_date"])
 
-        if data.get("name_order") == "asc":
-            query += " ORDER BY s.supplier_name ASC"
-        elif data.get("name_order") == "desc":
-            query += " ORDER BY s.supplier_name DESC"
-
         if "status" in data:
             filters.append("s.supplier_status = %s")
             values.append(data["status"])
@@ -60,6 +55,11 @@ class SuppliersRepository:
 
         if filters:
             query += " WHERE " + " AND ".join(filters)
+
+        if data.get("name_order") == "asc":
+            query += " ORDER BY s.supplier_name ASC"
+        elif data.get("name_order") == "desc":
+            query += " ORDER BY s.supplier_name DESC"
 
         try:
             cursor.execute(query, values)
