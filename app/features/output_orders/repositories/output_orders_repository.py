@@ -19,7 +19,7 @@ class OutputOrdersRepository:
         query = """
         SELECT
             oo.out_order_id,
-            oo.out_order_date,
+            DATE_FORMAT(oo.out_order_date, '%Y-%m-%d') AS out_order_date,
             oo.out_order_status,
             od.output_details_id,
             od.product_serial,
@@ -72,7 +72,7 @@ class OutputOrdersRepository:
                 if output_order_id not in orders_map:
                     orders_map[output_order_id] = {
                         "output_order_id": output_order_id,
-                        "output_order_date": date_formatter(item[1]),
+                        "output_order_date": item[1],
                         "output_order_status": item[2],
                         "products": [],
                     }
