@@ -1,0 +1,62 @@
+# Antes de levantar:
+#   1. cp .env.example .env  y completa las variables.
+#   2. Si tu MySQL corre en el host, en .env usa:
+#        DB_HOST=host.docker.internal   (Docker Desktop en Mac/Windows)
+#        DB_HOST=172.17.0.1            (Linux, IP del bridge por defecto)
+#   3. REDIS_URL se sobreescribe aquí a `redis://redis:6379` para que
+#      api y celery apunten al servicio redis del compose.
+#
+# Uso:
+#   docker compose up --build         # levantar todo
+#   docker compose up -d redis api    # solo redis y api (sin celery)
+#   docker compose down               # apagar y eliminar contenedores
+#   docker compose down -v            # también borra el volumen de redis
+
+services:
+  redis:
+    image: redis:7.4-alpine
+    container_name: tracklinker-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tracklinker-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tracklinker-celery
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: celery -A app.core.celery_app.celery worker --loglevel=info --pool=solo
+
+volumes:
+  redis-data:
