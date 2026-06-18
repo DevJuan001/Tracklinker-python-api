@@ -77,15 +77,7 @@ Group the changes by **area** using the `### <Area>` subheading. Pick the areas 
 
 Each bullet should be **one logical change** and should mention the file path (in backticks) and the symbol (function / class) it touches.
 
-### 3. `## Type of change`
-
-Tick exactly the boxes that apply. Most PRs are `Refactor` or `New feature` or `Bug fix`. Use `Breaking change` when the API contract changes (status codes, response fields, request shape).
-
-### 4. `## Checklist`
-
-The template pre-fills the project's [architectural rules](./agents.md) and conventions as a checklist. Do not untick boxes you have not verified.
-
-### 5. `## Related issues / PRs`
+### 3. `## Related issues / PRs`
 
 Link related issues with `Closes #123` or `Refs #45`. If the PR depends on or is blocked by another open PR, link it here too.
 
@@ -101,9 +93,9 @@ Link related issues with `Closes #123` or `Refs #45`. If the PR depends on or is
 
 For mixed PRs (e.g. a `fix` that also requires a small `refactor`), apply **both** labels. `docs` and `chore` PRs still get a label — pick the closest one (`refactor` for `docs`, `refactor` for `chore` is acceptable) or extend the label set if needed. Never open a PR without a label.
 
-## Pre-PR checklist (run before requesting review)
+## Pre-PR checklist (run locally before requesting review)
 
-The skill `development-workflow` has the same list. The short version:
+The PR body does **not** include a checklist section. Run this list silently and only fix what fails; do not paste it into the PR description.
 
 1. `uv sync` — deps in sync.
 2. `pytest` — exits 0.

@@ -33,34 +33,6 @@
 ### Cleanup
 - <!-- e.g. Removed dead `from app.core.database import get_connection` import in `subcategories_repository.py`. -->
 
-## Type of change
-
-<!-- Delete the options that do not apply. -->
-
-- [ ] Bug fix (non-breaking change that fixes an issue)
-- [ ] New feature (non-breaking change that adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to change)
-- [ ] Refactor (no functional change, no API change)
-- [ ] Documentation update
-- [ ] Chore (build, CI, dependencies, etc.)
-
-## Checklist
-
-<!-- Review these before requesting review. -->
-
-- [ ] My code follows the project's [architectural rules](./agents.md) (service → repository only, no service-to-service calls).
-- [ ] Pydantic models follow the `*Schema` / `*Response` / no-suffix convention.
-- [ ] Error messages in repositories and services are in Spanish.
-- [ ] All `(error, data)` repository returns follow the contract.
-- [ ] Multi-step writes share a single `connection` and call `commit()` once.
-- [ ] `pytest` passes locally.
-- [ ] `pip-audit` reports no new high-severity vulnerabilities.
-- [ ] I have manually smoke-tested the touched endpoints in `http://localhost:8000/docs`.
-
-## Screenshots / Evidence
-
-<!-- If relevant, paste a Swagger screenshot, a MySQL Workbench query result, or a `curl` response. -->
-
 ## Related issues / PRs
 
 <!-- Link any related issue or PR. Use `Closes #123` or `Refs #45` to auto-link. -->
