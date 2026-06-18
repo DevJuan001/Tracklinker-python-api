@@ -49,8 +49,7 @@ class AuthService:
             refresh_token = create_refresh_token({
                 "sub": str(user[1]),
                 "role": user[0]
-            }
-            )
+            })
 
             set_auth_cookies(response, access_token, refresh_token)
 
@@ -71,8 +70,12 @@ class AuthService:
             raise ServiceError("Refresh token no encontrado")
 
         try:
+            # Calculamos el tiempo que le queda para que expire
             ttl = get_token_remaining_ttl(refresh_token)
+
+            # Agregamos el token con el tiempo que le queda de expiración a la blacklist
             added = await add_to_blacklist(refresh_token, ttl)
+
             if not added and ttl > 0:
                 logger.warning(
                     "No se pudo blacklistear el refresh_token viejo en refresh_tokens"
@@ -83,6 +86,7 @@ class AuthService:
                 settings.REFRESH_TOKEN_SECRET_KEY,
                 algorithms=[settings.ALGORITHM]
             )
+
             user_id = payload.get("sub")
 
             if not user_id:
@@ -114,7 +118,7 @@ class AuthService:
 
         except Exception as e:
             logger.error("Error en refresh_tokens: %s", e, exc_info=True)
-            return "Error al intentar refrezcar los tokens", False, None
+            return "Error al intentar refrescar los tokens", False, None
 
     @staticmethod
     def verify_roles(body: VerifyRoleModelSchema, payload: dict):
@@ -141,16 +145,24 @@ class AuthService:
             refresh_token = request.cookies.get("refresh_token")
 
             if access_token:
+                # Calculamos el tiempo que le queda para que expire
                 ttl = get_token_remaining_ttl(access_token)
+
+                # Agregamos el token con el tiempo que le queda de expiración a la blacklist
                 added = await add_to_blacklist(access_token, ttl)
+
                 if not added and ttl > 0:
                     logger.warning(
                         "No se pudo blacklistear el access_token en logout"
                     )
 
             if refresh_token:
+                # Calculamos el tiempo que le queda para que expire
                 ttl = get_token_remaining_ttl(refresh_token)
+                
+                # Agregamos el token con el tiempo que le queda de expiración a la blacklist
                 added = await add_to_blacklist(refresh_token, ttl)
+                
                 if not added and ttl > 0:
                     logger.warning(
                         "No se pudo blacklistear el refresh_token en logout"
