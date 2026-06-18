@@ -181,6 +181,36 @@ Group imports in this order, separated by a blank line:
 
 The project has very few comments. When you add one, keep it in Spanish and only when it explains **why**, not what the next line does. The code is meant to be self-documenting.
 
+## Exception handling — one `try` per function
+
+Use **a single** `try` block per function. The order of `except` clauses matters: list the most specific exception first, and **always re-raise `HTTPException`** before catching anything else, otherwise an intentional `HTTPException` raised inside the `try` gets swallowed by a generic `except Exception` and the user gets a misleading error message.
+
+The canonical pattern (used in `app/middlewares/jwt_middleware.py::verify_jwt`):
+
+```python
+try:
+    # 1. side effect that can fail in its own way (e.g. Redis)
+    # 2. business logic
+    # 3. raise HTTPException on validation failures
+    ...
+
+except HTTPException:
+    raise                                # preserve the intentional 401
+
+except SpecificLibraryError:            # e.g. PyJWTError
+    raise domain_specific_exception
+
+except Exception as e:
+    logger.error("Contexto: %s", e, exc_info=True)
+    raise HTTPException(500, "Mensaje genérico")
+```
+
+Anti-patterns:
+
+- ❌ Two `try` blocks in the same function to handle two unrelated concerns — merge them and use the `except` chain above.
+- ❌ `except Exception` **without** `except HTTPException: raise` above it — the `HTTPException` gets logged as an "error" and re-raised with a wrong message.
+- ❌ A bare `except:` — it catches `SystemExit` and `KeyboardInterrupt` too.
+
 ## Reference paths
 
 - `app/utils/logger.py` — `get_logger`.
