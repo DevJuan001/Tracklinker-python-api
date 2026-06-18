@@ -2,11 +2,12 @@ from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
 from app.features.products.repositories.products_repository import ProductsRepository
-from app.features.output_orders.services.output_orders_service import OutputOrdersService
-from app.features.output_orders.models.output_orders_schema import CreateOutputOrderSchema
+from app.features.output_orders.models.output_details_model import CreateOutputDetails
 from app.features.warranties.repositories.warranties_repository import WarrantiesRepository
 from app.features.warranties.repositories.technicians_repository import TechniciansRepository
 from app.features.products.repositories.product_serials_repository import ProductSerialsRepository
+from app.features.output_orders.repositories.output_orders_repository import OutputOrdersRepository
+from app.features.output_orders.repositories.output_details_repository import OutputDetailsRepository
 from app.features.warranties.models.warranties_schemas import CreateWarrantySchema, UpdateWarrantySchema, WarrantiesFilterSchema
 
 logger = get_logger("warranties.service")
@@ -89,14 +90,27 @@ class WarrantiesService:
                 )
 
             # Creamos la orden de salida del producto
-            error, success, message = OutputOrdersService.create_output_order(
-                CreateOutputOrderSchema(
-                    product_serials=[data["product_serial"]],
-                    output_product_garanty="2026-01-01"
-                )
+            error, success, output_order_id = OutputOrdersRepository.create_output_order(
+                connection
             )
-            if error:
+
+            if error or not success:
                 raise ServiceError(error)
+
+            # Creamos los detalles de la orden de salida
+            error, success, message = OutputDetailsRepository.create_output_details(
+                output_order_id,
+                CreateOutputDetails(
+                    product_serial=data["product_serial"],
+                    output_product_garanty=data["output_product_garanty"],
+                ),
+                connection
+            )
+
+            if error or not success:
+                raise ServiceError(
+                    error or "Error al intentar crear los detalles de la orden de salida"
+                )
 
             # Actualizamos el estado del producto y lo ponemos en garantía
             error, success, message = ProductsRepository.update_product_status(
@@ -177,7 +191,6 @@ class WarrantiesService:
 
                 if error:
                     raise ServiceError(error)
-             
 
             # Aqui Verificamos si el estado actual es 2 = "Pendiente o sin empezar" y el nuevo estado es igual a 3 = "En proceso"
             if current_status == 2 and new_status == 3:

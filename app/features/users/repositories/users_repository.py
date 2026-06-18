@@ -1,4 +1,5 @@
 import bcrypt
+from pydantic import EmailStr
 from app.utils.logger import get_logger
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
@@ -193,7 +194,7 @@ class UsersRepository:
 
     # Obtener un usuario mediante el correo
     @staticmethod
-    def find_user_by_email(email: str, connection):
+    def find_user_by_email(email: EmailStr, connection):
         cursor = connection.cursor(buffered=True)
 
         # Petición a la base de datos

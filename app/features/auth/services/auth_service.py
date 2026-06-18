@@ -6,11 +6,12 @@ from pydantic import EmailStr
 from fastapi import Request, Response
 
 from app.core.config import settings
+from app.core.database import get_connection
 from app.utils.logger import get_logger
 from app.core.exception import ServiceError
 from app.tasks.email_tasks import recovery_password_email
-from app.features.users.services.users_service import UsersService
 from app.features.auth.models.auth_schema import VerifyRoleModelSchema
+from app.features.users.repositories.users_repository import UsersRepository
 from app.core.security import create_access_token, create_refresh_token, set_auth_cookies, verify_password
 
 logger = get_logger("auth.service")
@@ -18,9 +19,14 @@ logger = get_logger("auth.service")
 
 class AuthService:
     @staticmethod
-    def login(email: str, password: str, response: Response):
+    def login(email: EmailStr, password: str, response: Response):
+        connection = get_connection()
+
         try:
-            error, user = UsersService.get_user_by_email(email)
+            # Buscamos si el correo esta registrado
+            error, user = UsersRepository.find_user_by_email(
+                email, connection
+            )
 
             if error or not user:
                 raise ServiceError(error)
@@ -141,8 +147,12 @@ class AuthService:
 
     @staticmethod
     def recover_password(email: EmailStr):
+        connection = get_connection()
+
         try:
-            error, user = UsersService.get_user_by_email(email)
+            error, user = UsersRepository.find_user_by_email(
+                email, connection
+            )
 
             if user:
                 recovery_password_email.delay(
