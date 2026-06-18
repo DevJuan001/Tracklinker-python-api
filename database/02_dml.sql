@@ -210,7 +210,7 @@ INSERT INTO PRODUCT_DETAILS VALUES
 
 
 INSERT INTO PRODUCTS VALUES 
-(null, 15, 1, 2),    -- HP 110 .
+(null, 15, 1, 2),    -- HP 110
 (null, 15, 2, 1),    -- Zebra ZD420 
 (null, 15, 3, 3),    -- Epson TM-T20 
 (null, 12, 4, 4),    -- Epson L3150 

@@ -7,6 +7,7 @@ from fastapi import Request, Response
 
 from app.core.config import settings
 from app.core.database import get_connection
+from app.core.token_blacklist import add_to_blacklist, get_token_remaining_ttl
 from app.utils.logger import get_logger
 from app.core.exception import ServiceError
 from app.tasks.email_tasks import recovery_password_email
@@ -48,8 +49,7 @@ class AuthService:
             refresh_token = create_refresh_token({
                 "sub": str(user[1]),
                 "role": user[0]
-            }
-            )
+            })
 
             set_auth_cookies(response, access_token, refresh_token)
 
@@ -63,18 +63,30 @@ class AuthService:
             return "No autorizado", False, None
 
     @staticmethod
-    def refresh_tokens(request: Request, response: Response):
+    async def refresh_tokens(request: Request, response: Response):
         refresh_token = request.cookies.get("refresh_token")
 
         if not refresh_token:
             raise ServiceError("Refresh token no encontrado")
 
         try:
+            # Calculamos el tiempo que le queda para que expire
+            ttl = get_token_remaining_ttl(refresh_token)
+
+            # Agregamos el token con el tiempo que le queda de expiración a la blacklist
+            added = await add_to_blacklist(refresh_token, ttl)
+
+            if not added and ttl > 0:
+                logger.warning(
+                    "No se pudo blacklistear el refresh_token viejo en refresh_tokens"
+                )
+
             payload = jwt.decode(
                 refresh_token,
                 settings.REFRESH_TOKEN_SECRET_KEY,
                 algorithms=[settings.ALGORITHM]
             )
+
             user_id = payload.get("sub")
 
             if not user_id:
@@ -106,7 +118,7 @@ class AuthService:
 
         except Exception as e:
             logger.error("Error en refresh_tokens: %s", e, exc_info=True)
-            return "Error al intentar refrezcar los tokens", False, None
+            return "Error al intentar refrescar los tokens", False, None
 
     @staticmethod
     def verify_roles(body: VerifyRoleModelSchema, payload: dict):
@@ -127,8 +139,35 @@ class AuthService:
             return "Error al intentar verificar los roles", None
 
     @staticmethod
-    def logout(response: Response):
+    async def logout(request: Request, response: Response):
         try:
+            access_token = request.cookies.get("access_token")
+            refresh_token = request.cookies.get("refresh_token")
+
+            if access_token:
+                # Calculamos el tiempo que le queda para que expire
+                ttl = get_token_remaining_ttl(access_token)
+
+                # Agregamos el token con el tiempo que le queda de expiración a la blacklist
+                added = await add_to_blacklist(access_token, ttl)
+
+                if not added and ttl > 0:
+                    logger.warning(
+                        "No se pudo blacklistear el access_token en logout"
+                    )
+
+            if refresh_token:
+                # Calculamos el tiempo que le queda para que expire
+                ttl = get_token_remaining_ttl(refresh_token)
+                
+                # Agregamos el token con el tiempo que le queda de expiración a la blacklist
+                added = await add_to_blacklist(refresh_token, ttl)
+                
+                if not added and ttl > 0:
+                    logger.warning(
+                        "No se pudo blacklistear el refresh_token en logout"
+                    )
+
             response.delete_cookie(
                 key="access_token",
                 path="/"

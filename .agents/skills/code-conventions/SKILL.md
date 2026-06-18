@@ -181,6 +181,53 @@ Group imports in this order, separated by a blank line:
 
 The project has very few comments. When you add one, keep it in Spanish and only when it explains **why**, not what the next line does. The code is meant to be self-documenting.
 
+## Exception handling — one `try` per function
+
+Use **a single** `try` block per function. The order of `except` clauses matters: list the most specific exception first, and **always re-raise `HTTPException` and `ServiceError`** before catching anything else, otherwise an intentional exception raised inside the `try` gets swallowed by a generic `except Exception` and the user gets a misleading error message.
+
+The canonical pattern (used in `app/middlewares/jwt_middleware.py::verify_jwt` and every `*Service` in `app/features/`):
+
+```python
+try:
+    # 1. side effect that can fail in its own way (e.g. Redis)
+    # 2. business logic
+    # 3. raise the project's domain exception on validation failures
+    ...
+
+except (HTTPException, ServiceError):
+    raise                                # preserve the intentional error
+
+except SpecificLibraryError:            # e.g. PyJWTError, mysql.Error
+    raise domain_specific_exception
+
+except Exception as e:
+    logger.error("Contexto: %s", e, exc_info=True)
+    raise HTTPException(500, "Mensaje genérico")   # or return (error, ...) in services
+```
+
+### Which exception to raise
+
+| Layer | Exception to raise | Why |
+| --- | --- | --- |
+| Middleware / dependency (`app/middlewares/`) | `HTTPException` | Lives in the request path; FastAPI handles it directly. |
+| Controller (`*_controller.py`) | `HTTPException` | Same — lives in the request path. |
+| Service (`*_service.py`) | `ServiceError` (from `app/core/exception.py`) | The service does not know about HTTP. The controller converts `error` to `HTTPException`. |
+| Repository (`*_repository.py`) | **Never** raises — returns `(error, data)` tuples. | The repository is the lowest layer; it must not leak exceptions. |
+| Background task / Celery (`app/tasks/`) | `self.retry(exc=e, ...)` | The Celery task is the boundary; let the framework handle it. |
+
+The two project exceptions:
+
+- `app/core/exception.py::ServiceError(message: str)` — carries a single `message` attribute. The service catches it, returns `(e.message, success, message)`, and the controller maps `error` to `HTTPException`.
+- `fastapi.HTTPException(status_code, detail)` — only raised in middlewares, controllers, and the `verify_jwt` path. Status codes per `architecture/SKILL.md`.
+
+Anti-patterns:
+
+- ❌ Two `try` blocks in the same function to handle two unrelated concerns — merge them and use the `except` chain above.
+- ❌ `except Exception` **without** `except (HTTPException, ServiceError): raise` above it — the intentional exception gets logged as an "error" and re-raised with a wrong message.
+- ❌ A bare `except:` — it catches `SystemExit` and `KeyboardInterrupt` too.
+- ❌ Raising `HTTPException` from inside a `*Service` — services don't know about HTTP. Raise `ServiceError` and let the controller translate.
+- ❌ Returning `(None, data)` from a `*Service` without a `try/except` — an unhandled exception bypasses the `(error, success, message)` contract the controllers expect.
+
 ## Reference paths
 
 - `app/utils/logger.py` — `get_logger`.
