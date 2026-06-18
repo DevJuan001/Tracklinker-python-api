@@ -1,13 +1,3 @@
-# Tracklinker API — local orchestration
-#
-# Levanta los tres servicios necesarios para desarrollo local:
-#   - redis   (rate limit, cache, broker de Celery, backend de resultados)
-#   - api     (FastAPI + uvicorn, puerto 8000)
-#   - celery  (worker para envío de correos)
-#
-# MySQL NO está incluido: se asume que corre fuera de Docker (host, RDS, etc.).
-# Si lo agregas aquí, añade un servicio `db` y un volumen.
-#
 # Antes de levantar:
 #   1. cp .env.example .env  y completa las variables.
 #   2. Si tu MySQL corre en el host, en .env usa:
