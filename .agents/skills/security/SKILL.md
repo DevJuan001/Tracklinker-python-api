@@ -115,6 +115,39 @@ Keep the same granularity when adding new endpoints.
 - **Never** commit `.env`. `.gitignore` should already exclude it; verify before committing.
 - The `.env.example` file ships with empty values — never put real secrets there.
 
+## Token blacklist (revoked JWTs)
+
+A JWT is valid until its `exp` claim passes, even if the user logged out or rotated the token. To invalidate a token **before** its natural expiration we keep a Redis-backed blacklist.
+
+### Where the code lives
+
+- `app/core/token_blacklist.py` — the util. Public functions: `add_to_blacklist(token, ttl)`, `is_blacklisted(token)`, `get_token_remaining_ttl(token)`. Tokens are stored as `sha256(token)`, never as raw strings, so a Redis dump cannot be used to replay them.
+- `app/middlewares/jwt_middleware.py` — checks the blacklist on every protected request.
+- `app/features/auth/services/auth_service.py` — adds the token to the blacklist on `logout` and `refresh_tokens`.
+
+### Lifecycle
+
+| Event | What gets blacklisted | Why |
+| --- | --- | --- |
+| `POST /api/auth/logout` | `access_token` and `refresh_token` (if present) | The user is leaving — the pair must never be reusable. |
+| `POST /api/auth/refresh` | `refresh_token` only | The `access_token` is already expired (that's why the user is calling `/refresh`) and the browser has dropped it. The `refresh_token` is the one we rotate. |
+| Token naturally expires | Nothing | The blacklist entry's TTL equals the token's remaining lifetime, so it expires at the same time. |
+
+### TTL
+
+The blacklist entry is set with `EX = token_remaining_ttl`. Once the JWT naturally expires, the blacklist entry disappears on its own. The util exposes `get_token_remaining_ttl(token)` which decodes `exp` **without** signature verification (we only need the claim) and clamps negative values to 0.
+
+### Failure modes
+
+| Component | If Redis is unreachable | Rationale |
+| --- | --- | --- |
+| `verify_jwt` (middleware) | **Fail closed** — raise `401`. | We cannot prove the token is not revoked, so we must not let it through. |
+| `logout` / `refresh_tokens` (service) | **Fail open** — log a `warning` and still clear cookies / issue new tokens. | Logout must always succeed; the cookie clearing is the user-visible contract. |
+
+### Adding a new entry point that should blacklist
+
+Anywhere you generate a new pair of tokens (e.g. an admin "force re-login" endpoint, a password-change endpoint), call `add_to_blacklist(token, get_token_remaining_ttl(token))` for the tokens you want to revoke before issuing the replacement.
+
 ## Input validation
 
 Pydantic `BaseModel` schemas (in `models/schemas/*_schemas.py`) handle request validation. The `*Schema` suffix is mandatory.
@@ -132,6 +165,7 @@ class CreateFooSchema(BaseSchema):
 ## Reference paths
 
 - `app/core/security.py` — JWT, bcrypt, cookies, password generator.
+- `app/core/token_blacklist.py` — Redis-backed token blacklist util.
 - `app/middlewares/jwt_middleware.py` — `verify_jwt`.
 - `app/middlewares/roles_middleware.py` — `require_roles`.
 - `app/middlewares/validate_request.py` — `validate_request` (catches client disconnects).

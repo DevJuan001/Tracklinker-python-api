@@ -30,8 +30,8 @@ def login(credentials: LoginModelSchema, response: Response):
         Depends(RateLimiter(times=30, seconds=60)),
     ]
 )
-def refresh_tokens(request: Request, response: Response):
-    return AuthController.refresh_tokens(request, response)
+async def refresh_tokens(request: Request, response: Response):
+    return await AuthController.refresh_tokens(request, response)
 
 
 # Endpoint para verificar el rol del usuario
@@ -47,8 +47,8 @@ def verifyRole(body: VerifyRoleModelSchema, payload: dict = Depends(verify_jwt))
 
 # Endpoint para cerrar sesión
 @router.post("/logout")
-def logout(response: Response):
-    return AuthController.logout(response)
+async def logout(request: Request, response: Response):
+    return await AuthController.logout(request, response)
 
 
 # Endpoint para recuperar contraseña
