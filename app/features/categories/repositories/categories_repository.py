@@ -313,8 +313,8 @@ class CategoriesRepository:
             WHERE category_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
             ) AS recent_categories,
             (SELECT COUNT(*) FROM CATEGORIES) AS total_categories,
-            SUM(CASE WHEN category_status = 0 THEN 1 ELSE 0 END) AS inactive_categories,
-            SUM(CASE WHEN category_status = 1 THEN 1 ELSE 0 END) AS active_categories
+            SUM(CASE WHEN category_status = 1 THEN 1 ELSE 0 END) AS inactive_categories,
+            SUM(CASE WHEN category_status = 2 THEN 1 ELSE 0 END) AS active_categories
         FROM CATEGORIES
         """
 

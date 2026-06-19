@@ -327,9 +327,9 @@ class WarrantiesRepository:
         query = """
         SELECT
             (SELECT COUNT(*) FROM WARRANTY_INCIDENTS) AS total_warranties,
-            SUM(CASE WHEN warranty_status = 0 THEN 0 ELSE 0 END) AS without_make_warranties,
-            SUM(CASE WHEN warranty_status = 1 THEN 1 ELSE 0 END) AS inprocess_warranties,
-            SUM(CASE WHEN warranty_status = 2 THEN 1 ELSE 0 END) AS complete_warranties
+            SUM(CASE WHEN warranty_status = 2 THEN 1 ELSE 0 END) AS without_make_warranties,
+            SUM(CASE WHEN warranty_status = 3 THEN 1 ELSE 0 END) AS inprocess_warranties,
+            SUM(CASE WHEN warranty_status = 4 THEN 1 ELSE 0 END) AS complete_warranties
         FROM WARRANTY_INCIDENTS
         """
 

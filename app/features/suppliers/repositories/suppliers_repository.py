@@ -419,7 +419,7 @@ class SuppliersRepository:
             (SELECT COUNT(*) FROM SUPPLIERS) AS total_suppliers,
             COUNT(CASE WHEN supplier_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 END) as recent_suppliers,
             SUM(CASE WHEN supplier_status = 1 THEN 1 ELSE 0 END) AS inactive_suppliers,
-            SUM(CASE WHEN supplier_status = 2 THEN 2 ELSE 0 END) AS active_suppliers
+            SUM(CASE WHEN supplier_status = 2 THEN 1 ELSE 0 END) AS active_suppliers
         FROM SUPPLIERS
         """
 
