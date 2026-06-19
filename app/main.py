@@ -44,7 +44,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "https://tracklinker-frontend-web.vercel.app",
-        "https://tracklinker-frontend-web-project.onrender.com"
+        "https://tracklinker-frontend-web-project.onrender.com",
+        "https://tracklinker-frontend-web-u111.onrender.com"
     ],
     allow_credentials=True,
     allow_methods=["*"],
