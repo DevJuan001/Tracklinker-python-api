@@ -3,12 +3,12 @@ from pydantic import EmailStr
 from app.utils.logger import get_logger
 from app.core.exception import ServiceError
 from app.core.database import get_connection
-from app.tasks.email_tasks import send_welcome_email
+from app.tasks.email_tasks import send_welcome_client_email, send_welcome_email
 from app.core.security import generate_temporal_password, verify_password
 from app.features.users.repositories.roles_repository import RolesRepository
 from app.features.users.repositories.users_repository import UsersRepository
 from app.features.users.repositories.cities_repository import CitiesRepository
-from app.features.users.models.users_schemas import UpdatePasswordSchema, UsersFiltersSchema, CreateUserSchema, UpdateUserSchema
+from app.features.users.models.users_schemas import CreateClientSchema, UpdatePasswordSchema, UsersFiltersSchema, CreateUserSchema, UpdateUserSchema
 
 logger = get_logger("users.service")
 
@@ -38,6 +38,34 @@ class UsersService:
                 exc_info=True
             )
             return "Error al intentar obtener los usuarios", None
+
+        finally:
+            connection.close()
+
+    @staticmethod
+    def get_active_clients():
+        connection = get_connection()
+
+        try:
+            error, clients = UsersRepository.find_active_clients(
+                connection
+            )
+
+            if error:
+                raise ServiceError(error)
+
+            return None, clients
+
+        except ServiceError as e:
+            return e.message, None
+
+        except Exception as e:
+            logger.error(
+                "Error en get_active_clients: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener los clientes activos", None
 
         finally:
             connection.close()
@@ -204,6 +232,61 @@ class UsersService:
                 exc_info=True
             )
             return "Error al intentar crear el usuario", False, None
+
+    @staticmethod
+    async def create_client(client_data: CreateClientSchema):
+        data = client_data.model_dump()
+
+        connection = get_connection()
+
+        try:
+            error, user = UsersRepository.find_user_by_email(
+                email=data["email"],
+                connection=connection
+            )
+
+            if error:
+                raise ServiceError(error)
+
+            if user:
+                raise ServiceError(
+                    "Este correo ya esta registrado, intenta ingresar otro correo e intentalo nuevamente"
+                )
+
+            error, success, message = UsersRepository.create_client(
+                client_data=client_data,
+                connection=connection
+            )
+
+            if error or not success:
+                raise ServiceError(error)
+
+            if success:
+                send_welcome_client_email.delay(
+                    user_name=data["name"],
+                    user_first_surname=data["first_surname"],
+                    user_email=data["email"]
+                )
+
+            connection.commit()
+
+            return None, True, "Cliente Creado Correctamente"
+
+        except ServiceError as e:
+            connection.rollback()
+            return e.message, False, None
+
+        except Exception as e:
+            connection.rollback()
+            logger.error(
+                "Error en create_client: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar crear el cliente", False, None
+
+        finally:
+            connection.close()
 
     @staticmethod
     def update_user(user_id: int, user_data: UpdateUserSchema):
