@@ -41,7 +41,7 @@ CREATE TABLE USERS (
   user_phone VARCHAR(255) NOT NULL COMMENT 'Número de teléfono del usuario (VARCHAR, Not null)',
   user_email VARCHAR(255) NOT NULL COMMENT 'Correo electrónico del usuario (VARCHAR, Not null)',
   user_address VARCHAR(255) NOT NULL COMMENT 'Dirección del usuario (VARCHAR, Not null)',
-  user_password VARCHAR(255) NOT NULL COMMENT 'Contrasena del usuario, se debe almacenar hasheada para mayor seguridad (VARCHAR, Not null)',
+  user_password VARCHAR(255) NULL COMMENT 'Contrasena del usuario, se debe almacenar hasheada para mayor seguridad (VARCHAR, Not null)',
   user_city INT NOT NULL COMMENT 'Ciudad en la que se encuentra el usuario',
   user_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del usuario (DATE, Not null)',
   user_status INT NOT NULL DEFAULT 2 COMMENT "Estado en el que se encuentra el usuario 1 = deshabilitado, 2 = activo",
