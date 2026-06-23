@@ -3,7 +3,7 @@ from fastapi_limiter.depends import RateLimiter
 from app.middlewares.jwt_middleware import verify_jwt
 from app.middlewares.roles_middleware import require_roles
 from app.features.users.controllers.users_controller import UsersController
-from app.features.users.models.users_schemas import CreateUserSchema, UpdateCurrentUserSchema, UpdatePasswordSchema, UpdateUserSchema, UsersFiltersSchema
+from app.features.users.models.users_schemas import CreateClientSchema, CreateUserSchema, UpdateCurrentUserSchema, UpdatePasswordSchema, UpdateUserSchema, UsersFiltersSchema
 
 router = APIRouter(
     prefix="/api/users",
@@ -56,6 +56,32 @@ def get_all_roles():
 )
 def get_all_cities():
     return UsersController.get_all_cities()
+
+
+# Endpoint para obtener todos los clientes activos
+@router.get(
+    "/active-clients",
+    dependencies=[
+        Depends(RateLimiter(times=30, seconds=60)),
+        Depends(require_roles(["Admin", "Almacén", "Técnico"]))
+    ]
+)
+def get_active_clients():
+    return UsersController.get_active_clients()
+
+
+# Endpoint para crear o registrar un cliente
+@router.post(
+    "/clients/create",
+    dependencies=[
+        Depends(RateLimiter(times=30, seconds=60)),
+        Depends(require_roles(["Admin", "Técnico"]))
+    ]
+)
+async def create_client(
+    client_data: CreateClientSchema
+):
+    return await UsersController.create_client(client_data)
 
 
 # Endpoint para obtener un usuario mediante el id

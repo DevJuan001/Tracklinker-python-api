@@ -19,7 +19,7 @@ INSERT INTO CITIES VALUES
 
 INSERT INTO USERS VALUES 
 (1, null, 'Albeiro', 'Ramos', 'Villalba','3001112223', 'profealbeiro2020@gmail.com', 'KR 12 NO 20-245', sha1('12345'), 1, '2026-01-10', 2),
-(1, null, 'Juan', 'Pérez', 'García', '3004567890', 'juan.perez1@example.com', 'Calle 123 #45-67', sha1('hash_password_1'), 1, '2026-01-20', 2),
+(1, null, 'Juan', 'Alvarez', 'Gonzalez','3001112223', 'juanesyt7@gmail.com', 'KR 12 NO 20-245', '$2b$12$XBdScAQV3IGaEfEV3mM/7e9fBsCMHYf/F8bBQERBzdtsfrBtzBeUe', 1, '2026-01-10', 2),
 (2, null, 'María', 'López', 'Rodríguez', '3112345678', 'maria.lopez23@example.com', 'Carrera 10 #20-30', sha1('hash_password_2'), 1, '2026-01-19', 2),
 (2, null, 'María', 'López', 'Rodríguez', '3112345678', 'maria.lopez23@example.com', 'Carrera 10 #20-30', sha1('hash_password_2'), 1, '2026-01-19', 2),
 (2, null, 'Carlos', 'García', 'Moreno', '3101112233', 'carlos.garcia@example.com', 'Calle 45 #12-30', sha1('hash_password_18'), 1, '2026-01-20', 2),

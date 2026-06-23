@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from app.features.users.services.users_service import UsersService
-from app.features.users.models.users_schemas import CreateUserSchema, UpdateCurrentUserSchema, UpdatePasswordSchema, UpdateUserSchema, UsersFiltersSchema
+from app.features.users.models.users_schemas import CreateClientSchema, CreateUserSchema, UpdateCurrentUserSchema, UpdatePasswordSchema, UpdateUserSchema, UsersFiltersSchema
 
 
 class UsersController:
@@ -14,6 +14,17 @@ class UsersController:
 
         return {
             "data": users
+        }
+
+    @staticmethod
+    def get_active_clients():
+        error, clients = UsersService.get_active_clients()
+
+        if error:
+            raise HTTPException(status_code=404, detail=error)
+
+        return {
+            "data": clients
         }
 
     @staticmethod
@@ -75,6 +86,20 @@ class UsersController:
     async def create_user(user_data: CreateUserSchema):
         error, success, message = await UsersService.create_user(
             user_data
+        )
+
+        if error:
+            raise HTTPException(status_code=400, detail=error)
+
+        return {
+            "success": success,
+            "message": message
+        }
+
+    @staticmethod
+    async def create_client(client_data: CreateClientSchema):
+        error, success, message = await UsersService.create_client(
+            client_data
         )
 
         if error:

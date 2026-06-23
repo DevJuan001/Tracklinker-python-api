@@ -32,6 +32,30 @@ def send_welcome_email(self, user_name: str, user_first_surname: str, user_email
 
 
 @celery.task(bind=True, max_retries=3)
+def send_welcome_client_email(self, user_name: str, user_first_surname: str, user_email: EmailStr):
+    try:
+        message = MessageSchema(
+            subject="Bienvenido a Tracklinker",
+            recipients=[user_email],
+            template_body={
+                "name": user_name,
+                "surname": user_first_surname,
+                "email": user_email
+            },
+            subtype="html",
+        )
+
+        asyncio.run(
+            fm.send_message(
+                message, template_name="welcome_client_mail.html"
+            )
+        )
+
+    except Exception as e:
+        raise self.retry(exc=e, countdown=60)
+
+
+@celery.task(bind=True, max_retries=3)
 def recovery_password_email(self, user_email: EmailStr, user_name: str):
     try:
         message = MessageSchema(

@@ -22,6 +22,16 @@ class CreateUserSchema(BaseModel):
     phone: int
 
 
+class CreateClientSchema(BaseModel):
+    name: str
+    first_surname: str
+    second_surname: str
+    address: str
+    city: int
+    email: EmailStr
+    phone: int
+
+
 class UpdateUserSchema(BaseModel):
     role_id: Optional[int] = None
     name: Optional[str] = None

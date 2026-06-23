@@ -1,8 +1,10 @@
-from app.features.output_orders.models.output_orders_model import UpdateOutputOrderModel
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
+from app.features.users.repositories.users_repository import UsersRepository
+from app.features.output_orders.models.output_orders_model import UpdateOutputOrderModel
 from app.features.products.repositories.product_serials_repository import ProductSerialsRepository
+from app.features.output_orders.repositories.customers_repository import CustomersRepository
 from app.features.output_orders.repositories.output_orders_repository import OutputOrdersRepository
 from app.features.output_orders.repositories.output_details_repository import OutputDetailsRepository
 from app.features.output_orders.models.output_details_model import CreateOutputDetails, UpdateOutputDetails
@@ -75,6 +77,14 @@ class OutputOrdersService:
         connection = get_connection()
 
         try:
+            # Validar que el cliente existe y está activo
+            error, client = UsersRepository.find_client_by_id(
+                data["client_id"], connection
+            )
+
+            if error or not client:
+                raise ServiceError(error or "El cliente no existe o no está activo")
+
             for serial in data["product_serials"]:
                 # Verificar que cada serial existe
                 error, product = ProductSerialsRepository.find_product_by_serial(
@@ -92,6 +102,14 @@ class OutputOrdersService:
             # Crear la orden de salida
             error, success, output_order_id = OutputOrdersRepository.create_output_order(
                 connection
+            )
+
+            if error or not success:
+                raise ServiceError(error)
+
+            # Relacionar el cliente con la orden de salida
+            error, success, message = CustomersRepository.create_customer(
+                data["client_id"], output_order_id, connection
             )
 
             if error or not success:
@@ -133,6 +151,8 @@ class OutputOrdersService:
 
         connection = get_connection()
 
+        print(output_order_id)
+
         try:
             # Validar que cada serial existe
             if "product_serials" in data:
@@ -166,7 +186,7 @@ class OutputOrdersService:
                     raise ServiceError(error)
 
             if "product_serials" in data:
-                error, success = OutputDetailsRepository.delete_output_details_by_output_order_id(
+                error, success, message = OutputDetailsRepository.delete_output_details_by_output_order_id(
                     output_order_id, connection
                 )
                 
