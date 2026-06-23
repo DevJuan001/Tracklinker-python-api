@@ -361,16 +361,20 @@ class ProductsRepository:
 
             (SELECT COUNT(product_serial)
             FROM PRODUCT_SERIALS
-            ) AS total_products,    
+            ) AS total_products,
 
             (SELECT COUNT(DISTINCT product_serial)
             FROM WARRANTY_INCIDENTS
             ) AS warranties_products,
 
-            (SELECT COUNT(DISTINCT product_id)
-            FROM PRODUCTS
-            WHERE product_status = 3
-            ) AS sold_products;
+            (SELECT COUNT(ps.product_serial)
+            FROM PRODUCT_SERIALS AS ps
+            INNER JOIN PRODUCTS AS p
+                ON ps.product_id = p.product_id
+            WHERE p.product_status = 3
+            ) AS sold_products
+        FROM PRODUCTS
+        LIMIT 1;
         """
 
         try:

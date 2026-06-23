@@ -210,22 +210,22 @@ INSERT INTO PRODUCT_DETAILS VALUES
 
 
 INSERT INTO PRODUCTS VALUES 
-(null, 15, 1, 2),    -- HP 110
+(null, 15, 1, 3),    -- HP 110
 (null, 15, 2, 1),    -- Zebra ZD420 
 (null, 15, 3, 3),    -- Epson TM-T20 
-(null, 12, 4, 4),    -- Epson L3150 
-(null, 12, 5, 2),    -- Canon G2010 
-(null, 12, 6, 2),    -- HP Ink Tank 415 
-(null, 13, 7, 2),    -- LaserJet Pro 
-(null, 13, 8, 2),    -- Brother HL 
-(null, 13, 9, 2),    -- Samsung Xpress 
+(null, 12, 4, 3),    -- Epson L3150 
+(null, 12, 5, 3),    -- Canon G2010 
+(null, 12, 6, 3),    -- HP Ink Tank 415 
+(null, 13, 7, 3),    -- LaserJet Pro 
+(null, 13, 8, 3),    -- Brother HL 
+(null, 13, 9, 3),    -- Samsung Xpress 
 (null, 7, 10, 2),    -- QLED Samsung
 (null, 6, 11, 2),    -- Bravia Sony 
 (null, 5, 12, 2),    -- LG LED 
 (null, 6, 13, 2),    -- LG OLED 
 (null, 37, 14, 2),   -- WD My Passport 
 (null, 31, 15, 2),   -- Logitech MX Keys 
-(null, 32, 16, 2),   -- Razer DeathAdder 
+(null, 32, 16, 3),   -- Razer DeathAdder 
 (null, 33, 17, 2),   -- HyperX Cloud II 
 (null, 34, 18, 2),   -- TP-Link Router 
 (null, 35, 19, 2),   -- Cisco Switch 

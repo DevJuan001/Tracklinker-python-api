@@ -132,10 +132,10 @@ class WarrantiesService:
         connection = get_connection()
 
         WARRANTY_STATUS_PRODUCT_MAP = {
-            1: 2,
+            1: 3,
             2: 4,
             3: 4,
-            4: 2,
+            4: 3,
         }
 
         try:
@@ -167,18 +167,7 @@ class WarrantiesService:
 
             # Aqui verificamos si el estado actual es 1 = "Deshabilitada" y el nuevo está entre
             # 3 = "En proceso" o 4 = "Completada"
-            if current_status == 1 and new_status in (3, 4):
-                # Asignamos esa garantía al técnico que le dio empezar
-                error, success, message = TechniciansRepository.assign_technician(
-                    warranty_incidents_id, user_id, connection
-                )
-
-                if error:
-                    raise ServiceError(error)
-
-            # Aqui Verificamos si el estado actual es 2 = "Pendiente o sin empezar" y el nuevo estado es igual a 3 = "En proceso"
-            if current_status == 2 and new_status == 3:
-
+            if current_status in (1, 2) and new_status in (3, 4):
                 # Asignamos esa garantía al técnico que le dio empezar
                 error, success, message = TechniciansRepository.assign_technician(
                     warranty_incidents_id, user_id, connection
@@ -212,6 +201,9 @@ class WarrantiesService:
                     product_serial,
                     connection
                 )
+
+                if error:
+                    raise ServiceError(error)
 
                 if not product:
                     raise ServiceError("Serial no encontrado")
