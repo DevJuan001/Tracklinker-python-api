@@ -5,12 +5,14 @@ from pydantic import BaseModel
 
 
 class OutputOrdersFiltersSchema(BaseModel):
+    client_id: Optional[int] = None
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     status: Optional[int] = None
 
 
 class CreateOutputOrderSchema(BaseModel):
+    client_id: int
     product_serials: list[str]
     output_product_garanty: datetime
 

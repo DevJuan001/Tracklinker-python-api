@@ -24,12 +24,12 @@ class OutputDetailsRepository:
         try:
             cursor.execute(query, (output_order_id,))
 
-            output_details = cursor.fetchone()
+            output_details = cursor.fetchall()
 
             if not output_details:
                 return "Detalles de la orden de salida no encontrados", None
 
-            return None, output_details
+            return None, output_details[0]
 
         except Exception as e:
             logger.error(
