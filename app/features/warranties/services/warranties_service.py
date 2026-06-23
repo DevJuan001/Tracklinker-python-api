@@ -73,10 +73,10 @@ class WarrantiesService:
                     "Este serial no existe, rectifica que el serial este bien escrito e intentalo nuevamente"
                 )
 
-            # Validamos que el producto no este deshabilitado
-            if product[1] == 1:
+            # Validamos que el producto no este deshabilitado, activo o en garantía
+            if product[1] in (1, 2, 4):
                 raise ServiceError(
-                    "No puedes crear una garantía con un producto deshabilitado, activa o habilita este producto e intentalo nuevamente"
+                    "No puedes crear una garantía con un producto que no esta vendido, vende este producto previamente e intentalo nuevamente"
                 )
 
             # Verificamos que el producto no tenga una garantía activa
@@ -89,24 +89,6 @@ class WarrantiesService:
                     "El producto ya cuenta con una garantía activa, debes completar o deshabilitar esa garantía  e intentarlo nuevamente"
                 )
 
-            # Creamos la orden de salida del producto
-            error, success, output_order_id = OutputOrdersRepository.create_output_order(
-                connection
-            )
-
-            if error or not success:
-                raise ServiceError(error)
-
-            # Creamos los detalles de la orden de salida
-            error, success, message = OutputDetailsRepository.create_output_details(
-                output_order_id,
-                CreateOutputDetails(
-                    product_serial=data["product_serial"],
-                    output_product_garanty=data["output_product_garanty"],
-                ),
-                connection
-            )
-
             if error or not success:
                 raise ServiceError(
                     error or "Error al intentar crear los detalles de la orden de salida"
@@ -116,12 +98,14 @@ class WarrantiesService:
             error, success, message = ProductsRepository.update_product_status(
                 product[0], 4, connection
             )
+
             if error:
                 raise ServiceError(error)
 
             error, success, message = WarrantiesRepository.create_warranty(
                 data, user_id, connection
             )
+
             if error:
                 raise ServiceError(error)
 
