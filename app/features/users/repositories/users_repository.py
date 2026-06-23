@@ -165,6 +165,42 @@ class UsersRepository:
         finally:
             cursor.close()
 
+    # Validar que un usuario es cliente activo (rol Cliente = 4, estado activo = 2)
+    @staticmethod
+    def find_client_by_id(client_id: int, connection):
+        cursor = connection.cursor()
+
+        query = """
+        SELECT
+            u.user_id,
+            u.user_name,
+            u.user_first_surname,
+            u.user_second_surname,
+            u.user_email,
+            u.user_phone
+        FROM USERS AS u
+        INNER JOIN ROLES AS r
+            ON u.rol_id = r.rol_id
+        WHERE u.user_id = %s AND u.rol_id = 4 AND u.user_status = 2
+        """
+
+        try:
+            cursor.execute(query, (client_id,))
+
+            result = cursor.fetchone()
+
+            if not result:
+                return "El cliente no existe o no está activo", None
+
+            return None, result
+
+        except Exception as e:
+            logger.error("Error en find_client_by_id: %s", e, exc_info=True)
+            return "Error al intentar obtener el cliente", None
+
+        finally:
+            cursor.close()
+
     # Obtener un usuario por el ID
     @staticmethod
     def find_user_by_id(user_id: int, connection):
