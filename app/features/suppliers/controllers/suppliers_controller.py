@@ -18,7 +18,7 @@ class SuppliersController:
 
     @staticmethod
     def get_supplier_by_id(supplier_id: int):
-        error, data = SuppliersService.find_supplier_by_id(supplier_id)
+        error, data = SuppliersService.get_supplier_by_id(supplier_id)
 
         if error:
             raise HTTPException(status_code=404, detail=error)
