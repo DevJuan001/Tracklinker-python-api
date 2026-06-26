@@ -103,6 +103,12 @@ class ProductsRepository:
         if filters:
             query += " WHERE " + " AND ".join(filters)
 
+        query += " ORDER BY p.product_id DESC LIMIT %s OFFSET %s"
+
+        per_page = filters_data.per_page
+        offset = (filters_data.page - 1) * per_page
+        values += [per_page, offset]
+
         try:
             cursor.execute(query, values)
             result = cursor.fetchall()
@@ -269,7 +275,7 @@ class ProductsRepository:
         except Exception as e:
             logger.error("Error en update_product: %s", e, exc_info=True)
             return "Error al intentar actualizar el producto", False, None
-        
+
         finally:
             cursor.close()
 
@@ -286,7 +292,7 @@ class ProductsRepository:
             )
 
             return None, True, "Estado del producto actualizado correctamente"
-        
+
         except Exception as e:
             logger.error(
                 "Error en update_product_status: %s",
@@ -294,7 +300,7 @@ class ProductsRepository:
                 exc_info=True
             )
             return "Error al intentar actualizar el estado del producto", False, None
-        
+
         finally:
             cursor.close()
 
