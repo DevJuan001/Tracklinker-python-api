@@ -89,11 +89,6 @@ class WarrantiesService:
                     "El producto ya cuenta con una garantía activa, debes completar o deshabilitar esa garantía  e intentarlo nuevamente"
                 )
 
-            if error or not success:
-                raise ServiceError(
-                    error or "Error al intentar crear los detalles de la orden de salida"
-                )
-
             # Actualizamos el estado del producto y lo ponemos en garantía
             error, success, message = ProductsRepository.update_product_status(
                 product[0], 4, connection
@@ -139,6 +134,9 @@ class WarrantiesService:
         }
 
         try:
+            if not data:
+                raise ServiceError("No hay campos para actualizar")
+
             # Verificamos que el serial existe
             if "product_serial" in data:
                 error, product = ProductSerialsRepository.find_product_by_serial(
@@ -149,21 +147,18 @@ class WarrantiesService:
                     raise ServiceError(error)
 
             # Validamos que exista esa garantía
-            warranty = WarrantiesRepository.find_warranty_by_id(
+            error, warranty = WarrantiesRepository.find_warranty_by_id(
                 warranty_incidents_id, connection
             )
 
-            if not warranty:
-                raise ServiceError("Garantía no encontrada")
-
-            if not data:
-                raise ServiceError("No hay campos para actualizar")
+            if error or not warranty:
+                raise ServiceError(error or "Garantía no encontrada")
 
             # Obtenemos el nuevo estado que se le va a asignar a la garantía
             new_status = data.get("status")
 
             # Obtenemos el estado actual de la garantía
-            current_status = warranty[1]
+            current_status = warranty[0].status
 
             # Aqui verificamos si el estado actual es 1 = "Deshabilitada" y el nuevo está entre
             # 3 = "En proceso" o 4 = "Completada"
