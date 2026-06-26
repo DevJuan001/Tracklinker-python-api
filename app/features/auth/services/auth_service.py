@@ -32,8 +32,11 @@ class AuthService:
             if error or not user:
                 raise ServiceError(error)
 
-            # Validación de los parametros recibidos
-            verify_password(user[6], password)
+            # Validamos si la contraseña es la correcta
+            success = verify_password(user[6], password)
+
+            if not success:
+                raise ServiceError("Contraseña incorrecta")
 
             # Tiempo en que expira el token
             expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE)
