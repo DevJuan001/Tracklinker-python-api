@@ -102,16 +102,60 @@ class WarrantiesRepository:
 
         # Petición a la base de datos
         query = """
-        SELECT warranty_customer, warranty_status FROM WARRANTY_INCIDENTS WHERE warranty_incidents_id = %s
+        SELECT
+            wi.warranty_incidents_id,
+            wi.product_serial,
+            wi.warranty_customer,
+            wi.warranty_phone,
+            wi.warranty_address,
+            wi.warranty_description,
+            wi.warranty_link_attachments,
+            wi.warranty_city,
+            c.city_name,
+            wi.warranty_date,
+            wi.warranty_status,
+            CONCAT(u.user_name, ' ', u.user_first_surname) AS created_by,
+            CONCAT(tech.user_name, ' ', tech.user_first_surname) AS assigned_to
+        FROM WARRANTY_INCIDENTS AS wi
+        INNER JOIN CITIES as c
+            ON wi.warranty_city = c.city_id
+        INNER JOIN USERS AS u
+            ON wi.created_by = u.user_id
+        LEFT JOIN TECHNICAL AS t
+            ON wi.warranty_incidents_id = t.warranty_incidents_id
+        LEFT JOIN USERS AS tech
+            ON t.user_id = tech.user_id
+        WHERE wi.warranty_incidents_id = %s
         """
         try:
             cursor.execute(query, (warranty_incidents_id,))
 
-            return cursor.fetchone()
+            results = cursor.fetchall()
+
+            data = [
+                WarrantyResponse(
+                    id=item[0],
+                    product_serial=item[1],
+                    customer=item[2],
+                    phone=item[3],
+                    address=item[4],
+                    description=item[5],
+                    link_attachments=item[6],
+                    city=item[7],
+                    city_name=item[8],
+                    date=date_formatter(item[9]),
+                    status=item[10],
+                    created_by=item[11],
+                    assigned_to=item[12]
+                )
+                for item in results
+            ]
+
+            return None, data
 
         except Exception as e:
             logger.error("Error en find_warranty_by_id: %s", e, exc_info=True)
-            return None
+            return "Error al intentar obtener la garantía mediante el id", None
 
         finally:
             cursor.close()
