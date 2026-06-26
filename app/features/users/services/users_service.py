@@ -359,9 +359,12 @@ class UsersService:
                 raise ServiceError(error)
 
             # Validamos que la contraseña antigua sea igual a la que esta registrada
-            verify_password(
+            success = verify_password(
                 str(user[0]), data["old_password"]
             )
+
+            if not success:
+                raise ServiceError("Contraseña incorrecta")
 
             error, success, message = UsersRepository.update_user_password(
                 user_id, data["new_password"], connection
