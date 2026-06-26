@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     MAIL_USERNAME: EmailStr
     MAIL_PASSWORD: str
     MAIL_FROM: EmailStr
+    MAIL_PORT: int
 
     class Config:
         env_file = ".env"
