@@ -79,10 +79,7 @@ def verify_password(user_password: str, password: str):
     hashed_bytes = user_password.encode("utf-8")
 
     if not bcrypt.checkpw(password_bytes, hashed_bytes):
-        raise HTTPException(
-            status_code=401, 
-            detail="Contraseña Incorrecta"
-        )
+        return False
     
     return True
 
