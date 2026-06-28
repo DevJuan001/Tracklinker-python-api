@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ProductsFilterSchema(BaseModel):
@@ -14,6 +14,8 @@ class ProductsFilterSchema(BaseModel):
     product_status: Optional[int] = None
     brand: Optional[int] = None
     product_model: Optional[int] = None
+    page: int = Field(1, ge=1)
+    per_page: int = Field(20, ge=1, le=100)
 
 
 class UpdateProductSchema(BaseModel):
