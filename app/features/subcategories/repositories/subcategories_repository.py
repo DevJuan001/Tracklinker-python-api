@@ -12,7 +12,7 @@ class SubcategoriesRepository:
     # Obtener todas las subcategorías
     @staticmethod
     def find_all_subcategories(filters_data: SubcategoriesFiltersSchema, connection):
-        data = filters.model_dump(exclude_none=True)
+        data = filters_data.model_dump(exclude_none=True)
 
         cursor = connection.cursor()
 
