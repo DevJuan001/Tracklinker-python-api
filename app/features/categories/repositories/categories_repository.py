@@ -48,7 +48,7 @@ class CategoriesRepository:
         elif data.get("name_order") == "desc":
             query += " ORDER BY category_name DESC"
 
-        query += "ORDER BY category_id DESC LIMIT %s OFFSET %s"
+        query += " ORDER BY category_id DESC LIMIT %s OFFSET %s"
 
         per_page = filters_data.per_page
         offset = (filters_data.page - 1) * per_page
