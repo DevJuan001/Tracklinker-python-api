@@ -10,8 +10,8 @@ logger = get_logger("warranties.repository")
 class WarrantiesRepository:
 
     @staticmethod
-    def find_all_warranties(filters: WarrantiesFilterSchema, connection):
-        data = filters.model_dump(exclude_none=True)
+    def find_all_warranties(filters_data: WarrantiesFilterSchema, connection):
+        data = filters_data.model_dump(exclude_none=True)
 
         cursor = connection.cursor()
 
@@ -65,6 +65,12 @@ class WarrantiesRepository:
 
         if filters:
             query += " WHERE " + " AND ".join(filters)
+
+        query += " ORDER BY wi.warranty_incidents_id DESC LIMIT %s OFFSET %s"
+
+        per_page = filters_data.per_page
+        offset = (filters_data.page - 1) * per_page
+        values += [per_page, offset]
 
         try:
             cursor.execute(query, values)
