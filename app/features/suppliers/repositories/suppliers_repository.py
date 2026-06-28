@@ -61,6 +61,12 @@ class SuppliersRepository:
         elif data.get("name_order") == "desc":
             query += " ORDER BY s.supplier_name DESC"
 
+        query += " ORDER BY s.supplier_id DESC LIMIT %s OFFSET %s"
+
+        per_page = filters_data.per_page
+        offset = (filters_data.page - 1) * per_page
+        values += [per_page, offset]
+
         try:
             cursor.execute(query, values)
             result = cursor.fetchall()
