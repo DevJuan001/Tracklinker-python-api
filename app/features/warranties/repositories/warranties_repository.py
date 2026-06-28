@@ -280,13 +280,15 @@ class WarrantiesRepository:
 
         query = """
         SELECT
-            product_serial,
-            warranty_customer,
-            warranty_description,
-            warranty_date,
-            warranty_status
-        FROM WARRANTY_INCIDENTS as c
-        ORDER BY warranty_incidents_id DESC
+            wi.product_serial,
+            CONCAT(cust.user_name, ' ', cust.user_first_surname) AS customer,
+            wi.warranty_description,
+            wi.warranty_date,
+            wi.warranty_status
+        FROM WARRANTY_INCIDENTS as wi
+        INNER JOIN USERS AS cust
+            ON wi.warranty_customer = cust.user_id
+        ORDER BY wi.warranty_incidents_id DESC
         LIMIT 6
         """
 
@@ -299,7 +301,7 @@ class WarrantiesRepository:
                     serial=item[0],
                     customer=item[1],
                     description=item[2],
-                    date=item[3],
+                    date=date_formatter(item[3]),
                     status=item[4],
                 )
                 for item in results
