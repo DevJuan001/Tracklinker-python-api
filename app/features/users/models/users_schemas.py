@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UsersFiltersSchema(BaseModel):
@@ -9,6 +9,8 @@ class UsersFiltersSchema(BaseModel):
     end_date: Optional[str] = None
     status: Optional[int] = None
     city: Optional[int] = None
+    page: int = Field(1, ge=1)
+    per_page: int = Field(20, ge=1, le=100)
 
 
 class CreateUserSchema(BaseModel):

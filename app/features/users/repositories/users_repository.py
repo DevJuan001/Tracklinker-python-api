@@ -72,6 +72,12 @@ class UsersRepository:
         elif data.get("name_order") == "desc":
             query += " ORDER BY u.user_name DESC"
 
+        query += " ORDER BY u.user_id DESC LIMIT %s OFFSET %s"
+
+        per_page = filters_data.per_page
+        offset = (filters_data.page - 1) * per_page
+        values += [per_page, offset]
+
         try:
             cursor.execute(query, values)
 
@@ -249,11 +255,11 @@ class UsersRepository:
                 for item in result
             ]
             return None, data
-        
+
         except Exception as e:
             logger.error("Error en find_user_by_id: %s", e, exc_info=True)
             return "Error al intentar obtener el usuario mediante el id", None
-        
+
         finally:
             cursor.close()
 
