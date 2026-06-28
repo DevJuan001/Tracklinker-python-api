@@ -55,7 +55,7 @@ class SubcategoriesRepository:
         elif data.get("name_order") == "desc":
             query += " ORDER BY s.subcategory_name DESC"
 
-        query += "ORDER BY s.subcategory_id DESC LIMIT %s OFFSET %s"
+        query += " ORDER BY s.subcategory_id DESC LIMIT %s OFFSET %s"
 
         per_page = filters_data.per_page
         offset = (filters_data.page - 1) * per_page
