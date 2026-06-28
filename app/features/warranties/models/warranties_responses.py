@@ -7,6 +7,7 @@ from app.utils.base_schema import BaseSchema
 class WarrantyResponse(BaseModel):
     id: int
     product_serial: str
+    customer_id: int
     customer: str
     phone: str
     address: str
