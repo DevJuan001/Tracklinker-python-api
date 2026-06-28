@@ -11,7 +11,7 @@ class WarrantiesFilterSchema(BaseModel):
 
 class CreateWarrantySchema(BaseModel):
     product_serial: str
-    customer: str
+    customer: int
     phone: str
     address: str
     description: str
@@ -21,7 +21,7 @@ class CreateWarrantySchema(BaseModel):
 
 class UpdateWarrantySchema(BaseModel):
     product_serial: str
-    customer: Optional[str] = None
+    customer: Optional[int] = None
     phone: Optional[str] = None
     address: Optional[str] = None
     description: Optional[str] = None

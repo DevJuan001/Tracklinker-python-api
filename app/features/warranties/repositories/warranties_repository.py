@@ -20,6 +20,7 @@ class WarrantiesRepository:
             wi.warranty_incidents_id,
             wi.product_serial,
             wi.warranty_customer,
+            CONCAT(cust.user_name, ' ', cust.user_first_surname) AS customer,
             wi.warranty_phone,
             wi.warranty_address,
             wi.warranty_description,
@@ -35,6 +36,8 @@ class WarrantiesRepository:
             ON wi.warranty_city = c.city_id
         INNER JOIN USERS AS u
             ON wi.created_by = u.user_id
+        INNER JOIN USERS AS cust
+            ON wi.warranty_customer = cust.user_id
         LEFT JOIN TECHNICAL AS t
             ON wi.warranty_incidents_id = t.warranty_incidents_id
         LEFT JOIN USERS AS tech
@@ -71,17 +74,18 @@ class WarrantiesRepository:
                 WarrantyResponse(
                     id=item[0],
                     product_serial=item[1],
-                    customer=item[2],
-                    phone=item[3],
-                    address=item[4],
-                    description=item[5],
-                    link_attachments=item[6],
-                    city=item[7],
-                    city_name=item[8],
-                    date=date_formatter(item[9]),
-                    status=item[10],
-                    created_by=item[11],
-                    assigned_to=item[12]
+                    customer_id=item[2],
+                    customer=item[3],
+                    phone=item[4],
+                    address=item[5],
+                    description=item[6],
+                    link_attachments=item[7],
+                    city=item[8],
+                    city_name=item[9],
+                    date=date_formatter(item[10]),
+                    status=item[11],
+                    created_by=item[12],
+                    assigned_to=item[13]
                 )
                 for item in results
             ]
@@ -106,6 +110,7 @@ class WarrantiesRepository:
             wi.warranty_incidents_id,
             wi.product_serial,
             wi.warranty_customer,
+            u.user_name,
             wi.warranty_phone,
             wi.warranty_address,
             wi.warranty_description,
@@ -136,17 +141,18 @@ class WarrantiesRepository:
                 WarrantyResponse(
                     id=item[0],
                     product_serial=item[1],
-                    customer=item[2],
-                    phone=item[3],
-                    address=item[4],
-                    description=item[5],
-                    link_attachments=item[6],
-                    city=item[7],
-                    city_name=item[8],
-                    date=date_formatter(item[9]),
-                    status=item[10],
-                    created_by=item[11],
-                    assigned_to=item[12]
+                    customer_id=item[2],
+                    customer=item[3],
+                    phone=item[4],
+                    address=item[5],
+                    description=item[6],
+                    link_attachments=item[7],
+                    city=item[8],
+                    city_name=item[9],
+                    date=date_formatter(item[10]),
+                    status=item[11],
+                    created_by=item[12],
+                    assigned_to=item[13]
                 )
                 for item in results
             ]
@@ -267,19 +273,22 @@ class WarrantiesRepository:
 
 #   ------------ REPORTES DE GARANTÍAS ------------
 
+
     @staticmethod
     def find_recent_warranties(connection):
         cursor = connection.cursor()
 
         query = """
         SELECT
-            product_serial,
-            warranty_customer,
-            warranty_description,
-            warranty_date,
-            warranty_status
-        FROM WARRANTY_INCIDENTS as c
-        ORDER BY warranty_incidents_id DESC
+            wi.product_serial,
+            CONCAT(cust.user_name, ' ', cust.user_first_surname) AS customer,
+            wi.warranty_description,
+            wi.warranty_date,
+            wi.warranty_status
+        FROM WARRANTY_INCIDENTS as wi
+        INNER JOIN USERS AS cust
+            ON wi.warranty_customer = cust.user_id
+        ORDER BY wi.warranty_incidents_id DESC
         LIMIT 6
         """
 
@@ -292,7 +301,7 @@ class WarrantiesRepository:
                     serial=item[0],
                     customer=item[1],
                     description=item[2],
-                    date=item[3],
+                    date=date_formatter(item[3]),
                     status=item[4],
                 )
                 for item in results

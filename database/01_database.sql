@@ -293,7 +293,7 @@ ENGINE = InnoDB;
 CREATE TABLE WARRANTY_INCIDENTS (
   warranty_incidents_id INT NOT NULL AUTO_INCREMENT COMMENT'Identificador único y autoincremental para los incidentes de garantía registrados en el sistema.',
   product_serial VARCHAR(255) NOT NULL COMMENT' Identificador autoincremental para cada número de serie registrado.',
-  warranty_customer VARCHAR(100) NOT NULL COMMENT' Almacena la información de los clientes con garantías, incluyendo los detalles del producto y la fecha de expiración.',
+  warranty_customer INT NOT NULL COMMENT' Almacena la información de los clientes con garantías, incluyendo los detalles del producto y la fecha de expiración.',
   warranty_phone VARCHAR(255) NOT NULL COMMENT'Número de contacto principal para la gestión de la garantía.',
   warranty_address VARCHAR(255) NOT NULL COMMENT' Dirección del cliente para la gestión de la garantía.',
   warranty_description VARCHAR(100) NOT NULL COMMENT'Descripción detallada del problema o incidente reportado por el cliente.',
@@ -319,7 +319,12 @@ CREATE TABLE WARRANTY_INCIDENTS (
     FOREIGN KEY (warranty_city)
     REFERENCES CITIES (city_id)
     ON DELETE CASCADE
-    ON UPDATE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_warranties_customer
+    FOREIGN KEY (warranty_customer)
+    REFERENCES USERS (user_id)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE
 )
 ENGINE = InnoDB;
 
