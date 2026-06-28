@@ -11,8 +11,8 @@ logger = get_logger("subcategories.repository")
 class SubcategoriesRepository:
     # Obtener todas las subcategorías
     @staticmethod
-    def find_all_subcategories(filters: SubcategoriesFiltersSchema, connection):
-        filters_data = filters.model_dump(exclude_none=True)
+    def find_all_subcategories(filters_data: SubcategoriesFiltersSchema, connection):
+        data = filters.model_dump(exclude_none=True)
 
         cursor = connection.cursor()
 
@@ -31,29 +31,35 @@ class SubcategoriesRepository:
         filters = []
         values = []
 
-        if "start_date" in filters_data:
+        if "start_date" in data:
             filters.append("DATE(s.subcategory_date) >= %s")
-            values.append(filters_data["start_date"])
+            values.append(data["start_date"])
 
-        if "end_date" in filters_data:
+        if "end_date" in data:
             filters.append("DATE(s.subcategory_date) <= %s")
-            values.append(filters_data["end_date"])
+            values.append(data["end_date"])
 
-        if "category_order" in filters_data:
+        if "category_order" in data:
             filters.append("c.category_id = %s")
-            values.append(filters_data["category_order"])
+            values.append(data["category_order"])
 
-        if "status" in filters_data:
+        if "status" in data:
             filters.append("s.subcategory_status = %s")
-            values.append(filters_data["status"])
+            values.append(data["status"])
 
         if filters:
             query += " WHERE " + " AND ".join(filters)
 
-        if filters_data.get("name_order") == "asc":
+        if data.get("name_order") == "asc":
             query += " ORDER BY s.subcategory_name ASC"
-        elif filters_data.get("name_order") == "desc":
+        elif data.get("name_order") == "desc":
             query += " ORDER BY s.subcategory_name DESC"
+
+        query += "ORDER BY s.subcategory_id DESC LIMIT %s OFFSET %s"
+
+        per_page = filters_data.per_page
+        offset = (filters_data.page - 1) * per_page
+        values += [per_page, offset]
 
         try:
             cursor.execute(query, values)
