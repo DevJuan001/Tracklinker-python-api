@@ -60,11 +60,11 @@ class SubcategoriesService:
             return "Error al intentar obtener la subcategorias mediante el id", None
 
     @staticmethod
-    def get_active_categories():
+    def get_active_subcategories():
         connection = get_connection()
 
         try:
-            error, categories = SubcategoriesRepository.find_active_categories(
+            error, categories = SubcategoriesRepository.find_active_subcategories(
                 connection
             )
 
@@ -78,7 +78,7 @@ class SubcategoriesService:
 
         except Exception as e:
             logger.error(
-                "Error en get_active_categories: %s",
+                "Error en get_active_subcategories: %s",
                 e,
                 exc_info=True
             )
