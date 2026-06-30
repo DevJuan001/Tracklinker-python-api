@@ -2,7 +2,7 @@ from app.utils.logger import get_logger
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
 from app.features.categories.models.categories_schemas import CategoriesFiltersSchema, CreateCategorySchema, UpdateCategorySchema
-from app.features.categories.models.categories_responses import CategoryByStatusResponse, CategoryResponse, GrowthCategoryResponse, RecentCategoryResponse
+from app.features.categories.models.categories_responses import ActiveCategoryResponse, CategoryByStatusResponse, CategoryResponse, GrowthCategoryResponse, RecentCategoryResponse
 
 logger = get_logger("categories.repository")
 
@@ -112,6 +112,44 @@ class CategoriesRepository:
         except Exception as e:
             logger.error("Error en find_category_by_id: %s", e, exc_info=True)
             return "Error al intentar obtener la categoría", None
+
+        finally:
+            cursor.close()
+
+    @staticmethod
+    def find_active_categories(connection):
+        cursor = connection.cursor()
+
+        query = """
+        SELECT
+            category_id,
+            category_name
+        FROM CATEGORIES
+        WHERE category_status = 2 
+        """
+
+        try:
+            cursor.execute(query)
+
+            result = cursor.fetchall()
+
+            data = [
+                ActiveCategoryResponse(
+                    category_id=item[0],
+                    category_name=item[1]
+                )
+                for item in result
+            ]
+
+            return None, data
+
+        except Exception as e:
+            logger.error(
+                "Error en find_active_categories: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener las categorias activas", None
 
         finally:
             cursor.close()

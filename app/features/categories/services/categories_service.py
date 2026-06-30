@@ -58,6 +58,31 @@ class CategoriesService:
             connection.close()
 
     @staticmethod
+    def get_active_categories():
+        connection = get_connection()
+
+        try:
+            error, categories = CategoriesRepository.find_active_categories(
+                connection
+            )
+
+            if error:
+                raise ServiceError(error)
+
+            return None, categories
+
+        except ServiceError as e:
+            return e.message, None
+
+        except Exception as e:
+            logger.error(
+                "Error en get_active_categories: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener las categorias activas", None
+
+    @staticmethod
     def create_category(category_data: CreateCategorySchema):
         data = category_data.model_dump()
 
