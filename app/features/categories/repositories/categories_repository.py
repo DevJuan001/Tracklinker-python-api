@@ -40,6 +40,14 @@ class CategoriesRepository:
             filters.append("category_status = %s")
             values.append(data["status"])
 
+        if data.get("search"):
+            search_term = f"%{data['search'].lower()}%"
+            filters.append(
+                "(LOWER(category_name) LIKE %s OR LOWER(category_description) LIKE %s)"
+            )
+            values.append(search_term)
+            values.append(search_term)
+
         if filters:
             query += " WHERE " + " AND ".join(filters)
 
