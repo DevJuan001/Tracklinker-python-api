@@ -33,7 +33,7 @@ class AuthService:
                 raise ServiceError(error)
 
             # Validamos si la contraseña es la correcta
-            success = verify_password(user[6], password)
+            success = verify_password(user.user_password, password)
 
             if not success:
                 raise ServiceError("Contraseña incorrecta")
@@ -43,15 +43,15 @@ class AuthService:
 
             # Creación del token
             access_token = create_access_token({
-                "sub": str(user[1]),
-                "role": user[0]
+                "sub": str(user.user_id),
+                "role": user.rol_name
             },
                 expires_delta=expires
             )
 
             refresh_token = create_refresh_token({
-                "sub": str(user[1]),
-                "role": user[0]
+                "sub": str(user.user_id),
+                "role": user.rol_name
             })
 
             set_auth_cookies(response, access_token, refresh_token)
@@ -73,17 +73,6 @@ class AuthService:
             raise ServiceError("Refresh token no encontrado")
 
         try:
-            # Calculamos el tiempo que le queda para que expire
-            ttl = get_token_remaining_ttl(refresh_token)
-
-            # Agregamos el token con el tiempo que le queda de expiración a la blacklist
-            added = await add_to_blacklist(refresh_token, ttl)
-
-            if not added and ttl > 0:
-                logger.warning(
-                    "No se pudo blacklistear el refresh_token viejo en refresh_tokens"
-                )
-
             payload = jwt.decode(
                 refresh_token,
                 settings.REFRESH_TOKEN_SECRET_KEY,
@@ -94,6 +83,17 @@ class AuthService:
 
             if not user_id:
                 raise ServiceError("Refresh token inválido")
+
+            # Calculamos el tiempo que le queda para que expire
+            ttl = get_token_remaining_ttl(refresh_token)
+
+            # Agregamos el token con el tiempo que le queda de expiración a la blacklist
+            added = await add_to_blacklist(refresh_token, ttl)
+
+            if not added and ttl > 0:
+                logger.warning(
+                    "No se pudo blacklistear el refresh_token viejo en refresh_tokens"
+                )
 
             new_access_token = create_access_token({
                 "sub": str(user_id),
@@ -147,6 +147,16 @@ class AuthService:
             access_token = request.cookies.get("access_token")
             refresh_token = request.cookies.get("refresh_token")
 
+            response.delete_cookie(
+                key="access_token",
+                path="/"
+            )
+
+            response.delete_cookie(
+                key="refresh_token",
+                path="/api/auth/refresh"
+            )
+
             if access_token:
                 # Calculamos el tiempo que le queda para que expire
                 ttl = get_token_remaining_ttl(access_token)
@@ -162,24 +172,14 @@ class AuthService:
             if refresh_token:
                 # Calculamos el tiempo que le queda para que expire
                 ttl = get_token_remaining_ttl(refresh_token)
-                
+
                 # Agregamos el token con el tiempo que le queda de expiración a la blacklist
                 added = await add_to_blacklist(refresh_token, ttl)
-                
+
                 if not added and ttl > 0:
                     logger.warning(
                         "No se pudo blacklistear el refresh_token en logout"
                     )
-
-            response.delete_cookie(
-                key="access_token",
-                path="/"
-            )
-
-            response.delete_cookie(
-                key="refresh_token",
-                path="/api/auth/refresh"
-            )
 
             return None, True, "Sesión cerrada exitosamente"
 
@@ -199,7 +199,7 @@ class AuthService:
             if user:
                 recovery_password_email.delay(
                     user_email=email,
-                    user_name=user[2]
+                    user_name=user.user_name
                 )
 
         except Exception:
