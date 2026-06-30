@@ -6,13 +6,12 @@ from pydantic import EmailStr
 from fastapi import Request, Response
 
 from app.core.config import settings
-from app.core.database import get_connection
-from app.core.token_blacklist import add_to_blacklist, get_token_remaining_ttl
 from app.utils.logger import get_logger
 from app.core.exception import ServiceError
+from app.core.database import get_connection
 from app.tasks.email_tasks import recovery_password_email
-from app.features.auth.models.auth_schema import VerifyRoleModelSchema
 from app.features.users.repositories.users_repository import UsersRepository
+from app.core.token_blacklist import add_to_blacklist, get_token_remaining_ttl
 from app.core.security import create_access_token, create_refresh_token, set_auth_cookies, verify_password
 
 logger = get_logger("auth.service")
@@ -122,24 +121,6 @@ class AuthService:
         except Exception as e:
             logger.error("Error en refresh_tokens: %s", e, exc_info=True)
             return "Error al intentar refrescar los tokens", False, None
-
-    @staticmethod
-    def verify_roles(body: VerifyRoleModelSchema, payload: dict):
-        try:
-            user_role = payload.get("role")
-            roles = body.roles
-
-            if user_role not in roles:
-                raise ServiceError("No autorizado")
-
-            return None, True
-
-        except ServiceError as e:
-            return e.message, None
-
-        except Exception as e:
-            logger.error("Error en verify_roles: %s", e, exc_info=True)
-            return "Error al intentar verificar los roles", None
 
     @staticmethod
     async def logout(request: Request, response: Response):

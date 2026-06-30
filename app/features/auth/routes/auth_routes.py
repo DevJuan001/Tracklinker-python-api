@@ -34,17 +34,6 @@ async def refresh_tokens(request: Request, response: Response):
     return await AuthController.refresh_tokens(request, response)
 
 
-# Endpoint para verificar el rol del usuario
-@router.post(
-    "/verify-roles",
-    dependencies=[
-        Depends(RateLimiter(times=50, seconds=60)),
-    ]
-)
-def verifyRole(body: VerifyRoleModelSchema, payload: dict = Depends(verify_jwt)):
-    return AuthController.verify_roles(body, payload)
-
-
 # Endpoint para cerrar sesión
 @router.post(
     "/logout",
