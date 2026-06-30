@@ -46,7 +46,12 @@ def verifyRole(body: VerifyRoleModelSchema, payload: dict = Depends(verify_jwt))
 
 
 # Endpoint para cerrar sesión
-@router.post("/logout")
+@router.post(
+    "/logout",
+    dependencies=[
+        Depends(RateLimiter(times=50, seconds=60)),
+    ]
+)
 async def logout(request: Request, response: Response):
     return await AuthController.logout(request, response)
 
