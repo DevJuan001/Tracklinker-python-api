@@ -4,7 +4,7 @@ from app.utils.logger import get_logger
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
 from app.features.users.models.users_schemas import CreateClientSchema, CreateUserSchema, UpdateUserSchema, UsersFiltersSchema
-from app.features.users.models.users_responses import RecentUserResponse, UserByIdResponse, UserResponse, UsersByRoleResponse, UsersByStatusResponse, UsersGrowthResponse
+from app.features.users.models.users_responses import RecentUserResponse, UserByEmailResponse, UserByIdResponse, UserResponse, UsersByRoleResponse, UsersByStatusResponse, UsersGrowthResponse
 
 logger = get_logger("users.repository")
 
@@ -77,7 +77,7 @@ class UsersRepository:
         per_page = filters_data.per_page
         offset = (filters_data.page - 1) * per_page
         values += [per_page, offset]
-
+        
         try:
             cursor.execute(query, values)
 
@@ -321,7 +321,20 @@ class UsersRepository:
 
             result = cursor.fetchone()
 
-            return None, result
+            data = [
+                UserByEmailResponse(
+                    rol_name=item[0],
+                    user_id=item[1],
+                    user_name=item[2],
+                    user_first_surname=item[3],
+                    user_second_surname=item[4],
+                    user_email=item[5],
+                    user_password=item[6],
+                )
+                for item in result
+            ]
+
+            return None, data[0]
 
         except Exception as e:
             logger.error("Error en find_user_by_email: %s", e, exc_info=True)

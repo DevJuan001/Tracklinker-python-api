@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request, Response
 from fastapi_limiter.depends import RateLimiter
 
 from app.features.auth.controllers.auth_controller import AuthController
-from app.features.auth.models.auth_schema import LoginModelSchema, RecoverPasswordSchema, VerifyRoleModelSchema
+from app.features.auth.models.auth_schema import LoginModelSchema, RecoverPasswordSchema
 from app.middlewares.jwt_middleware import verify_jwt
 
 
@@ -34,19 +34,13 @@ async def refresh_tokens(request: Request, response: Response):
     return await AuthController.refresh_tokens(request, response)
 
 
-# Endpoint para verificar el rol del usuario
+# Endpoint para cerrar sesión
 @router.post(
-    "/verify-roles",
+    "/logout",
     dependencies=[
         Depends(RateLimiter(times=50, seconds=60)),
     ]
 )
-def verifyRole(body: VerifyRoleModelSchema, payload: dict = Depends(verify_jwt)):
-    return AuthController.verify_roles(body, payload)
-
-
-# Endpoint para cerrar sesión
-@router.post("/logout")
 async def logout(request: Request, response: Response):
     return await AuthController.logout(request, response)
 

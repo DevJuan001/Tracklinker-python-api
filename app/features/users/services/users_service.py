@@ -96,31 +96,6 @@ class UsersService:
             return "Error al intentar obtener el usuario mediante el id", None
 
     @staticmethod
-    def get_user_by_email(email: EmailStr):
-        connection = get_connection()
-
-        try:
-            error, user = UsersRepository.find_user_by_email(
-                email, connection
-            )
-
-            if error or not user:
-                raise ServiceError(error)
-
-            return None, user
-
-        except ServiceError as e:
-            return e.message, None
-
-        except Exception as e:
-            logger.error(
-                "Error en get_user_by_email: %s",
-                e,
-                exc_info=True
-            )
-            return "Error al intentar obtener el usuario mediante el correo", None
-
-    @staticmethod
     def get_all_roles():
         connection = get_connection()
 
@@ -308,7 +283,7 @@ class UsersService:
                     data["email"], connection
                 )
 
-                if existing_user and (existing_user[1] != user_id):
+                if existing_user and (existing_user.user_id != user_id):
                     raise ServiceError(
                         "El correo ya está registrado, ingresa un correo diferente e intentalo nuevamente"
                     )
