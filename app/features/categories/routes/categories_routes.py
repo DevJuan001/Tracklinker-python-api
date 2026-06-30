@@ -44,7 +44,7 @@ async def get_all_categories(filters: CategoriesFiltersSchema = Depends(), redis
     ]
 )
 async def get_active_categories(redis=Depends(get_redis)):
-    cache_key = "subcategories:active"
+    cache_key = "categories:active"
 
     cached = await get_cache(redis, cache_key)
     if cached:
