@@ -31,6 +31,16 @@ class UserByIdResponse(BaseModel):
     city: int
 
 
+class UserByEmailResponse(BaseModel):
+    rol_name: str
+    user_id: int
+    user_name: str
+    user_first_surname: str
+    user_second_surname: str
+    user_email: EmailStr
+    user_password: str
+
+
 class RecentUserResponse(BaseModel):
     name: str
     surname: str

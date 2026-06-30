@@ -50,17 +50,6 @@ class UsersController:
         }
 
     @staticmethod
-    def get_user_by_email(email: str):
-        error, user = UsersService.get_user_by_email(email)
-
-        if error:
-            raise HTTPException(status_code=404, detail=error)
-
-        return {
-            "data": user
-        }
-
-    @staticmethod
     def get_all_roles():
         error, data = UsersService.get_all_roles()
 
