@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from app.utils.safe_str import safe_optional_str
+from app.utils.safe_types import safe_list_str
 
 
 class OutputOrdersFiltersSchema(BaseModel):
@@ -17,11 +17,11 @@ class OutputOrdersFiltersSchema(BaseModel):
 
 class CreateOutputOrderSchema(BaseModel):
     client_id: int
-    product_serials: list[str]
+    product_serials: list[str] = safe_list_str(min_items=1, min_length=1)
     output_product_garanty: datetime
 
 
 class UpdateOutputOrderSchema(BaseModel):
     output_order_status: Optional[int] = None
-    product_serials: Optional[list[str]] = None
+    product_serials: Optional[list[str]] = safe_list_str(min_items=1, min_length=1)
     output_product_garanty: Optional[datetime] = None
