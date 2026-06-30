@@ -2,7 +2,7 @@ from app.utils.logger import get_logger
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import daily_periods, period_map
 from app.features.subcategories.models.subcategories_schemas import CreateSubcategorySchema, SubcategoriesFiltersSchema, UpdateSubcategorySchema
-from app.features.subcategories.models.subcategories_responses import ActiveCategoryResponse, RecentSubcategoryResponse, SubcategoriesByCategoryResponse, SubcategoriesByStatusResponse, SubcategoriesGrowthResponse, SubcategoryByName, SubcategoryResponse
+from app.features.subcategories.models.subcategories_responses import ActiveSubcategoryResponse, RecentSubcategoryResponse, SubcategoriesByCategoryResponse, SubcategoriesByStatusResponse, SubcategoriesGrowthResponse, SubcategoryByName, SubcategoryResponse
 
 
 logger = get_logger("subcategories.repository")
@@ -89,44 +89,6 @@ class SubcategoriesRepository:
         finally:
             cursor.close()
 
-    @staticmethod
-    def find_active_categories(connection):
-        cursor = connection.cursor()
-
-        query = """
-        SELECT
-            category_id,
-            category_name
-        FROM CATEGORIES
-        WHERE category_status = 2 
-        """
-
-        try:
-            cursor.execute(query)
-
-            result = cursor.fetchall()
-
-            data = [
-                ActiveCategoryResponse(
-                    category_id=item[0],
-                    category_name=item[1]
-                )
-                for item in result
-            ]
-
-            return None, data
-
-        except Exception as e:
-            logger.error(
-                "Error en find_active_categories: %s",
-                e,
-                exc_info=True
-            )
-            return "Error al intentar obtener las categorias activas", None
-
-        finally:
-            cursor.close()
-
     # Obtener una subcategoría por el ID
     @staticmethod
     def find_subcategory_by_id(subcategory_id: int, connection):
@@ -173,6 +135,44 @@ class SubcategoriesRepository:
                 exc_info=True
             )
             return "Error al intentar obtener la subcategoría mediante el id", None
+
+        finally:
+            cursor.close()
+
+    @staticmethod
+    def find_active_subcategories(connection):
+        cursor = connection.cursor()
+
+        query = """
+        SELECT
+            subcategory_id,
+            subcategory_name
+        FROM SUBCATEGORIES
+        WHERE subcategory_status = 2 
+        """
+
+        try:
+            cursor.execute(query)
+
+            result = cursor.fetchall()
+
+            data = [
+                ActiveSubcategoryResponse(
+                    subcategory_id=item[0],
+                    subcategory_name=item[1]
+                )
+                for item in result
+            ]
+
+            return None, data
+
+        except Exception as e:
+            logger.error(
+                "Error en find_active_subcategories: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener las subcategorias activas", None
 
         finally:
             cursor.close()

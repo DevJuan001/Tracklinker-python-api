@@ -32,8 +32,8 @@ class SubcategoriesController:
         }
 
     @staticmethod
-    def get_active_categories():
-        error, categories = SubcategoriesService.get_active_categories()
+    def get_active_subcategories():
+        error, categories = SubcategoriesService.get_active_subcategories()
 
         if error:
             raise HTTPException(status_code=404, detail=error)

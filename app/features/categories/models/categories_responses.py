@@ -18,11 +18,17 @@ class RecentCategoryResponse(BaseModel):
     status: int
 
 
+class ActiveCategoryResponse(BaseModel):
+    category_id: int
+    category_name: str
+
+
 class CategoryByStatusResponse(BaseModel):
     recent_categories: int
     total_categories: int
     inactive_categories: int
     active_categories: int
+
 
 class GrowthCategoryResponse(BaseSchema):
     date: str

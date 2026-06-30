@@ -39,20 +39,20 @@ async def get_all_subcategories(filters: SubcategoriesFiltersSchema = Depends(),
 
 # Endpoint para obtener las categorias activas
 @router.get(
-    "/active-categories",
+    "/active-subcategories",
     dependencies=[
         Depends(RateLimiter(times=30, seconds=60)),
         Depends(require_roles(["Admin", "Almacén"]))
     ]
 )
-async def get_active_categories(redis=Depends(get_redis)):
+async def get_active_subcategories(redis=Depends(get_redis)):
     cache_key = "subcategories:active"
 
     cached = await get_cache(redis, cache_key)
     if cached:
         return cached
 
-    result = SubcategoriesController.get_active_categories()
+    result = SubcategoriesController.get_active_subcategories()
 
     await set_cache(redis, cache_key, result, 300)
 
