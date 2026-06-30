@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel, Field
-from app.utils.safe_str import safe_str, safe_optional_str
+from app.utils.safe_types import safe_str, safe_optional_str
 
 
 class CategoriesFiltersSchema(BaseModel):

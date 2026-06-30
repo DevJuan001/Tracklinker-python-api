@@ -68,3 +68,41 @@ def safe_optional_str(*, min_length: Optional[int] = None, max_length: int = 100
     field = Field(default=None)
     field.metadata.append(AfterValidator(_validator))
     return field
+
+
+def safe_list_str(
+    *,
+    min_length: Optional[int] = None,
+    max_length: int = 100,
+    min_items: int = 0,
+    max_items: int = 50,
+) -> FieldInfo:
+    def _list_validator(value: list) -> list:
+        return [
+            _validate(item, min_length=min_length, max_length=max_length)
+            for item in value
+        ]
+
+    field = Field(..., min_length=min_items, max_length=max_items)
+    field.metadata.append(AfterValidator(_list_validator))
+    return field
+
+
+def safe_optional_list_str(
+    *,
+    min_length: Optional[int] = None,
+    max_length: int = 100,
+    min_items: int = 0,
+    max_items: int = 50,
+) -> FieldInfo:
+    def _list_validator(value: Optional[list]) -> Optional[list]:
+        if value is None:
+            return None
+        return [
+            _validate(item, min_length=min_length, max_length=max_length)
+            for item in value
+        ]
+
+    field = Field(default=None, min_length=min_items, max_length=max_items)
+    field.metadata.append(AfterValidator(_list_validator))
+    return field
