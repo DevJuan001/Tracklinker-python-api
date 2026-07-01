@@ -2,7 +2,7 @@ from app.utils.logger import get_logger
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
 from app.features.categories.models.categories_schemas import CategoriesFiltersSchema, CreateCategorySchema, UpdateCategorySchema
-from app.features.categories.models.categories_responses import CategoryByStatusResponse, CategoryResponse, GrowthCategoryResponse, RecentCategoryResponse
+from app.features.categories.models.categories_responses import ActiveCategoryResponse, CategoryByStatusResponse, CategoryResponse, GrowthCategoryResponse, RecentCategoryResponse
 
 logger = get_logger("categories.repository")
 
@@ -40,6 +40,14 @@ class CategoriesRepository:
             filters.append("category_status = %s")
             values.append(data["status"])
 
+        if data.get("search"):
+            search_term = f"%{data['search'].lower()}%"
+            filters.append(
+                "(LOWER(category_name) LIKE %s OR LOWER(category_description) LIKE %s)"
+            )
+            values.append(search_term)
+            values.append(search_term)
+
         if filters:
             query += " WHERE " + " AND ".join(filters)
 
@@ -47,6 +55,12 @@ class CategoriesRepository:
             query += " ORDER BY category_name ASC"
         elif data.get("name_order") == "desc":
             query += " ORDER BY category_name DESC"
+
+        query += " ORDER BY category_id DESC LIMIT %s OFFSET %s"
+
+        per_page = filters_data.per_page
+        offset = (filters_data.page - 1) * per_page
+        values += [per_page, offset]
 
         try:
             cursor.execute(query, values)
@@ -110,6 +124,44 @@ class CategoriesRepository:
         finally:
             cursor.close()
 
+    @staticmethod
+    def find_active_categories(connection):
+        cursor = connection.cursor()
+
+        query = """
+        SELECT
+            category_id,
+            category_name
+        FROM CATEGORIES
+        WHERE category_status = 2 
+        """
+
+        try:
+            cursor.execute(query)
+
+            result = cursor.fetchall()
+
+            data = [
+                ActiveCategoryResponse(
+                    category_id=item[0],
+                    category_name=item[1]
+                )
+                for item in result
+            ]
+
+            return None, data
+
+        except Exception as e:
+            logger.error(
+                "Error en find_active_categories: %s",
+                e,
+                exc_info=True
+            )
+            return "Error al intentar obtener las categorias activas", None
+
+        finally:
+            cursor.close()
+
     # Obtener una categoria por el ID
     @staticmethod
     def find_category_by_name(category_name: str, connection):
@@ -157,24 +209,10 @@ class CategoriesRepository:
     def create_category(category_data: CreateCategorySchema, connection):
         data = category_data.model_dump()
 
-        cursor = connection.cursor(buffered=True)
+        cursor = connection.cursor()
 
         try:
-            # Validar nombre duplicado
-            cursor.execute(
-                """
-            SELECT
-                category_name
-            FROM CATEGORIES
-            WHERE category_name = %s
-            """, (data["name"],))
-
-            category_exist = cursor.fetchone()
-
-            if category_exist:
-                return "Ya existe un categoria con este nombre, usa uno diferente e intentalo nuevamente", False, None
-
-            query = "INSERT INTO categories (category_name, category_description) VALUES (%s, %s)"
+            query = "INSERT INTO CATEGORIES (category_name, category_description) VALUES (%s, %s)"
 
             cursor.execute(
                 query, (data["name"], data["description"])
@@ -327,8 +365,8 @@ class CategoriesRepository:
             WHERE category_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
             ) AS recent_categories,
             (SELECT COUNT(*) FROM CATEGORIES) AS total_categories,
-            SUM(CASE WHEN category_status = 0 THEN 1 ELSE 0 END) AS inactive_categories,
-            SUM(CASE WHEN category_status = 1 THEN 1 ELSE 0 END) AS active_categories
+            SUM(CASE WHEN category_status = 1 THEN 1 ELSE 0 END) AS inactive_categories,
+            SUM(CASE WHEN category_status = 2 THEN 1 ELSE 0 END) AS active_categories
         FROM CATEGORIES
         """
 

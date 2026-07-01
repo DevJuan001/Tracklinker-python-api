@@ -3,7 +3,7 @@ from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
 from app.features.output_orders.models.output_orders_model import UpdateOutputOrderModel
 from app.features.output_orders.models.output_orders_schema import OutputOrdersFiltersSchema
-from app.features.output_orders.models.output_orders_responses import OutputOrderByBrandResponse, OutputOrderByStatusResponse, OutputOrderGrowthResponse, OutputOrderResponse, RecentOutputOrderResponse
+from app.features.output_orders.models.output_orders_responses import OutputOrderByBrandResponse, OutputOrderByStatusResponse, OutputOrderClientResponse, OutputOrderGrowthResponse, OutputOrderResponse, RecentOutputOrderResponse
 
 logger = logger.get_logger("output_orders.repository")
 
@@ -19,13 +19,20 @@ class OutputOrdersRepository:
         query = """
         SELECT
             oo.out_order_id,
-            oo.out_order_date,
+            DATE_FORMAT(oo.out_order_date, '%Y-%m-%d') AS out_order_date,
             oo.out_order_status,
+            od.output_details_id,
             od.product_serial,
-            od.out_product_garanty,
+            DATE_FORMAT(od.out_product_garanty, '%Y-%m-%d') AS out_product_garanty,
             pb.product_brand_name,
             pm.product_model_name,
-            pm.product_model_description
+            p.product_status,
+            cu.user_id,
+            u.user_name,
+            u.user_first_surname,
+            u.user_second_surname,
+            u.user_email,
+            u.user_phone
         FROM OUTPUT_DETAILS AS od 
         INNER JOIN OUTPUT_ORDERS AS oo
             ON oo.out_order_id = od.out_order_id
@@ -39,10 +46,18 @@ class OutputOrdersRepository:
             ON pd.product_model_id = pm.product_model_id 
         INNER JOIN PRODUCT_BRANDS AS pb
             ON pm.product_brand_id = pb.product_brand_id
+        LEFT JOIN CUSTOMERS AS cu
+            ON oo.out_order_id = cu.out_order_id
+        LEFT JOIN USERS AS u
+            ON cu.user_id = u.user_id
         """
 
         filters = []
         values = []
+
+        if "client_id" in data:
+            filters.append("cu.user_id = %s")
+            values.append(data["client_id"])
 
         if "start_date" in data:
             filters.append("DATE(oo.out_order_date) >= %s")
@@ -59,27 +74,57 @@ class OutputOrdersRepository:
         if filters:
             query += " WHERE " + " AND ".join(filters)
 
+        query += " ORDER BY oo.out_order_id DESC LIMIT %s OFFSET %s"
+
+        per_page = filters_data.per_page
+        offset = (filters_data.page - 1) * per_page
+        values += [per_page, offset]
+
         try:
             cursor.execute(query, values)
-
             results = cursor.fetchall()
 
+            orders_map = {}
+
+            for item in results:
+                output_order_id = item[0]
+
+                if output_order_id not in orders_map:
+                    client = None
+                    if item[9] is not None:
+                        client = OutputOrderClientResponse(
+                            client_id=item[9],
+                            client_name=item[10],
+                            client_first_surname=item[11],
+                            client_second_surname=item[12],
+                            client_email=item[13],
+                            client_phone=item[14],
+                        )
+
+                    orders_map[output_order_id] = {
+                        "output_order_id": output_order_id,
+                        "output_order_date": item[1],
+                        "output_order_status": item[2],
+                        "client": client,
+                        "products": [],
+                    }
+
+                orders_map[output_order_id]["products"].append({
+                    "output_details_id": item[3],
+                    "product_serial": item[4],
+                    "output_product_garanty": item[5],
+                    "product_brand_name": item[6],
+                    "product_model_name": item[7],
+                    "product_status": item[8],
+                })
+
             orders = [
-                OutputOrderResponse(
-                    output_order_id=item[0],
-                    output_order_date=date_formatter(item[1]),
-                    output_order_status=item[2],
-                    product_serial=item[3],
-                    output_product_garanty=item[4],
-                    product_brand_name=item[5],
-                    product_model_name=item[6],
-                    product_model_description=item[7],
-                )
-                for item in results
+                OutputOrderResponse(**order)
+                for order in orders_map.values()
             ]
 
             return None, orders
-        
+
         except Exception as e:
             logger.error(
                 "Error en find_all_output_orders: %s",
@@ -87,7 +132,7 @@ class OutputOrdersRepository:
                 exc_info=True
             )
             return "Error al intentar obtener las ordenes de salida", None
-        
+
         finally:
             cursor.close()
 
@@ -106,7 +151,13 @@ class OutputOrdersRepository:
             od.out_product_garanty,
             pb.product_brand_name,
             pm.product_model_name,
-            pm.product_model_description
+            pm.product_model_description,
+            cu.user_id,
+            u.user_name,
+            u.user_first_surname,
+            u.user_second_surname,
+            u.user_email,
+            u.user_phone
         FROM OUTPUT_DETAILS AS od 
         INNER JOIN OUTPUT_ORDERS AS oo
             ON oo.out_order_id = od.out_order_id
@@ -120,6 +171,10 @@ class OutputOrdersRepository:
             ON pd.product_model_id = pm.product_model_id 
         INNER JOIN PRODUCT_BRANDS AS pb
             ON pm.product_brand_id = pb.product_brand_id
+        LEFT JOIN CUSTOMERS AS cu
+            ON oo.out_order_id = cu.out_order_id
+        LEFT JOIN USERS AS u
+            ON cu.user_id = u.user_id
         WHERE oo.out_order_id = %s
         """
         try:
@@ -127,11 +182,26 @@ class OutputOrdersRepository:
 
             result = cursor.fetchall()
 
+            if not result:
+                return "Orden de salida no encontrada", None
+
+            client = None
+            if result[0][8] is not None:
+                client = OutputOrderClientResponse(
+                    client_id=result[0][8],
+                    client_name=result[0][9],
+                    client_first_surname=result[0][10],
+                    client_second_surname=result[0][11],
+                    client_email=result[0][12],
+                    client_phone=result[0][13],
+                )
+
             data = [
                 OutputOrderResponse(
                     output_order_id=item[0],
                     output_order_date=date_formatter(item[1]),
                     output_order_status=item[2],
+                    client=client,
                     product_serial=item[3],
                     output_product_garanty=item[4],
                     product_brand_name=item[5],
@@ -150,7 +220,7 @@ class OutputOrdersRepository:
                 exc_info=True
             )
             return "Error al intentar obtener la orden de salida", None
-        
+
         finally:
             cursor.close()
 
@@ -167,7 +237,7 @@ class OutputOrdersRepository:
             output_order_id = cursor.lastrowid
 
             return None, True, output_order_id
-        
+
         except Exception as e:
             logger.error(
                 "Error en create_output_order: %s",
@@ -175,7 +245,7 @@ class OutputOrdersRepository:
                 exc_info=True
             )
             return "Error al intentar crear la orden de salida", False, None
-        
+
         finally:
             cursor.close()
 
@@ -197,7 +267,7 @@ class OutputOrdersRepository:
             ))
 
             return None, True, "Orden de salida actualizada exitosamente"
-        
+
         except Exception as e:
             logger.error(
                 "Error en update_output_order: %s",
@@ -205,7 +275,7 @@ class OutputOrdersRepository:
                 exc_info=True
             )
             return "Error al intentar actualizar la orden de salida", False, None
-        
+
         finally:
             cursor.close()
 
@@ -220,7 +290,7 @@ class OutputOrdersRepository:
             )
 
             return None, True, "Orden de salida deshabilitada correctamente"
-        
+
         except Exception as e:
             logger.error(
                 "Error en disable_output_order: %s",
@@ -228,7 +298,7 @@ class OutputOrdersRepository:
                 exc_info=True
             )
             return "Error al intentar deshabilitar la orden de salida", False, None
-        
+
         finally:
             cursor.close()
 
@@ -243,7 +313,7 @@ class OutputOrdersRepository:
             )
 
             return None, True, "Orden de salida habilitada correctamente"
-        
+
         except Exception as e:
             logger.error(
                 "Error en enable_output_order: %s",
@@ -251,12 +321,13 @@ class OutputOrdersRepository:
                 exc_info=True
             )
             return "Error al intentar habilitar la orden de salida", False, None
-        
+
         finally:
             cursor.close()
 
 
 #   ------------ REPORTES DE ORDENES DE SALIDA ------------
+
 
     @staticmethod
     def find_recent_outputs(connection):

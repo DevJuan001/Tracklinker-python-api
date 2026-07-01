@@ -1,7 +1,10 @@
-from app.features.output_orders.models.output_orders_model import UpdateOutputOrderModel
 from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
+from app.features.users.repositories.users_repository import UsersRepository
+from app.features.products.repositories.products_repository import ProductsRepository
+from app.features.output_orders.models.output_orders_model import UpdateOutputOrderModel
+from app.features.output_orders.repositories.customers_repository import CustomersRepository
 from app.features.products.repositories.product_serials_repository import ProductSerialsRepository
 from app.features.output_orders.repositories.output_orders_repository import OutputOrdersRepository
 from app.features.output_orders.repositories.output_details_repository import OutputDetailsRepository
@@ -75,8 +78,35 @@ class OutputOrdersService:
         connection = get_connection()
 
         try:
+            # Validar que el cliente existe y está activo
+            error, client = UsersRepository.find_client_by_id(
+                data["client_id"], connection
+            )
+
+            if error or not client:
+                raise ServiceError(
+                    error or "El cliente no existe o no está activo")
+
+            # Crear la orden de salida
+            error, success, output_order_id = OutputOrdersRepository.create_output_order(
+                connection
+            )
+
+            if error or not success:
+                raise ServiceError(
+                    error or "Error al intentar crear la orden de salida"
+                )
+
+            # Relacionar el cliente con la orden de salida
+            error, success, message = CustomersRepository.create_customer(
+                data["client_id"], output_order_id, connection
+            )
+
+            if error or not success:
+                raise ServiceError(error)
+
             for serial in data["product_serials"]:
-                # Verificar que cada serial existe
+                # Buscamos que cada serial este registrado
                 error, product = ProductSerialsRepository.find_product_by_serial(
                     serial, connection
                 )
@@ -86,19 +116,10 @@ class OutputOrdersService:
 
                 if not product:
                     raise ServiceError(
-                        "No existe un producto con este serial"
+                        f"No existe un producto con el serial {serial}"
                     )
 
-            # Crear la orden de salida
-            error, success, output_order_id = OutputOrdersRepository.create_output_order(
-                connection
-            )
-
-            if error or not success:
-                raise ServiceError(error)
-
-            # Crear los detalles de la orden de salida por cada serial que viene
-            for serial in data["product_serials"]:
+                # Crear los detalles de la orden de salida por cada serial que viene
                 error, success, message = OutputDetailsRepository.create_output_details(
                     output_order_id,
                     CreateOutputDetails(
@@ -108,8 +129,20 @@ class OutputOrdersService:
                     connection
                 )
 
-            if error or not success:
-                raise ServiceError(error)
+                if error or not success:
+                    raise ServiceError(
+                        error or "Error al intentar crear los detalles de la orden de salida"
+                    )
+
+                # Actualizamos el estado del producto a vendido
+                error, success, message = ProductsRepository.update_product_status(
+                    product[0], 3, connection
+                )
+
+                if error or not success:
+                    raise ServiceError(
+                        error or "Error al intentar actualizar el estado del producto"
+                    )
 
             connection.commit()
 
@@ -132,6 +165,8 @@ class OutputOrdersService:
         data = output_order_data.model_dump(exclude_none=True)
 
         connection = get_connection()
+
+        print(output_order_id)
 
         try:
             # Validar que cada serial existe
@@ -166,10 +201,10 @@ class OutputOrdersService:
                     raise ServiceError(error)
 
             if "product_serials" in data:
-                error, success = OutputDetailsRepository.delete_output_details_by_output_order_id(
+                error, success, message = OutputDetailsRepository.delete_output_details_by_output_order_id(
                     output_order_id, connection
                 )
-                
+
                 if error or not success:
                     raise ServiceError(error)
 

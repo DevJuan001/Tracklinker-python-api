@@ -45,11 +45,6 @@ class SuppliersRepository:
             filters.append("DATE(s.supplier_date) <= %s")
             values.append(data["end_date"])
 
-        if data.get("name_order") == "asc":
-            query += " ORDER BY s.supplier_name ASC"
-        elif data.get("name_order") == "desc":
-            query += " ORDER BY s.supplier_name DESC"
-
         if "status" in data:
             filters.append("s.supplier_status = %s")
             values.append(data["status"])
@@ -60,6 +55,17 @@ class SuppliersRepository:
 
         if filters:
             query += " WHERE " + " AND ".join(filters)
+
+        if data.get("name_order") == "asc":
+            query += " ORDER BY s.supplier_name ASC"
+        elif data.get("name_order") == "desc":
+            query += " ORDER BY s.supplier_name DESC"
+
+        query += " ORDER BY s.supplier_id DESC LIMIT %s OFFSET %s"
+
+        per_page = filters_data.per_page
+        offset = (filters_data.page - 1) * per_page
+        values += [per_page, offset]
 
         try:
             cursor.execute(query, values)
@@ -418,8 +424,8 @@ class SuppliersRepository:
         SELECT
             (SELECT COUNT(*) FROM SUPPLIERS) AS total_suppliers,
             COUNT(CASE WHEN supplier_date >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 END) as recent_suppliers,
-            SUM(CASE WHEN supplier_status = 0 THEN 0 ELSE 0 END) AS inactive_suppliers,
-            SUM(CASE WHEN supplier_status = 1 THEN 1 ELSE 0 END) AS active_suppliers
+            SUM(CASE WHEN supplier_status = 1 THEN 1 ELSE 0 END) AS inactive_suppliers,
+            SUM(CASE WHEN supplier_status = 2 THEN 1 ELSE 0 END) AS active_suppliers
         FROM SUPPLIERS
         """
 

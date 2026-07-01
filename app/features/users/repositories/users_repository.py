@@ -1,9 +1,10 @@
 import bcrypt
+from pydantic import EmailStr
 from app.utils.logger import get_logger
 from app.utils.date_formatter import date_formatter
 from app.utils.periods import period_map, daily_periods
-from app.features.users.models.users_schemas import CreateUserSchema, UpdateUserSchema, UsersFiltersSchema
-from app.features.users.models.users_responses import RecentUserResponse, UserByIdResponse, UserResponse, UsersByRoleResponse, UsersByStatusResponse, UsersGrowthResponse
+from app.features.users.models.users_schemas import CreateClientSchema, CreateUserSchema, UpdateUserSchema, UsersFiltersSchema
+from app.features.users.models.users_responses import RecentUserResponse, UserByEmailResponse, UserByIdResponse, UserResponse, UsersByRoleResponse, UsersByStatusResponse, UsersGrowthResponse
 
 logger = get_logger("users.repository")
 
@@ -71,6 +72,12 @@ class UsersRepository:
         elif data.get("name_order") == "desc":
             query += " ORDER BY u.user_name DESC"
 
+        query += " ORDER BY u.user_id DESC LIMIT %s OFFSET %s"
+
+        per_page = filters_data.per_page
+        offset = (filters_data.page - 1) * per_page
+        values += [per_page, offset]
+        
         try:
             cursor.execute(query, values)
 
@@ -99,6 +106,103 @@ class UsersRepository:
         except Exception as e:
             logger.error("Error en find_all_users: %s", e, exc_info=True)
             return "Error al intentar obtener todos los usuarios", None
+
+        finally:
+            cursor.close()
+
+    # Obtener todos los clientes activos (rol Cliente = 4, estado activo = 2)
+    @staticmethod
+    def find_active_clients(connection):
+        cursor = connection.cursor()
+
+        query = """
+        SELECT
+            r.rol_id,
+            r.rol_name,
+            u.user_id,
+            u.user_name,
+            u.user_first_surname,
+            u.user_second_surname,
+            u.user_phone,
+            u.user_email,
+            u.user_address,
+            u.user_city,
+            c.city_name,
+            u.user_date,
+            u.user_status
+        FROM USERS AS u
+        INNER JOIN ROLES AS r
+            ON u.rol_id = r.rol_id
+        INNER JOIN CITIES AS c
+            ON u.user_city = c.city_id
+        WHERE u.rol_id = 4 AND u.user_status = 2
+        ORDER BY u.user_name ASC
+        """
+
+        try:
+            cursor.execute(query)
+
+            results = cursor.fetchall()
+
+            users = [
+                UserResponse(
+                    role_id=item[0],
+                    role_name=item[1],
+                    id=item[2],
+                    name=item[3],
+                    first_surname=item[4],
+                    second_surname=item[5],
+                    phone=item[6],
+                    email=item[7],
+                    address=item[8],
+                    city=item[9],
+                    city_name=item[10],
+                    date=date_formatter(item[11]),
+                    status=item[12]
+                )
+                for item in results
+            ]
+            return None, users
+
+        except Exception as e:
+            logger.error("Error en find_active_clients: %s", e, exc_info=True)
+            return "Error al intentar obtener los clientes activos", None
+
+        finally:
+            cursor.close()
+
+    # Validar que un usuario es cliente activo (rol Cliente = 4, estado activo = 2)
+    @staticmethod
+    def find_client_by_id(client_id: int, connection):
+        cursor = connection.cursor()
+
+        query = """
+        SELECT
+            u.user_id,
+            u.user_name,
+            u.user_first_surname,
+            u.user_second_surname,
+            u.user_email,
+            u.user_phone
+        FROM USERS AS u
+        INNER JOIN ROLES AS r
+            ON u.rol_id = r.rol_id
+        WHERE u.user_id = %s AND u.rol_id = 4 AND u.user_status = 2
+        """
+
+        try:
+            cursor.execute(query, (client_id,))
+
+            result = cursor.fetchone()
+
+            if not result:
+                return "El cliente no existe o no está activo", None
+
+            return None, result
+
+        except Exception as e:
+            logger.error("Error en find_client_by_id: %s", e, exc_info=True)
+            return "Error al intentar obtener el cliente", None
 
         finally:
             cursor.close()
@@ -151,11 +255,11 @@ class UsersRepository:
                 for item in result
             ]
             return None, data
-        
+
         except Exception as e:
             logger.error("Error en find_user_by_id: %s", e, exc_info=True)
             return "Error al intentar obtener el usuario mediante el id", None
-        
+
         finally:
             cursor.close()
 
@@ -193,7 +297,7 @@ class UsersRepository:
 
     # Obtener un usuario mediante el correo
     @staticmethod
-    def find_user_by_email(email: str, connection):
+    def find_user_by_email(email: EmailStr, connection):
         cursor = connection.cursor(buffered=True)
 
         # Petición a la base de datos
@@ -217,7 +321,20 @@ class UsersRepository:
 
             result = cursor.fetchone()
 
-            return None, result
+            data = [
+                UserByEmailResponse(
+                    rol_name=item[0],
+                    user_id=item[1],
+                    user_name=item[2],
+                    user_first_surname=item[3],
+                    user_second_surname=item[4],
+                    user_email=item[5],
+                    user_password=item[6],
+                )
+                for item in result
+            ]
+
+            return None, data[0]
 
         except Exception as e:
             logger.error("Error en find_user_by_email: %s", e, exc_info=True)
@@ -263,6 +380,49 @@ class UsersRepository:
         except Exception as e:
             logger.error("Error en create_user: %s", e, exc_info=True)
             return "Error al intentar crear el usuario", False, None
+
+        finally:
+            cursor.close()
+
+    # Crear un cliente (rol Cliente = 4, sin contraseña, estado activo = 2)
+    @staticmethod
+    def create_client(client_data: CreateClientSchema, connection):
+        data = client_data.model_dump()
+
+        cursor = connection.cursor()
+
+        query = """INSERT INTO USERS (
+            rol_id,
+            user_name,
+            user_first_surname,
+            user_second_surname,
+            user_address,
+            user_city,
+            user_password,
+            user_email,
+            user_phone,
+            user_status
+        ) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+
+        try:
+            cursor.execute(query, (
+                4,
+                data["name"],
+                data["first_surname"],
+                data["second_surname"],
+                data["address"],
+                data["city"],
+                None,
+                data["email"],
+                data["phone"],
+                2
+            ))
+
+            return None, True, "Cliente creado correctamente"
+
+        except Exception as e:
+            logger.error("Error en create_client: %s", e, exc_info=True)
+            return "Error al intentar crear el cliente", False, None
 
         finally:
             cursor.close()

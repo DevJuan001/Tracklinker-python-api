@@ -2,11 +2,12 @@ from app.utils.logger import get_logger
 from app.core.database import get_connection
 from app.core.exception import ServiceError
 from app.features.products.repositories.products_repository import ProductsRepository
-from app.features.output_orders.services.output_orders_service import OutputOrdersService
-from app.features.output_orders.models.output_orders_schema import CreateOutputOrderSchema
+from app.features.output_orders.models.output_details_model import CreateOutputDetails
 from app.features.warranties.repositories.warranties_repository import WarrantiesRepository
 from app.features.warranties.repositories.technicians_repository import TechniciansRepository
 from app.features.products.repositories.product_serials_repository import ProductSerialsRepository
+from app.features.output_orders.repositories.output_orders_repository import OutputOrdersRepository
+from app.features.output_orders.repositories.output_details_repository import OutputDetailsRepository
 from app.features.warranties.models.warranties_schemas import CreateWarrantySchema, UpdateWarrantySchema, WarrantiesFilterSchema
 
 logger = get_logger("warranties.service")
@@ -72,10 +73,10 @@ class WarrantiesService:
                     "Este serial no existe, rectifica que el serial este bien escrito e intentalo nuevamente"
                 )
 
-            # Validamos que el producto no este deshabilitado
-            if product[1] == 1:
+            # Validamos que el producto no este deshabilitado, activo o en garantía
+            if product[1] in (1, 2, 4):
                 raise ServiceError(
-                    "No puedes crear una garantía con un producto deshabilitado, activa o habilita este producto e intentalo nuevamente"
+                    "No puedes crear una garantía con un producto que no esta vendido, vende este producto previamente e intentalo nuevamente"
                 )
 
             # Verificamos que el producto no tenga una garantía activa
@@ -88,26 +89,18 @@ class WarrantiesService:
                     "El producto ya cuenta con una garantía activa, debes completar o deshabilitar esa garantía  e intentarlo nuevamente"
                 )
 
-            # Creamos la orden de salida del producto
-            error, success, message = OutputOrdersService.create_output_order(
-                CreateOutputOrderSchema(
-                    product_serials=[data["product_serial"]],
-                    output_product_garanty="2026-01-01"
-                )
-            )
-            if error:
-                raise ServiceError(error)
-
             # Actualizamos el estado del producto y lo ponemos en garantía
             error, success, message = ProductsRepository.update_product_status(
                 product[0], 4, connection
             )
+
             if error:
                 raise ServiceError(error)
 
             error, success, message = WarrantiesRepository.create_warranty(
                 data, user_id, connection
             )
+
             if error:
                 raise ServiceError(error)
 
@@ -134,13 +127,16 @@ class WarrantiesService:
         connection = get_connection()
 
         WARRANTY_STATUS_PRODUCT_MAP = {
-            1: 2,
+            1: 3,
             2: 4,
             3: 4,
-            4: 2,
+            4: 3,
         }
 
         try:
+            if not data:
+                raise ServiceError("No hay campos para actualizar")
+
             # Verificamos que el serial existe
             if "product_serial" in data:
                 error, product = ProductSerialsRepository.find_product_by_serial(
@@ -151,25 +147,22 @@ class WarrantiesService:
                     raise ServiceError(error)
 
             # Validamos que exista esa garantía
-            warranty = WarrantiesRepository.find_warranty_by_id(
+            error, warranty = WarrantiesRepository.find_warranty_by_id(
                 warranty_incidents_id, connection
             )
 
-            if not warranty:
-                raise ServiceError("Garantía no encontrada")
-
-            if not data:
-                raise ServiceError("No hay campos para actualizar")
+            if error or not warranty:
+                raise ServiceError(error or "Garantía no encontrada")
 
             # Obtenemos el nuevo estado que se le va a asignar a la garantía
             new_status = data.get("status")
 
             # Obtenemos el estado actual de la garantía
-            current_status = warranty[1]
+            current_status = warranty[0].status
 
-            # Aqui Verificamos si el estado actual es 2 = "Pendiente o sin empezar" y el nuevo estado es igual a 3 = "En proceso"
-            if current_status == 2 and new_status == 3:
-
+            # Aqui verificamos si el estado actual es 1 = "Deshabilitada" y el nuevo está entre
+            # 3 = "En proceso" o 4 = "Completada"
+            if current_status in (1, 2) and new_status in (3, 4):
                 # Asignamos esa garantía al técnico que le dio empezar
                 error, success, message = TechniciansRepository.assign_technician(
                     warranty_incidents_id, user_id, connection
@@ -180,7 +173,7 @@ class WarrantiesService:
 
             # Aqui validamos que si el nuevo estado es 1 = "Deshabilitada" y el estado actual está entre
             # 2 = "Pendiente o sin comenzar", 3 = "En proceso" o 4 = "Completada"
-            elif new_status == 1 and current_status in (2, 3, 4):
+            if new_status == 1 and current_status in (2, 3, 4):
                 # Desasignamos esa garantía al tecnico que la empezo
                 error, success, message = TechniciansRepository.unassign_technician(
                     warranty_incidents_id,
@@ -203,6 +196,9 @@ class WarrantiesService:
                     product_serial,
                     connection
                 )
+
+                if error:
+                    raise ServiceError(error)
 
                 if not product:
                     raise ServiceError("Serial no encontrado")

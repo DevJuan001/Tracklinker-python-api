@@ -2,7 +2,6 @@ from fastapi import HTTPException, Request, Response
 from pydantic import EmailStr
 
 from app.features.auth.services.auth_service import AuthService
-from app.features.auth.models.auth_schema import VerifyRoleModelSchema
 
 
 class AuthController:
@@ -23,8 +22,8 @@ class AuthController:
         }
 
     @staticmethod
-    def refresh_tokens(request: Request, response: Response):
-        error, success, message = AuthService.refresh_tokens(
+    async def refresh_tokens(request: Request, response: Response):
+        error, success, message = await AuthService.refresh_tokens(
             request, response
         )
 
@@ -39,22 +38,9 @@ class AuthController:
         }
 
     @staticmethod
-    def verify_roles(body: VerifyRoleModelSchema, payload: dict):
-        error, success = AuthService.verify_roles(
-            body, payload
-        )
-
-        if error or not success:
-            raise HTTPException(status_code=401, detail="No autorizado")
-
-        return {
-            "success": success
-        }
-
-    @staticmethod
-    def logout(response: Response):
-        error, success, message = AuthService.logout(
-            response
+    async def logout(request: Request, response: Response):
+        error, success, message = await AuthService.logout(
+            request, response
         )
 
         if error or not success:

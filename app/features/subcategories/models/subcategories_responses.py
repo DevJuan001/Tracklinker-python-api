@@ -12,9 +12,9 @@ class SubcategoryResponse(BaseModel):
     subcategory_status: int
 
 
-class ActiveCategoryResponse(BaseModel):
-    category_id: int
-    category_name: str
+class ActiveSubcategoryResponse(BaseModel):
+    subcategory_id: int
+    subcategory_name: str
 
 
 class RecentSubcategoryResponse(BaseSchema):

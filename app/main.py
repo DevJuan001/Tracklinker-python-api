@@ -41,10 +41,11 @@ app = FastAPI(
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://tracklinker-frontend-web.vercel.app"],
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-type", "Accept", "X-Request-ID"],
+    max_age=600
 )
 
 

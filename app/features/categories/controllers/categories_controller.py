@@ -28,6 +28,17 @@ class CategoriesController:
         }
 
     @staticmethod
+    def get_active_categories():
+        error, categories = CategoriesService.get_active_categories()
+
+        if error:
+            raise HTTPException(status_code=404, detail=error)
+
+        return {
+            "data": categories
+        }
+
+    @staticmethod
     def create_category(category_data: CreateCategorySchema):
         error, success, message = CategoriesService.create_category(
             category_data)

@@ -41,7 +41,7 @@ CREATE TABLE USERS (
   user_phone VARCHAR(255) NOT NULL COMMENT 'Número de teléfono del usuario (VARCHAR, Not null)',
   user_email VARCHAR(255) NOT NULL COMMENT 'Correo electrónico del usuario (VARCHAR, Not null)',
   user_address VARCHAR(255) NOT NULL COMMENT 'Dirección del usuario (VARCHAR, Not null)',
-  user_password VARCHAR(255) NOT NULL COMMENT 'Contrasena del usuario, se debe almacenar hasheada para mayor seguridad (VARCHAR, Not null)',
+  user_password VARCHAR(255) NULL COMMENT 'Contrasena del usuario, se debe almacenar hasheada para mayor seguridad (VARCHAR, Not null)',
   user_city INT NOT NULL COMMENT 'Ciudad en la que se encuentra el usuario',
   user_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del usuario (DATE, Not null)',
   user_status INT NOT NULL DEFAULT 2 COMMENT "Estado en el que se encuentra el usuario 1 = deshabilitado, 2 = activo",
@@ -272,6 +272,7 @@ CREATE TABLE OUTPUT_DETAILS (
   output_details_id INT NOT NULL AUTO_INCREMENT COMMENT ' Identificador de detalle de salida\n,  Clave primaria única que identifica cada registro individual en la tabla de detalles de salida. Este identificador se genera automáticamente por el sistema en orden secuencial y no puede ser nulo. Se utiliza para distinguir y rastrear cada línea o componente dentro de una orden de salida.',
   out_product_garanty DATE NOT NULL COMMENT 'Garantía del producto en salida\n\nIndica si el producto entregado o despachado cuenta con garantía activa o especifica el período de garantía ofrecido. Este campo es obligatorio, ya que permite hacer seguimiento a las condiciones de postventa o soporte del producto.',
   INDEX fk_output_details_output_order_idx (out_order_id ASC),
+  UNIQUE INDEX fk_output_details_product_serial_UNIQUE (product_serial ASC),
   PRIMARY KEY (output_details_id),
   CONSTRAINT fk_output_details_output_oder
     FOREIGN KEY (out_order_id)
@@ -292,7 +293,7 @@ ENGINE = InnoDB;
 CREATE TABLE WARRANTY_INCIDENTS (
   warranty_incidents_id INT NOT NULL AUTO_INCREMENT COMMENT'Identificador único y autoincremental para los incidentes de garantía registrados en el sistema.',
   product_serial VARCHAR(255) NOT NULL COMMENT' Identificador autoincremental para cada número de serie registrado.',
-  warranty_customer VARCHAR(100) NOT NULL COMMENT' Almacena la información de los clientes con garantías, incluyendo los detalles del producto y la fecha de expiración.',
+  warranty_customer INT NOT NULL COMMENT' Almacena la información de los clientes con garantías, incluyendo los detalles del producto y la fecha de expiración.',
   warranty_phone VARCHAR(255) NOT NULL COMMENT'Número de contacto principal para la gestión de la garantía.',
   warranty_address VARCHAR(255) NOT NULL COMMENT' Dirección del cliente para la gestión de la garantía.',
   warranty_description VARCHAR(100) NOT NULL COMMENT'Descripción detallada del problema o incidente reportado por el cliente.',
@@ -318,7 +319,12 @@ CREATE TABLE WARRANTY_INCIDENTS (
     FOREIGN KEY (warranty_city)
     REFERENCES CITIES (city_id)
     ON DELETE CASCADE
-    ON UPDATE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_warranties_customer
+    FOREIGN KEY (warranty_customer)
+    REFERENCES USERS (user_id)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE
 )
 ENGINE = InnoDB;
 

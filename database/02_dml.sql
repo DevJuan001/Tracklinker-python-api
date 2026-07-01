@@ -19,7 +19,7 @@ INSERT INTO CITIES VALUES
 
 INSERT INTO USERS VALUES 
 (1, null, 'Albeiro', 'Ramos', 'Villalba','3001112223', 'profealbeiro2020@gmail.com', 'KR 12 NO 20-245', sha1('12345'), 1, '2026-01-10', 2),
-(1, null, 'Juan', 'Pérez', 'García', '3004567890', 'juan.perez1@example.com', 'Calle 123 #45-67', sha1('hash_password_1'), 1, '2026-01-20', 2),
+(1, null, 'Juan', 'Alvarez', 'Gonzalez','3001112223', 'juanesyt7@gmail.com', 'KR 12 NO 20-245', '$2b$12$XBdScAQV3IGaEfEV3mM/7e9fBsCMHYf/F8bBQERBzdtsfrBtzBeUe', 1, '2026-01-10', 2),
 (2, null, 'María', 'López', 'Rodríguez', '3112345678', 'maria.lopez23@example.com', 'Carrera 10 #20-30', sha1('hash_password_2'), 1, '2026-01-19', 2),
 (2, null, 'María', 'López', 'Rodríguez', '3112345678', 'maria.lopez23@example.com', 'Carrera 10 #20-30', sha1('hash_password_2'), 1, '2026-01-19', 2),
 (2, null, 'Carlos', 'García', 'Moreno', '3101112233', 'carlos.garcia@example.com', 'Calle 45 #12-30', sha1('hash_password_18'), 1, '2026-01-20', 2),
@@ -210,22 +210,22 @@ INSERT INTO PRODUCT_DETAILS VALUES
 
 
 INSERT INTO PRODUCTS VALUES 
-(null, 15, 1, 2),    -- HP 110 .
+(null, 15, 1, 3),    -- HP 110
 (null, 15, 2, 1),    -- Zebra ZD420 
 (null, 15, 3, 3),    -- Epson TM-T20 
-(null, 12, 4, 4),    -- Epson L3150 
-(null, 12, 5, 2),    -- Canon G2010 
-(null, 12, 6, 2),    -- HP Ink Tank 415 
-(null, 13, 7, 2),    -- LaserJet Pro 
-(null, 13, 8, 2),    -- Brother HL 
-(null, 13, 9, 2),    -- Samsung Xpress 
+(null, 12, 4, 3),    -- Epson L3150 
+(null, 12, 5, 3),    -- Canon G2010 
+(null, 12, 6, 3),    -- HP Ink Tank 415 
+(null, 13, 7, 3),    -- LaserJet Pro 
+(null, 13, 8, 3),    -- Brother HL 
+(null, 13, 9, 3),    -- Samsung Xpress 
 (null, 7, 10, 2),    -- QLED Samsung
 (null, 6, 11, 2),    -- Bravia Sony 
 (null, 5, 12, 2),    -- LG LED 
 (null, 6, 13, 2),    -- LG OLED 
 (null, 37, 14, 2),   -- WD My Passport 
 (null, 31, 15, 2),   -- Logitech MX Keys 
-(null, 32, 16, 2),   -- Razer DeathAdder 
+(null, 32, 16, 3),   -- Razer DeathAdder 
 (null, 33, 17, 2),   -- HyperX Cloud II 
 (null, 34, 18, 2),   -- TP-Link Router 
 (null, 35, 19, 2),   -- Cisco Switch 
@@ -388,16 +388,16 @@ INSERT INTO OUTPUT_DETAILS VALUES
 
 
 INSERT INTO WARRANTY_INCIDENTS VALUES
-(null, 'QTYC1123122', 'Juan Perez', '3008765432', 'Calle 50 #10-25', 'Problema con la impresión', '../warranties/images/WINC0001', 1, '2026-01-15', 3, 10),
-(null, 'QTYA9876543', 'Ana Gomez', '3008765432', 'Calle 50 #10-25', 'Problema con la impresión', '../warranties/images/WINC0001', 1, '2026-01-15', 3, 16),
-(null, 'QTYB5554441', 'Carlos Ruiz', '3002223344', 'Calle 80 #45-10', 'Teclado no enciende retroiluminación', '../warranties/images/WINC0002', 1, '2026-01-01', 3, 11),
-(null, 'QTYC3332220', 'Laura Jimenez', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-01-02', 3, 12),
-(null, 'QTYD1234567', 'Laura Jimenez', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-01-02', 4, 12),
-(null, 'QTYE9876543', 'Laura Jimenez', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-01-02', 4, 11),
-(null, 'QTYF1112223', 'Pedro Torres', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-02-02', 4, 12),
-(null, 'QTYG7778889', 'Sofia Fernandez', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-02-02', 2, 13),
-(null, 'QTYH5556667', 'Luiz Alvarez', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-03-02', 2, 14),
-(null, 'QTYI9990001', 'Martha Vargas', '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-04-02', 1, 15);
+(null, 'QTYC1123122', 17, '3008765432', 'Calle 50 #10-25', 'Problema con la impresión', '../warranties/images/WINC0001', 1, '2026-01-15', 3, 10),
+(null, 'QTYA9876543', 17, '3008765432', 'Calle 50 #10-25', 'Problema con la impresión', '../warranties/images/WINC0001', 1, '2026-01-15', 3, 16),
+(null, 'QTYB5554441', 18, '3002223344', 'Calle 80 #45-10', 'Teclado no enciende retroiluminación', '../warranties/images/WINC0002', 1, '2026-01-01', 3, 11),
+(null, 'QTYC3332220', 19, '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-01-02', 3, 12),
+(null, 'QTYD1234567', 20, '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-01-02', 4, 12),
+(null, 'QTYE9876543', 21, '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-01-02', 4, 11),
+(null, 'QTYF1112223', 22, '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-02-02', 4, 12),
+(null, 'QTYG7778889', 23, '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-02-02', 2, 13),
+(null, 'QTYH5556667', 24, '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-03-02', 2, 14),
+(null, 'QTYI9990001', 26, '3015556677', 'Carrera 15 #22-55', 'Mouse con sensor defectuoso', '../warranties/images/WINC0003', 1, '2026-04-02', 1, 15);
 
 
 INSERT INTO TECHNICAL VALUES

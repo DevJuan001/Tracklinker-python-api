@@ -40,14 +40,14 @@ class SuppliersService():
         connection = get_connection()
 
         try:
-            error, suppliers = SuppliersRepository.find_all_suppliers(
+            error, supplier = SuppliersRepository.find_supplier_by_id(
                 supplier_id, connection
             )
 
             if error:
                 raise ServiceError(error)
 
-            return None, suppliers
+            return None, supplier
 
         except ServiceError as e:
             return e.message, None
