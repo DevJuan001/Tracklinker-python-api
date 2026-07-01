@@ -1,10 +1,10 @@
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel, Field
 from app.utils.safe_types import safe_str, safe_optional_str
 
 
 class CategoriesFiltersSchema(BaseModel):
-    name_order: Optional[str] = safe_optional_str(max_length=100)
+    name_order: Optional[Literal["asc", "desc"]] = None
     start_date: Optional[str] = safe_optional_str(max_length=100)
     end_date: Optional[str] = safe_optional_str(max_length=100)
     status: Optional[int] = None
