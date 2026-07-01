@@ -298,7 +298,7 @@ class UsersRepository:
     # Obtener un usuario mediante el correo
     @staticmethod
     def find_user_by_email(email: EmailStr, connection):
-        cursor = connection.cursor(buffered=True)
+        cursor = connection.cursor()
 
         # Petición a la base de datos
         query = """
@@ -308,7 +308,7 @@ class UsersRepository:
             u.user_name,
             u.user_first_surname,
             u.user_second_surname,
-            u.user_email, 
+            u.user_email,
             u.user_password
         FROM USERS AS u 
         INNER JOIN ROLES AS r 
@@ -319,7 +319,7 @@ class UsersRepository:
         try:
             cursor.execute(query, (email,))
 
-            result = cursor.fetchone()
+            result = cursor.fetchall()
 
             data = [
                 UserByEmailResponse(
